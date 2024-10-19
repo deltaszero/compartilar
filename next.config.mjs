@@ -1,4 +1,14 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
+import withPWA from 'next-pwa'
 
-export default nextConfig;
+const pwaConfig = withPWA({
+    dest: 'public',
+    // register: true,
+    // skipWaiting: true,
+})
+
+export default {
+    ...pwaConfig,
+    experimental: {
+        typedRoutes: true,
+    }
+};
