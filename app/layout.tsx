@@ -34,7 +34,7 @@ export default function RootLayout({
             <html lang="en" className="h-full scroll-smooth antialiased" suppressHydrationWarning>
                 <body className={`${inter.className} flex h-full flex-col`}>
                     <Header />
-                    <main className="flex-grow">
+                    <main className="grow">
                         {children}
                     </main>
                 </body>
