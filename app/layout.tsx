@@ -2,10 +2,10 @@ import "./globals.css";
 import { Inter } from 'next/font/google';
 import type { Metadata } from "next";
 // import localFont from "next/font/local";
-import {
-    ClerkProvider,
-} from '@clerk/nextjs'
-import Header from "@components/layout/Header";
+// import {
+//     ClerkProvider,
+// } from '@clerk/nextjs'
+// import Header from "@components/layout/Header";
 
 // const geistSans = localFont({
 //     src: "./fonts/GeistVF.woff",
@@ -30,15 +30,15 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <ClerkProvider>
+        // <ClerkProvider>
             <html lang="en" className="h-full scroll-smooth antialiased" suppressHydrationWarning>
                 <body className={`${inter.className} flex h-full flex-col`}>
-                    <Header />
+                    {/* <Header /> */}
                     <main className="grow">
                         {children}
                     </main>
                 </body>
             </html>
-        </ClerkProvider>
+        // </ClerkProvider>
     );
 }
