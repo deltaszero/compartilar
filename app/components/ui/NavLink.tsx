@@ -2,7 +2,7 @@
 
 import type { Route } from 'next'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+// import { usePathname } from 'next/navigation'
 
 interface NavLinkProps<T extends string> {
     href: Route<T> | URL
@@ -10,14 +10,14 @@ interface NavLinkProps<T extends string> {
 }
 
 function NavLink<T extends string>({href, children, ...props}: NavLinkProps<T>) {
-    const pathname = usePathname()
-    const isActive = pathname === href
+    // const pathname = usePathname()
+    // const isActive = pathname === href
 
     return (
         <Link 
             {...props}
             href={href}
-            className={isActive ? 'font-black' : ''}
+            // className={isActive ? 'font-black' : ''}
         >
             {children}
         </Link>

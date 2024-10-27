@@ -10,13 +10,34 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                background: "var(--background)",
-                foreground: "var(--foreground)",
+                // background: "var(--background)",
+                // foreground: "var(--foreground)",
+                primaryPurple: '#501357',
+                primaryGreen: '#135745',
+                secondaryGreen: '#9ad6c7',
+            },
+            fontFamily: {
+                playfair: ["Playfair Display", "serif"],
+                raleway: ["Raleway", "sans-serif"],
+                cinzel: ["Cinzel Decorative", "serif"],
+            },
+            fontWeight: {
+                extralight: '200',
+                light: '300',
+                regular: '400',
+                medium: '500',
+                bold: '700',
+                black: '900',
             },
         },
+        themes: [
+
+        ]
     },
-    plugins: [
-        require('daisyui')
-    ],
+    // plugins: [require("@tailwindcss/typography"), require("daisyui")],
+    plugins: [require("daisyui")],
+    daisyui: {
+        themes: ["forest",],
+    },
 };
 export default config;
