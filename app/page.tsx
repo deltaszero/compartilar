@@ -20,7 +20,7 @@ export default function Home() {
                         {/* {lorem_ipsum_1.generateParagraphs(1)} */}
                         Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                     </p>
-                    <button className="btn btn-info btn-xs sm:btn-sm md:btn-md lg:btn-lg">
+                    <button className="btn btn-info btn-xs sm:btn-sm md:btn-md lg:btn-lg bg-secondaryPurple border-none">
                         <div className="flex items-center justify-center space-x-2">
                             <span>&nbsp;</span>
                             <p className="text-2xl text-info-content font-light">

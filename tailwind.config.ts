@@ -15,6 +15,7 @@ const config: Config = {
                 primaryPurple: '#501357',
                 primaryGreen: '#135745',
                 secondaryGreen: '#9ad6c7',
+                secondaryPurple: '#a45fac',
             },
             fontFamily: {
                 playfair: ["Playfair Display", "serif"],
