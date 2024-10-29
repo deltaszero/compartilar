@@ -1,26 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { auth } from '../../../services/firebaseConfig';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import React from 'react';
 import NavLink from '../ui/NavLink';
 import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../../services/firebaseConfig';
 
 const Header = () => {
     const [user, setUser] = useState<User | null>(null); // const [user, setUser] = useState<any>(null);
+    const [username, setUsername] = useState('');
     const router = useRouter();
 
     useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-    });
-    return () => unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            setUser(currentUser);
+            if (currentUser) {
+                const docRef = doc(db, 'account_info', currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    setUsername(docSnap.data().username);
+                }
+            }
+        });
+        return () => unsubscribe();
     }, []);
 
     const handleSignOut = async () => {
-    await signOut(auth);
-    router.push('/');
+        await signOut(auth);
+        router.push('/');
     };
 
     return (
@@ -79,20 +88,21 @@ const Header = () => {
                 </ul>
             </div>
             <div className="navbar-end">
-                {user ? (
-                <div className="flex items-center space-x-2">
-                    <NavLink href={`/${user.uid}`}>Usuário</NavLink>
-                    <button onClick={handleSignOut} className="btn btn-outline">
-                        Sair
-                    </button>
-                </div>
+                {user && username ? (
+                    <div className="flex items-center space-x-2">
+                        <NavLink href={`/${username}`}>Usuário</NavLink>
+                        <button onClick={handleSignOut} className="btn btn-outline">
+                            Sair
+                        </button>
+                    </div>
                 ) : (
-                <a href="/login" className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none">
-                    <p className='font-normal'>
-                        Entre
-                    </p>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" id="Logout-1--Streamline-Core" height={16} width={16} ><desc>{"Logout 1 Streamline Icon: https://streamlinehq.com"}</desc><g id="logout-1--arrow-exit-frame-leave-logout-rectangle-right"><path id="Vector" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M9.5 10.5v2c0 0.2652 -0.10536 0.5196 -0.29289 0.7071 -0.18754 0.1875 -0.44189 0.2929 -0.70711 0.2929h-7c-0.26522 0 -0.51957 -0.1054 -0.707107 -0.2929C0.605357 13.0196 0.5 12.7652 0.5 12.5v-11c0 -0.26522 0.105357 -0.51957 0.292893 -0.707107C0.98043 0.605357 1.23478 0.5 1.5 0.5h7c0.26522 0 0.51957 0.105357 0.70711 0.292893C9.39464 0.98043 9.5 1.23478 9.5 1.5v2" strokeWidth={1} /><path id="Vector_2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M6.5 7h7" strokeWidth={1} /><path id="Vector_3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m11.5 5 2 2 -2 2" strokeWidth={1} /></g></svg>
-                </a>
+                    <a
+                        href="/login"
+                        className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none"
+                    >
+                        <p className="font-normal">Entre</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" id="Logout-1--Streamline-Core" height={16} width={16} ><desc>{"Logout 1 Streamline Icon: https://streamlinehq.com"}</desc><g id="logout-1--arrow-exit-frame-leave-logout-rectangle-right"><path id="Vector" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M9.5 10.5v2c0 0.2652 -0.10536 0.5196 -0.29289 0.7071 -0.18754 0.1875 -0.44189 0.2929 -0.70711 0.2929h-7c-0.26522 0 -0.51957 -0.1054 -0.707107 -0.2929C0.605357 13.0196 0.5 12.7652 0.5 12.5v-11c0 -0.26522 0.105357 -0.51957 0.292893 -0.707107C0.98043 0.605357 1.23478 0.5 1.5 0.5h7c0.26522 0 0.51957 0.105357 0.70711 0.292893C9.39464 0.98043 9.5 1.23478 9.5 1.5v2" strokeWidth={1} /><path id="Vector_2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M6.5 7h7" strokeWidth={1} /><path id="Vector_3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m11.5 5 2 2 -2 2" strokeWidth={1} /></g></svg>
+                    </a>
                 )}
             </div>
         </header>

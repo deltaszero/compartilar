@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../services/firebaseConfig';
+import { auth, db } from '../../services/firebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
@@ -17,15 +18,22 @@ export default function SignupPage() {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            router.push('/'); // Redireciona para a página inicial
+            // await createUserWithEmailAndPassword(auth, email, password);
+            // router.push('/'); // Redireciona para a página inicial
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await setDoc(doc(db, 'account_info', user.uid), {
+                username: username,
+                email: email,
+            });
+
+            router.push('/');
         } catch (error) {
             console.error(error);
-            // Trate os erros conforme necessário
         }
     };
 
-    // Função para verificar a força da senha
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newPassword = e.target.value;
         setPassword(newPassword);
