@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { auth, db } from '../../services/firebaseConfig'; // Adjust the path as necessary
+import { auth, db } from '../../lib/firebaseConfig'; // Adjust the path as necessary
 import { doc, getDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 

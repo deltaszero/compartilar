@@ -6,7 +6,7 @@ import React from 'react';
 import NavLink from '../ui/NavLink';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../../services/firebaseConfig';
+import { auth, db } from '../../lib/firebaseConfig';
 
 const Header = () => {
     const [user, setUser] = useState<User | null>(null); // const [user, setUser] = useState<any>(null);
