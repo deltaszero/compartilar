@@ -1,4 +1,3 @@
-// app/reset-password/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +17,6 @@ export default function ResetPasswordPage() {
             alert('Email de recuperação enviado!');
         } catch (error) {
             console.error(error);
-            // Trate os erros conforme necessário
         }
     };
 
