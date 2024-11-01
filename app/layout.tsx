@@ -6,7 +6,8 @@ import {
     // Cinzel_Decorative
 } from 'next/font/google';
 import type { Metadata } from "next";
-// import { auth } from "firebase-functions/v1";
+import { UserProvider } from '@context/userContext';
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -75,9 +76,11 @@ export default function RootLayout({
             suppressHydrationWarning
         >
             <body className={`${inter.className} flex h-full flex-col`}>
-                <main className="grow">
-                    {children}
-                </main>
+                <UserProvider>
+                    <main className="grow">
+                        {children}
+                    </main>
+                </UserProvider>
             </body>
         </html>
     );
