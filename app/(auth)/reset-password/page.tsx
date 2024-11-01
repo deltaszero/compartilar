@@ -3,7 +3,10 @@
 
 import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../../lib/firebaseConfig';
+
+import { auth } from '@lib/firebaseConfig';
+import LoginHeader from "@components/layout/LoginHeader";
+
 
 export default function ResetPasswordPage() {
     const [email, setEmail] = useState('');
@@ -20,7 +23,8 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div>
+        <div className="h-screen flex flex-col">
+            <LoginHeader />
             <h1>Recuperar Senha</h1>
             <form onSubmit={handleReset}>
                 <input type="email" placeholder="Email" value={email}
