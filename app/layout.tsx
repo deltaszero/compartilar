@@ -6,7 +6,9 @@ import {
     // Cinzel_Decorative
 } from 'next/font/google';
 import type { Metadata } from "next";
+import Script from 'next/script';
 import { UserProvider } from '@context/userContext';
+import Analytics from '@components/Analytics';
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
     creator: 'DSZero Consultoria',
     publisher: 'DSZero Consultoria',
     // authors : "Co-Authored by Isadora Urel and DSZero Consultoria",
-    
+
     // language: "pt-BR",
     // geo : {
     //     region: "BR",
@@ -75,9 +77,25 @@ export default function RootLayout({
             className="scroll-smooth antialiased"
             suppressHydrationWarning
         >
+            <head>
+                {/* Google Analytics */}
+                <Script
+                    src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}`}
+                    strategy="afterInteractive"
+                />
+                <Script id="ga-script" strategy="afterInteractive">
+                    {`
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){window.dataLayer.push(arguments);}
+                        gtag('js', new Date());
+                        gtag('config', '${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}');
+                    `}
+                </Script>
+            </head>
             <body className={`${inter.className} flex h-full flex-col`}>
                 <UserProvider>
                     <main className="grow">
+                        <Analytics />
                         {children}
                     </main>
                 </UserProvider>
