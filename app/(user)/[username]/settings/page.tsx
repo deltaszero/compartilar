@@ -36,9 +36,11 @@ export default function SettingsPage() {
             console.log('Saving profile...');
             e.preventDefault();
             setSaving(true);
-        //     const usernamesRef = collection(db, 'account_info');
-        //     const q = query(usernamesRef, where('username', '==', username));
-        //     const querySnapshot = await getDocs(q);
+            console.log('connecting to db');
+            // const usernamesRef = collection(db, 'account_info');
+            // const q = query(usernamesRef, where('username', '==', username));
+            // const querySnapshot = await getDocs(q);
+            console.log('done');
 
         //     if (!querySnapshot.empty && userData?.username !== username) {
         //         alert('Nome de usuário já está em uso. Por favor, escolha outro.');

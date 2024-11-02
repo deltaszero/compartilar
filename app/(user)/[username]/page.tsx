@@ -29,11 +29,14 @@ export default function UserPage() {
         <div className="h-screen flex flex-col">
             <LoginHeader />
             <section className="flex flex-col justify-center items-center min-h-screen">
+            {userData ? (
                 <div>
                     <h1>Hello, {userData.username}!</h1>
                     <p>Your email: {userData.email}</p>
-                    {/* Display other user info as needed */}
                 </div>
+            ) : (
+                <p>User not found</p>
+            )}
             </section>
         </div>
     );
