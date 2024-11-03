@@ -64,8 +64,7 @@ const Header = () => {
             </div>
             {loading ? (
                 <div className="navbar-end">
-                    <div className="skeleton h-8 w-1/2 rounded-md
-                    "></div>
+                    <div className="skeleton h-8 w-1/2 rounded-md"></div>
                 </div>
             ) : (
                 <div className="navbar-end">

@@ -11,13 +11,11 @@ export default function Sidebar() {
     const { user, userData, loading } = useUser();
     const pathname = usePathname();
 
-    console.log(pathname)
-
     return (
         <nav className="flex flex-col gap-16 bg-neutral">
             <LoginHeader />
             {userData ? (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 my-6">
                     <div className={`pl-2 ${pathname === `/${userData.username}` ? 'border-l-4 border-secondaryPurple text-secondaryPurple text-lg font-Raleway font-bold' : 'font-light'}`}>
                         <NavLink href={`/${userData.username}/`}>
                             <p>
@@ -34,7 +32,10 @@ export default function Sidebar() {
                     </div>
                 </div>
             ) : (
-                <p>Loading...</p>
+                <div className="flex flex-col gap-4 mx-6 my-6">
+                    <div className="skeleton h-8 w-full rounded-md"></div>
+                    <div className="skeleton h-8 w-full rounded-md"></div>
+                </div>
             )}
         </nav>
     );
