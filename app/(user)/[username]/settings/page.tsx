@@ -30,7 +30,6 @@ import {
     updateProfile 
 } from 'firebase/auth';
 // import Image from 'next/image';
-import LoginHeader from "@components/layout/LoginHeader";
 
 export default function SettingsPage() {
     // get vars
@@ -162,7 +161,6 @@ export default function SettingsPage() {
 
     return (
         <div className="h-screen flex flex-col">
-            <LoginHeader />
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold mb-4">Configurações da Conta</h1>
                 <form

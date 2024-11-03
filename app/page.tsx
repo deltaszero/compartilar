@@ -15,8 +15,8 @@ export default function Home() {
                     <Image
                         src={hero_img}
                         alt="Hero Background"
-                        layout="fill"
-                        objectFit="cover"
+                        style={{ objectFit: 'cover' }}
+                        fill
                         priority
                     />
                     <div className="absolute inset-0 bg-black opacity-80"></div>
@@ -28,7 +28,7 @@ export default function Home() {
                     <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-extralight mb-8">
                         Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                     </p>
-                    <button className="btn bg-secondaryPurple border-none flex flex-col px-6 py-3 text-lg sm:text-xl md:text-2xl font-light text-black hover:text-white">
+                    <button className="btn bg-secondaryPurple border-none flex flex-col px-6 py-3 text-lg sm:text-xl md:text-2xl font-light text-black hover:text-white hover:bg-info hover:border-none rounded-md">
                         <div className="flex items-center space-x-2">
                             <span>&nbsp;</span>
                             <p className="text-2xl text-info-content font-light">

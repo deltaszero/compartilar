@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { auth, db } from '@lib/firebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocFromCache } from 'firebase/firestore';
 
 interface UserData {
     username: string;
@@ -33,14 +33,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             if (currentUser) {
-                // fetch user data from firestore
                 const docRef = doc(db, 'account_info', currentUser.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setUserData(docSnap.data() as UserData);
-                } else {
-                    console.error('No user data found in Firestore');
-                    setUserData(null);
+                try {
+                    const cachedDoc = await getDocFromCache(docRef);
+                    setUserData(cachedDoc.exists() ? cachedDoc.data() as UserData : null);
+                } catch (error) {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data() as UserData);
+                    } else {
+                        console.error('No user data found in Firestore');
+                        setUserData(null);
+                    }
                 }
             } else {
                 setUserData(null);
