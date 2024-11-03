@@ -1,44 +1,52 @@
 import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
 
-import hero_img from "@assets/images/cellphone_01.gif";
+import MobileFooter from "@components/layout/MobileFooter";
 
-// import { LoremIpsum } from "lorem-ipsum";
-// const lorem_ipsum_1 = new LoremIpsum({
-//     sentencesPerParagraph: { max: 8, min: 4 },
-//     wordsPerSentence: { max: 5, min: 4 }
-// });
+import Image from 'next/image';
+import hero_img from "@assets/images/cellphone_01.gif";
 
 export default function Home() {
     return (
         <div>
             <Header />
-            <section className="hero min-h-screen" style={{backgroundImage: `url(${hero_img.src})`,}}>
-                <div className="hero-overlay bg-opacity-80"></div>
-                <div className="hero-content text-neutral-content text-center">
-                    <div className="max-w-6xl mx-12">
-                        <h1 className="text-7xl text-white font-playfair text-left font-bold mb-12">
-                            Facilite a coparentalidade organizando tudo em um só lugar
-                        </h1>
-                        <p className="my-12 text-left text-3xl font-extralight">
-                            {/* {lorem_ipsum_1.generateParagraphs(1)} */}
-                            Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
-                        </p>
-                        <button className="btn btn-info btn-xs sm:btn-sm md:btn-md lg:btn-lg bg-secondaryPurple border-none">
-                            <div className="flex items-center justify-center space-x-2">
-                                <span>&nbsp;</span>
-                                <p className="text-2xl text-info-content font-light">
-                                    Comece agora
-                                </p>
-                                <span>&nbsp;</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Arrow-Right--Streamline-Ultimate" height={24} width={24} ><desc>{"Arrow Right Streamline Icon: https://streamlinehq.com"}</desc><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M0.75 12h22.5" strokeWidth={1.5} /><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M12.75 22.5 23.25 12 12.75 1.5" strokeWidth={1.5} /></svg>
-                                <span>&nbsp;</span>
-                            </div>
-                        </button>
-                    </div>
+            <section className="relative hero min-h-screen flex items-center">
+                <div className="absolute inset-0">
+                    <Image
+                        src={hero_img}
+                        alt="Hero Background"
+                        layout="fill"
+                        objectFit="cover"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-black opacity-80"></div>
                 </div>
-            </section>
-            <Footer />
-        </div>
+                <div className="relative z-10 flex flex-col items-start px-4 py-24 md:px-12 lg:px-24 mx-auto max-w-7xl">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-playfair font-bold mb-6">
+                        Facilite a coparentalidade organizando tudo em um só lugar
+                    </h1>
+                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-extralight mb-8">
+                        Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
+                    </p>
+                    <button className="btn bg-secondaryPurple border-none flex flex-col px-6 py-3 text-lg sm:text-xl md:text-2xl font-light text-black hover:text-white">
+                        <div className="flex items-center space-x-2">
+                            <span>&nbsp;</span>
+                            <p className="text-2xl text-info-content font-light">
+                                Comece agora
+                            </p>
+                            <span>&nbsp;</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Arrow-Right--Streamline-Ultimate" height={24} width={24} ><desc>{"Arrow Right Streamline Icon: https://streamlinehq.com"}</desc><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M0.75 12h22.5" strokeWidth={1.5} /><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M12.75 22.5 23.25 12 12.75 1.5" strokeWidth={1.5} /></svg>
+                            <span>&nbsp;</span>
+                        </div>
+                    </button>
+                </div>
+            </section >
+            <div className="block md:hidden">
+                <MobileFooter />
+            </div>
+            <div className="hidden md:block">
+                <Footer />
+            </div>
+        </div >
     );
 }

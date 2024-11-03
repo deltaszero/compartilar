@@ -21,19 +21,6 @@ export const metadata: Metadata = {
         "aplicativo coparentalidade",
         "aplicativo direito família",
         "coparentalidade",
-        "coparentalidade organizada",
-        "coparentalidade saudável",
-        "coparentalidade consciente",
-        "coparentalidade positiva",
-        "coparentalidade harmoniosa",
-        "coparentalidade colaborativa",
-        "coparentalidade compartilhada",
-        "coparentalidade unida",
-        "coparentalidade integrada",
-        "coparentalidade conectada",
-        "coparentalidade interligada",
-        "coparentalidade interdependente",
-        "coparentalidade interconectada",
     ],
     authors: [
         { name: 'Isadora Urel', url: 'https://isadoraurel.adv.br' },
@@ -41,8 +28,6 @@ export const metadata: Metadata = {
     ],
     creator: 'DSZero Consultoria',
     publisher: 'DSZero Consultoria',
-    // authors : "Co-Authored by Isadora Urel and DSZero Consultoria",
-
     // language: "pt-BR",
     // geo : {
     //     region: "BR",

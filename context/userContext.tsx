@@ -5,7 +5,6 @@ import { auth, db } from '@lib/firebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
-
 interface UserData {
     username: string;
     email: string;
@@ -34,7 +33,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             if (currentUser) {
-                // Fetch user data from Firestore
+                // fetch user data from firestore
                 const docRef = doc(db, 'account_info', currentUser.uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
