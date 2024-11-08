@@ -1,4 +1,4 @@
-// components/Analytics.tsx
+// app/components/Analytics.tsx
 'use client';
 
 import { useEffect } from 'react';

@@ -1,3 +1,4 @@
+// app/page.tsx
 import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
 
@@ -18,6 +19,7 @@ export default function Home() {
                         style={{ objectFit: 'cover' }}
                         fill
                         priority
+                        unoptimized
                     />
                     <div className="absolute inset-0 bg-black opacity-80"></div>
                 </div>

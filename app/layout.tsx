@@ -1,3 +1,4 @@
+// app/layout.tsx
 import "@app/globals.css";
 import {
     Inter,

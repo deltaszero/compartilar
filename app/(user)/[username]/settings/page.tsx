@@ -5,11 +5,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     doc,
-    // updateDoc,
-    // collection,
-    // query,
-    // where,
-    // getDocs,
     runTransaction,
 } from 'firebase/firestore';
 import {
@@ -21,15 +16,12 @@ import {
     useUser,
 } from '@context/userContext';
 import {
-    // auth,
     db,
     storage
 } from '@lib/firebaseConfig';
-import { 
-    // User,
+import {
     updateProfile 
 } from 'firebase/auth';
-// import Image from 'next/image';
 
 export default function SettingsPage() {
     // get vars

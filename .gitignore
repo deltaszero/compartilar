@@ -40,3 +40,4 @@ services/firebase.js
 firebase-debug.log
 .firebase/**/*
 app/lib/firebaseConfig.ts
+tree.txt
