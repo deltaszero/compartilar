@@ -1,3 +1,4 @@
+// app/(user)/[username]/layout.tsx
 import Sidebar from "@components/Sidebar";
 import ContentArea from "@components/ContentArea";
 

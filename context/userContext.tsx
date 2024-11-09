@@ -1,15 +1,20 @@
-// context/userContext.tsx
 'use client';
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { auth, db } from '@lib/firebaseConfig';
+import React, { createContext, useState, useEffect } from 'react';
+import { auth, db } from '@/app/lib/firebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, getDocFromCache } from 'firebase/firestore';
+import { doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 interface UserData {
     username: string;
     email: string;
     photoURL?: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    birthDate?: string;
+    createdAt?: typeof serverTimestamp;
+    uid: string;
 }
 
 interface UserContextType {
@@ -18,12 +23,11 @@ interface UserContextType {
     loading: boolean;
 }
 
-const UserContext = createContext<UserContextType>({
+export const UserContext = createContext<UserContextType>({
     user: null,
     userData: null,
     loading: true,
 });
-
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -31,28 +35,48 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        let unsubscribeFirestore: (() => void) | undefined;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+            console.log('Auth state changed:', currentUser?.uid);
             setUser(currentUser);
+            
             if (currentUser) {
-                const docRef = doc(db, 'account_info', currentUser.uid);
                 try {
-                    const cachedDoc = await getDocFromCache(docRef);
-                    setUserData(cachedDoc.exists() ? cachedDoc.data() as UserData : null);
+                    const userDocRef = doc(db, 'account_info', currentUser.uid);
+                    unsubscribeFirestore = onSnapshot(
+                        userDocRef, 
+                        (doc) => {
+                            console.log('Firestore data:', doc.data());
+                            if (doc.exists()) {
+                                setUserData(doc.data() as UserData);
+                            } else {
+                                console.error('No user data found in Firestore');
+                                setUserData(null);
+                            }
+                            setLoading(false);
+                        },
+                        (error) => {
+                            console.error('Error fetching user data:', error);
+                            setLoading(false);
+                        }
+                    );
                 } catch (error) {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data() as UserData);
-                    } else {
-                        console.error('No user data found in Firestore');
-                        setUserData(null);
-                    }
+                    console.error('Error setting up Firestore listener:', error);
+                    setLoading(false);
                 }
             } else {
                 setUserData(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
-        return () => unsubscribe();
+
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeFirestore) {
+                unsubscribeFirestore();
+            }
+        };
     }, []);
 
     return (
@@ -62,4 +86,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+    const context = React.useContext(UserContext);
+    if (context === undefined) {
+        throw new Error('useUser must be used within a UserProvider');
+    }
+    return context;
+};
