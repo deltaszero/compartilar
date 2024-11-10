@@ -1,24 +1,25 @@
 // app/components/layout/Header.tsx
 'use client';
-
+// importing modules
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
+// importing components
 import NavLink from '@components/ui/NavLink';
 import { auth } from '@lib/firebaseConfig';
 import { useUser } from '@context/userContext';
-
+// importing assets
 import HamburgerIcon from '@assets/icons/hamburger.svg';
 import TreeIcon from '@assets/icons/tree.svg';
 import CameraIcon from '@assets/icons/camera.svg';
 import LoginIcon from '@assets/icons/login.svg';
 
-
 const Header = () => {
+    // setting up hooks
     const { user, userData, loading } = useUser();
     const router = useRouter();
-
+    // setting up functions
     const handleSignOut = async () => {
         try {
             await signOut(auth);
@@ -27,7 +28,7 @@ const Header = () => {
             console.error('Error signing out:', error);
         }
     };
-
+    // rendering
     return (
         <header className="navbar bg-neutral text-neutral-content lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
             <div className="navbar-start">
@@ -93,10 +94,7 @@ const Header = () => {
                                         )}
                                     </div>
                                 </label>
-                                <ul
-                                    tabIndex={0}
-                                    className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
-                                >
+                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                                     <li>
                                         <NavLink href={`/${userData.username}/settings`}>Configurações</NavLink>
                                     </li>
@@ -107,10 +105,7 @@ const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <a
-                            href="/login"
-                            className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none"
-                        >
+                        <a href="/login" className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none" >
                             <p className="font-normal">
                                 Entrar
                             </p>
