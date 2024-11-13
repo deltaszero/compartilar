@@ -74,8 +74,8 @@ const Header = () => {
                     {user && userData ? (
                         <div className="flex items-center space-x-2 z-50">
                             <NavLink href={`/${userData.username}`}>
-                                <span className="font-medium text-lg">
-                                    {userData.username}
+                                <span className="text-lg">
+                                    <p>{userData.username}</p>
                                 </span>
                             </NavLink>
                             <div className="dropdown dropdown-end">
@@ -95,6 +95,9 @@ const Header = () => {
                                     </div>
                                 </label>
                                 <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-md w-52">
+                                    <li>
+                                        <NavLink href={`/${userData.username}/`}>Perfil</NavLink>
+                                    </li>
                                     <li>
                                         <NavLink href={`/${userData.username}/settings`}>Configurações</NavLink>
                                     </li>

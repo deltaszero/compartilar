@@ -1,7 +1,11 @@
 // components/ProfilePictureStep.tsx
-import { useState, useRef } from 'react';
-import { useSignupForm } from '../hooks/useSignupForm';
+// importing modules
 import Image from 'next/image';
+import { useState, useRef } from 'react';
+// importing components
+import { useSignupForm } from '@auth/signup/hooks/useSignupForm';
+// importing assets
+import CameraIcon from '@assets/icons/camera.svg';
 
 export const ProfilePictureStep = () => {
     const { formData, updateFormData } = useSignupForm();
@@ -11,7 +15,6 @@ export const ProfilePictureStep = () => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Create preview URL
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
             updateFormData({ photoURL: url });
@@ -30,11 +33,13 @@ export const ProfilePictureStep = () => {
                     />
                 ) : (
                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <svg className="w-12 h-12 text-gray-400" /* Add your placeholder icon SVG here */ />
+                        <CameraIcon width={44} height={44} />
                     </div>
                 )}
             </div>
-
+            <p className="text-xs text-gray-500">
+                Você pode alterar sua foto de perfil a qualquer momento! Ela será visível <b>apenas</b> para sua rede de apoio 😊
+            </p>
             <input
                 type="file"
                 ref={fileInputRef}
@@ -44,7 +49,7 @@ export const ProfilePictureStep = () => {
             />
 
             <button
-                className="btn btn-primary"
+                className="btn btn-primary rounded-md"
                 onClick={() => fileInputRef.current?.click()}
             >
                 {previewUrl ? 'Alterar Foto' : 'Escolher Foto'}

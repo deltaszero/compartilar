@@ -1,16 +1,20 @@
 // app/signup/page.tsx
 'use client';
 
+// importing modules
 import { useEffect } from 'react';
-import { SignupProgress } from './components/SignupProgress';
-import { BasicInfoStep } from './components/BasicInfoStep';
-import { ProfilePictureStep } from './components/ProfilePictureStep';
-import { AccountInfoStep } from './components/AccountInfoStep';
-import { useSignupForm } from './hooks/useSignupForm';
-import LoginHeader from "@components/layout/LoginHeader";
 import { useRouter } from 'next/navigation';
+// importing components
+import LoginHeader from "@components/layout/LoginHeader";
+import { SignupProgress } from '@auth/signup/components/SignupProgress';
+import { BasicInfoStep } from '@auth/signup/components/BasicInfoStep';
+import { ProfilePictureStep } from '@auth/signup/components/ProfilePictureStep';
+import { AccountInfoStep } from '@auth/signup/components/AccountInfoStep';
+import { useSignupForm } from '@auth/signup/hooks/useSignupForm';
+
 
 export default function SignupPage() {
+    // setting up hooks
     const {
         currentStep,
         setCurrentStep,
@@ -21,8 +25,9 @@ export default function SignupPage() {
     } = useSignupForm();
     const router = useRouter();
 
+    // setting up functions 
     const handleNext = () => {
-        // Add validation logic here before proceeding
+        // validating form data
         if (currentStep === 'basic-info') {
             if (!formData.email || !formData.password || !formData.username) {
                 alert('Please fill in all required fields');
@@ -74,18 +79,27 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <LoginHeader />
             <div className="flex-1 container mx-auto px-4 py-8">
-                <div className="grid grid-cols-4 gap-8">
-                    <div className="col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-4 mb-8">
+                    <div className="hidden lg:block lg:col-span-1">
+                        {/* empty div for desktop layout */}
+                    </div>
+                    <div className="col-span-1 lg:col-span-3">
+                        <div className="flex justify-center lg:justify-start">
+                            <LoginHeader />
+                        </div>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <div className="hidden lg:block lg:col-span-1">
                         <SignupProgress currentStep={currentStep} />
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-1 lg:col-span-3">
                         {renderStep()}
                         <div className="mt-6 flex justify-between">
                             {currentStep !== 'basic-info' && (
                                 <button
-                                    className="btn btn-outline"
+                                    className="btn btn-outline rounded-md"
                                     onClick={handleBack}
                                     disabled={isSubmitting}
                                 >
@@ -94,7 +108,7 @@ export default function SignupPage() {
                             )}
                             {currentStep !== 'account-info' && (
                                 <button
-                                    className="btn btn-primary"
+                                    className="btn btn-primary rounded-md"
                                     onClick={handleNext}
                                     disabled={isSubmitting}
                                 >
@@ -103,7 +117,7 @@ export default function SignupPage() {
                             )}
                             {currentStep === 'account-info' && (
                                 <button
-                                    className="btn btn-primary"
+                                    className="btn btn-primary rounded-md"
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
                                 >

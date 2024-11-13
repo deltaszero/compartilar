@@ -1,5 +1,5 @@
 // components/SignupProgress.tsx
-import { SignupStep } from '../types/signup.types';
+import { SignupStep } from '@auth/signup/types/signup.types';
 
 interface SignupProgressProps {
     currentStep: SignupStep;

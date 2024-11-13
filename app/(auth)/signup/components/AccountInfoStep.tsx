@@ -1,5 +1,5 @@
 // components/AccountInfoStep.tsx
-import { useSignupForm } from '../hooks/useSignupForm';
+import { useSignupForm } from '@auth/signup/hooks/useSignupForm';
 
 export const AccountInfoStep = () => {
     const { formData, updateFormData } = useSignupForm();
