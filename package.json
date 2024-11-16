@@ -19,6 +19,7 @@
         "firebase-functions": "^6.0.1",
         "firebase-tools": "^1.2.0",
         "lorem-ipsum": "^2.0.8",
+        "motion": "^11.11.17",
         "next": "14.2.15",
         "next-mdx-remote": "^5.0.0",
         "react-responsive": "^10.0.0",

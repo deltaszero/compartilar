@@ -14,12 +14,14 @@ const LoginHeader = () => {
                 </div>
             </div>
             <div className="hidden lg:flex"> {/* hidden lg:flex */}
-                <div className="flex items-center justify-center space-x-2">
-                    <TreeIcon width={44} height={44} />
-                    <p className="text-3xl font-cinzel font-bold">
-                        CompartiLar
-                    </p>
-                </div>
+                <a href="/">
+                    <div className="flex items-center justify-center space-x-2">
+                        <TreeIcon width={44} height={44} />
+                        <p className="text-3xl font-cinzel font-bold">
+                            CompartiLar
+                        </p>
+                    </div>
+                </a>
             </div>
         </header>
     );

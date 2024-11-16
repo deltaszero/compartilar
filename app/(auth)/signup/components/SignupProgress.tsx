@@ -1,4 +1,4 @@
-// components/SignupProgress.tsx
+// app/(auth)/signup/components/SignupProgress.tsx
 import { SignupStep } from '@auth/signup/types/signup.types';
 
 interface SignupProgressProps {
@@ -7,9 +7,9 @@ interface SignupProgressProps {
 
 export const SignupProgress = ({ currentStep }: SignupProgressProps) => {
     const steps = [
-        { id: 'basic-info', label: 'Informações Básicas' },
+        { id: 'basic-info', label: 'Informações da Conta' },
         { id: 'profile-picture', label: 'Foto do Perfil' },
-        { id: 'account-info', label: 'Dados da Conta' },
+        { id: 'account-info', label: 'Seus Dados Pessoais' },
     ];
 
     return (

@@ -3,10 +3,6 @@ const nextConfig = {
     images: {
         domains: ['firebasestorage.googleapis.com'],
     },
-    i18n: {
-        locales: ['pt-BR'],
-        defaultLocale: 'pt-BR',
-    },
     // rules to handle svg imports
     webpack(config) {
         // get the existing rule that handles svg imports
