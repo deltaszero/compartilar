@@ -13,14 +13,14 @@ export const SignupProgress = ({ currentStep }: SignupProgressProps) => {
     ];
 
     return (
-        <ul className="steps steps-vertical w-full">
+        <ul className="steps steps-vertical w-full font-raleway">
             {steps.map((step) => (
                 <li
                     key={step.id}
                     className={`step ${currentStep === step.id ||
                             steps.findIndex(s => s.id === currentStep) >
                             steps.findIndex(s => s.id === step.id)
-                            ? 'step-primary'
+                            ? 'step-secondary'
                             : ''
                         }`}
                 >

@@ -1,6 +1,5 @@
 // app/signup/page.tsx
 'use client';
-
 // importing modules
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -77,38 +76,57 @@ export default function SignupPage() {
         }
     };
 
+    const foregroundColor = 'primaryPurple';
+
     return (
-        <div className="min-h-screen flex flex-col">
-            <div className="flex-1 container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 mb-8">
-                    <div className="hidden lg:block lg:col-span-1">
-                        {/* empty div for desktop layout */}
-                    </div>
-                    <div className="col-span-1 lg:col-span-3">
-                        <div className="flex justify-center lg:justify-start">
-                            <LoginHeader />
-                        </div>
+        <div className="min-h-screen flex flex-col px-72 py-12 bg-base-100 text-base-content">
+            {/* Header Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 mb-12">
+                <div className="hidden lg:block lg:col-span-1">
+                    {/* empty div for desktop layout */}
+                </div>
+                <div className="col-span-1 lg:col-span-3">
+                    <div className={`flex justify-center lg:justify-start text-${foregroundColor}`}>
+                        <LoginHeader />
                     </div>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            </div>
+
+            {/* Main Content Section */}
+            <div className="flex-1 flex">
+                <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Sidebar */}
                     <div className="hidden lg:block lg:col-span-1">
                         <SignupProgress currentStep={currentStep} />
                     </div>
-                    <div className="col-span-1 lg:col-span-3">
-                        {renderStep()}
-                        <div className="mt-6 flex justify-between">
+
+                    {/* Form Content */}
+                    <div className="col-span-1 lg:col-span-3 flex flex-col justify-between">
+                        <div className="flex-1">
+                            {renderStep()}
+                        </div>
+
+                        {/* Navigation Buttons */}
+                        <div className="flex justify-between">
                             {currentStep !== 'basic-info' && (
                                 <button
-                                    className="btn btn-outline rounded-md"
+                                    className={`
+                                        btn rounded-md
+                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
+                                    `}
                                     onClick={handleBack}
                                     disabled={isSubmitting}
                                 >
                                     Voltar
                                 </button>
                             )}
+                            <div></div>
                             {currentStep !== 'account-info' && (
                                 <button
-                                    className="btn btn-primary rounded-md"
+                                    className={`
+                                        btn rounded-md
+                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
+                                    `}
                                     onClick={handleNext}
                                     disabled={isSubmitting}
                                 >
@@ -117,7 +135,10 @@ export default function SignupPage() {
                             )}
                             {currentStep === 'account-info' && (
                                 <button
-                                    className="btn btn-primary rounded-md"
+                                    className={`
+                                        btn rounded-md
+                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
+                                    `}
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
                                 >

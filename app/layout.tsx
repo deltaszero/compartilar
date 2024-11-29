@@ -3,7 +3,7 @@
 // importing modules and components
 import Script from 'next/script';
 import Analytics from '@components/Analytics';
-import { Inter } from 'next/font/google';
+import { Inter, Raleway, Playfair_Display } from 'next/font/google';
 import { UserProvider } from '@context/userContext';
 // importing types
 import type { Metadata } from "next";
@@ -12,6 +12,16 @@ import "@app/globals.css";
 
 // setting up fonts
 const inter = Inter({ subsets: ["latin"] });
+const raleway = Raleway({
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-raleway',
+})
+const playfair = Playfair_Display({
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-playfair',
+})
 
 // setting up metadata
 export const metadata: Metadata = {
@@ -74,9 +84,9 @@ export default function RootLayout({
 }>) {
     return (
         <html
-            data-theme="forest"
-            className="scroll-smooth antialiased"
+            data-theme="garden"
             suppressHydrationWarning
+            className={`${raleway.variable} ${playfair.variable} scroll-smooth antialiased`}
         >
             <head>
                 {/* Google Analytics */}
@@ -93,9 +103,9 @@ export default function RootLayout({
                     `}
                 </Script>
             </head>
-            <body className={`${inter.className} flex h-full flex-col`}>
+            <body className={`${inter.className} flex flex-col`}>
                 <UserProvider>
-                    <main className="grow">
+                    <main>
                         <Analytics />
                         {children}
                     </main>

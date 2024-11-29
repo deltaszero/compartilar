@@ -24,7 +24,7 @@ export default function UserPage() {
 
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="flex flex-col">
             <section className="flex flex-col justify-center items-center min-h-screen">
                 <div className="flex flex-col items-left gap-4">
                     <div className="avatar">

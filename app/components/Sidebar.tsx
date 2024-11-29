@@ -3,10 +3,13 @@
 // importing modules
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 // importing components
 import NavLink from '@components/ui/NavLink';
 import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
+// importing assets
+import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 
 // animation variants
 const sidebarVariants = {
@@ -51,7 +54,7 @@ const NavItem = ({ href, currentPath, children }: NavItemProps) => {
             whileHover={{ x: isActive ? 0 : 10 }}
             className={`pl-2 ${
                 isActive 
-                    ? 'border-l-2 border-secondaryPurple text-secondaryPurple text-lg font-Raleway font-bold' 
+                    ? 'text-lg font-Raleway font-bold' 
                     : 'font-light'
             }`}
         >
@@ -76,36 +79,62 @@ export default function Sidebar() {
         { path: `/${userData.username}/settings`,  label: 'Configurações' },
     ] : [];
 
+    const foregroundColor = 'primaryPurple';
+
     return (
-        <div>
-            <LoginHeader />
-            <motion.nav
-                initial="hidden"
-                animate="visible"
-                variants={sidebarVariants}
-                className="flex flex-col gap-16"
-            > 
-                {loading ? (
-                    <motion.div variants={itemVariants} className="flex flex-col gap-4 mx-6 my-6">
-                        <div className="skeleton h-8 w-full rounded-md"></div>
-                        <div className="skeleton h-8 w-full rounded-md"></div>
-                    </motion.div>
-                ) : (
-                    <motion.div className="flex flex-col gap-4 my-6" variants={itemVariants}>
-                        {navItems.map(
-                            (item) => (
-                                <NavItem 
-                                    key={item.path}
-                                    href={item.path}
-                                    currentPath={pathname}
-                                >
-                                    {item.label}
-                                </NavItem>
-                            )
-                        )}
-                    </motion.div>
-                )}
-            </motion.nav>
+        <div className="sticky top-0 h-screen overflow-y-none flex flex-col justify-between pb-12 pt-6">
+            <div className={`text-${foregroundColor}`}>
+                <LoginHeader />
+                <motion.nav
+                    initial="hidden"
+                    animate="visible"
+                    variants={sidebarVariants}
+                    className="flex flex-col gap-16"
+                > 
+                    {loading ? (
+                        <motion.div variants={itemVariants} className="flex flex-col gap-4 mx-6 my-6">
+                            <div className="skeleton h-8 w-full rounded-md"></div>
+                            <div className="skeleton h-8 w-full rounded-md"></div>
+                        </motion.div>
+                    ) : (
+                        <motion.div className="flex flex-col gap-4 my-6" variants={itemVariants}>
+                            {navItems.map(
+                                (item) => (
+                                    <NavItem 
+                                        key={item.path}
+                                        href={item.path}
+                                        currentPath={pathname}
+                                    >
+                                        {item.label}
+                                    </NavItem>
+                                )
+                            )}
+                        </motion.div>
+                    )}
+                </motion.nav>
+            </div>
+            <div>
+                <div className={`card card-compact shadow-xl mx-8 bg-white`}>
+                    <Image
+                        src={premiumImage}
+                        alt="Call to Action Image: Hand holding a house"
+                        className='rounded-t-xl'
+                    />
+                    <div className="card-body flex flex-col gap-2">
+                        <p className="card-title font-Raleway text-md">
+                            Aprimore Sua Experiência
+                        </p>
+                        <p className="font-Raleway text-sm">
+                            Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
+                        </p>
+                        <div className="card-actions justify-end">
+                            <button className={`btn rounded-lg hover:border-${foregroundColor} bg-${foregroundColor} text-base-100 hover:bg-white hover:text-${foregroundColor} font-raleway`}>
+                                Ver Planos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         );
 }

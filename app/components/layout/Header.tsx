@@ -30,7 +30,7 @@ const Header = () => {
     };
     // rendering
     return (
-        <header className="navbar bg-neutral text-neutral-content lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
+        <header className="navbar bg-base-100 text-base-content lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden"> {/* lg:hidden */}
@@ -38,7 +38,7 @@ const Header = () => {
                     </div>
                     <ul
                         tabIndex={0}
-                        className="menu menu-sm dropdown-content bg-base-100 rounded-md z-[1] mt-3 w-52 p-2 shadow">
+                        className="menu menu-sm dropdown-content rounded-md z-[1] mt-3 w-52 p-2 shadow">
                         <li><a>Organize</a></li>
                         <li><a>Descomplique</a></li>
                         <li><a>Proteja</a></li>
@@ -57,7 +57,7 @@ const Header = () => {
                     </div>
                 </div>
             </div>
-            <div className="navbar-center hidden lg:flex"> {/* hidden lg:flex */}
+            <div className="navbar-center hidden lg:flex font-raleway font-semibold"> {/* hidden lg:flex */}
                 <ul className="menu menu-horizontal px-1 [&_li>*]:rounded-md">
                     <li ><NavLink href="/">Organize</NavLink></li>
                     <li><NavLink href="/">Descomplique</NavLink></li>
@@ -80,21 +80,21 @@ const Header = () => {
                             </NavLink>
                             <div className="dropdown dropdown-end">
                                 <label tabIndex={0}>
-                                    <div className="avatar ring-1 ring-offset-1 rounded-full hover:ring-offset-info hover:ring-info hover:cursor-pointer">
+                                    <div className="avatar hover:cursor-pointer">
                                         {userData.photoURL ? (
                                             <Image 
                                                 src={userData.photoURL}
-                                                width={32}
-                                                height={32}
+                                                width={34}
+                                                height={34}
                                                 alt="Avatar"
                                                 className="rounded-full"
                                             />
                                         ) : (
-                                            <CameraIcon width={32} height={32} />
+                                            <CameraIcon width={34} height={34} />
                                         )}
                                     </div>
                                 </label>
-                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-md w-52">
+                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52">
                                     <li>
                                         <NavLink href={`/${userData.username}/`}>Perfil</NavLink>
                                     </li>
@@ -108,8 +108,11 @@ const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <a href="/login" className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none" >
-                            <p className="font-normal">
+                        <a href="/login" className="
+                            btn btn-outline rounded-md flex items-center justify-center space-x-2 hover:border-primaryPurple
+                            bg-primaryPurple text-base-100 hover:bg-base-100 hover:text-primaryPurple font-raleway
+                        ">
+                            <p>
                                 Entrar
                             </p>
                             {/* login icon */}
