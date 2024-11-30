@@ -6,7 +6,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     return (
         <div className="flex">
             {/* Sidebar */}
-            <div className="w-1/4 bg-base-300 text-base-content font-raleway">
+            <div className="w-1/4 bg-neutral text-base-100 font-raleway">
                 <Sidebar />
             </div>
             {/* Content Area */}

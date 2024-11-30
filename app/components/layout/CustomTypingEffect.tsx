@@ -55,7 +55,7 @@ export const CustomTypingEffect = () => {
             <div>Plano parental,</div>
             <div className="flex items-center space-x-2">
                 <span>um plano de</span>
-                <div className="text-secondaryPurple min-w-[400px] relative">
+                <div className="text-secondaryGreen min-w-[400px] relative">
                     {text}
                     <motion.span
                         animate={{ opacity: [0, 1, 0] }}

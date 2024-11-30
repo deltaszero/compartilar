@@ -31,7 +31,7 @@ export default function LoginPage() {
     return (
         <div className="h-screen grid grid-cols-1 lg:grid-cols-2">
         {/* Left Sidebar */}
-            <div className="hidden lg:flex flex-col justify-center items-center text-4xl font-raleway bg-base-content text-base-100">
+            <div className="hidden lg:flex flex-col justify-center items-center text-4xl font-raleway bg-neutral text-base-100">
                 <CustomTypingEffect />
             </div>
         {/* Right Content */}

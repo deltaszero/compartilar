@@ -6,9 +6,10 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 // importing components
 import NavLink from '@components/ui/NavLink';
-import LoginHeader from "@components/layout/LoginHeader";
+// import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
 // importing assets
+import CameraIcon from '@assets/icons/camera.svg';
 import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 
 // animation variants
@@ -69,6 +70,10 @@ export default function Sidebar() {
     const { userData, loading } = useUser();
     const pathname = usePathname();
 
+    const capitalizeFirstLetter = (string: string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
+
     const navItems = userData ? [
         { path: `/${userData.username}`,           label: 'Meu Lar' },
         { path: `/${userData.username}/info`,      label: 'Informações' },
@@ -80,11 +85,53 @@ export default function Sidebar() {
     ] : [];
 
     const foregroundColor = 'primaryPurple';
+    const avatarSize = 68;
 
     return (
-        <div className="sticky top-0 h-screen overflow-y-none flex flex-col justify-between pb-12 pt-6">
-            <div className={`text-${foregroundColor}`}>
-                <LoginHeader />
+        <div className="sticky top-0 h-screen overflow-y-none flex flex-col justify-between pb-6 pt-3">
+            <div className={`text-neutral-content`}>
+                {/* avatar */}
+                <div className='flex flex-col items-center space-y-2'>
+                    <div className="avatar">
+                        {loading ? (
+                            <div className={`mask mask-squircle w-${avatarSize}`}>
+                                <div className={`skeleton h-${avatarSize} w-${avatarSize} rounded-md`}></div>
+                            </div>
+                        ) : (
+                            <div className={`mask mask-squircle w-${avatarSize}`}>
+                                {userData && userData.photoURL ? (
+                                    <Image
+                                        src={userData.photoURL}
+                                        width={avatarSize}
+                                        height={avatarSize}
+                                        alt="Avatar"
+                                        priority
+                                    />
+                                ) : (
+                                    <CameraIcon width={avatarSize} height={avatarSize} />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        {loading ? (
+                            <div className="flex flex-col gap-4">
+                                <div className="skeleton h-4 w-72 rounded-md"></div>
+                            </div>
+                        ) : (
+                            <div>
+                                {userData && userData.lastName && userData.firstName ? (
+                                    <div className="text-base-300">
+                                        {capitalizeFirstLetter(userData.firstName)} {capitalizeFirstLetter(userData.lastName)}
+                                    </div>
+                                ) : (
+                                    <p>User not found</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* menu */}
                 <motion.nav
                     initial="hidden"
                     animate="visible"
@@ -114,7 +161,7 @@ export default function Sidebar() {
                 </motion.nav>
             </div>
             <div>
-                <div className={`card card-compact shadow-xl mx-8 bg-white`}>
+                <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
                     <Image
                         src={premiumImage}
                         alt="Call to Action Image: Hand holding a house"

@@ -30,7 +30,7 @@ const Header = () => {
     };
     // rendering
     return (
-        <header className="navbar bg-base-100 text-base-content lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
+        <header className="navbar bg-base-100 text-neutral lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden"> {/* lg:hidden */}
@@ -82,19 +82,20 @@ const Header = () => {
                                 <label tabIndex={0}>
                                     <div className="avatar hover:cursor-pointer">
                                         {userData.photoURL ? (
-                                            <Image 
-                                                src={userData.photoURL}
-                                                width={34}
-                                                height={34}
-                                                alt="Avatar"
-                                                className="rounded-full"
-                                            />
+                                            <div className="mask mask-squircle">
+                                                <Image 
+                                                    src={userData.photoURL}
+                                                    width={34}
+                                                    height={34}
+                                                    alt="Avatar"
+                                                />
+                                            </div>
                                         ) : (
                                             <CameraIcon width={34} height={34} />
                                         )}
                                     </div>
                                 </label>
-                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52">
+                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52 bg-base-100 text-neutral">
                                     <li>
                                         <NavLink href={`/${userData.username}/`}>Perfil</NavLink>
                                     </li>

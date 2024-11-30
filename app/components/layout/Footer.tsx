@@ -8,7 +8,7 @@ import TwitterIcon from '@assets/icons/twitter.svg';
 import Youtube from '@assets/icons/youtube.svg';
 
 const Footer = () => (
-    <footer className="footer items-center p-4 bg-base-100 text-base-content ">
+    <footer className="footer items-center p-4 bg-base-100 text-neutral ">
         <aside className="grid-flow-col items-center">
             <div className="flex items-center space-x-2 justify-center gap-2">
                 <div className="flex items-center space-x-2">
