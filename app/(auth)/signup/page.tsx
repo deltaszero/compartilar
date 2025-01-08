@@ -10,7 +10,7 @@ import { BasicInfoStep } from '@auth/signup/components/BasicInfoStep';
 import { ProfilePictureStep } from '@auth/signup/components/ProfilePictureStep';
 import { AccountInfoStep } from '@auth/signup/components/AccountInfoStep';
 import { useSignupForm } from '@auth/signup/hooks/useSignupForm';
-
+import { KidsInfoStep } from '@auth/signup/components/KidsInfoStep';
 
 export default function SignupPage() {
     // setting up hooks
@@ -26,23 +26,42 @@ export default function SignupPage() {
 
     // setting up functions 
     const handleNext = () => {
-        // validating form data
-        if (currentStep === 'basic-info') {
-            if (!formData.email || !formData.password || !formData.username) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            setCurrentStep('profile-picture');
-        } else if (currentStep === 'profile-picture') {
-            setCurrentStep('account-info');
+        switch (currentStep) {
+            case 'basic-info':
+                if (!formData.email || !formData.password || !formData.username) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                setCurrentStep('profile-picture');
+                break;
+            case 'profile-picture':
+                setCurrentStep('account-info');
+                break;
+            case 'account-info':
+                setCurrentStep('kids-info');
+                break;
+            case 'kids-info':
+                setCurrentStep('verification');
+                break;
+            case 'verification':
+                handleSubmit();
         }
     };
 
     const handleBack = () => {
-        if (currentStep === 'profile-picture') {
-            setCurrentStep('basic-info');
-        } else if (currentStep === 'account-info') {
-            setCurrentStep('profile-picture');
+        switch (currentStep) {
+            case 'profile-picture':
+                setCurrentStep('basic-info');
+                break;
+            case 'account-info':
+                setCurrentStep('profile-picture');
+                break;
+            case 'kids-info':
+                setCurrentStep('account-info');
+                break;
+            case 'verification':
+                setCurrentStep('kids-info');
+                break;
         }
     };
 
@@ -71,6 +90,8 @@ export default function SignupPage() {
                 return <ProfilePictureStep />;
             case 'account-info':
                 return <AccountInfoStep />;
+            case 'kids-info':
+                return <KidsInfoStep />;
             default:
                 return null;
         }
@@ -121,7 +142,7 @@ export default function SignupPage() {
                                 </button>
                             )}
                             <div></div>
-                            {currentStep !== 'account-info' && (
+                            {currentStep !== 'kids-info' && (
                                 <button
                                     className={`
                                         btn rounded-md
@@ -133,7 +154,7 @@ export default function SignupPage() {
                                     Próximo
                                 </button>
                             )}
-                            {currentStep === 'account-info' && (
+                            {currentStep === 'kids-info' && (
                                 <button
                                     className={`
                                         btn rounded-md

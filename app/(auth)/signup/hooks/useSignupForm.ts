@@ -1,7 +1,7 @@
 // hooks/useSignupForm.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SignupFormData, SignupStep } from '../types/signup.types';
+import { SignupFormData, SignupStep, KidInfo } from '../../../../types/signup.types';
 import { auth, db } from '@/app/lib/firebaseConfig';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, runTransaction, serverTimestamp, collection } from 'firebase/firestore';
@@ -20,6 +20,8 @@ interface SignupStore {
     updateFormData: (data: Partial<SignupFormData>) => void;
     resetForm: () => void;
     submitForm: () => Promise<void>;
+    addKid: (kid: KidInfo) => void;
+    removeKid: (index: number) => void;
 }
 
 export const useSignupForm = create<SignupStore>()(
@@ -38,6 +40,22 @@ export const useSignupForm = create<SignupStore>()(
             },
             isSubmitting: false,
             error: null,
+            addKid: (kid) => {
+                set(state => ({
+                    formData: {
+                        ...state.formData,
+                        kids: [...(state.formData.kids || []), kid]
+                    }
+                }));
+            },
+            removeKid: (index) => {
+                set(state => ({
+                    formData: {
+                        ...state.formData,
+                        kids: state.formData.kids?.filter((_, i) => i !== index)
+                    }
+                }));
+            },
             setCurrentStep: (step) => set({ currentStep: step }),
             updateFormData: (data) =>
                 set((state) => ({

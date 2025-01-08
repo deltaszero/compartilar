@@ -1,28 +1,31 @@
 // app/(auth)/signup/components/SignupProgress.tsx
-import { SignupStep } from '@auth/signup/types/signup.types';
+import { SignupStep } from '@/types/signup.types';
 
 interface SignupProgressProps {
     currentStep: SignupStep;
 }
 
 export const SignupProgress = ({ currentStep }: SignupProgressProps) => {
-    const steps = [
-        { id: 'basic-info', label: 'Informações da Conta' },
-        { id: 'profile-picture', label: 'Foto do Perfil' },
-        { id: 'account-info', label: 'Seus Dados Pessoais' },
+    const steps: { key: SignupStep; label: string }[] = [
+        { key: 'basic-info', label: 'Basic Info' },
+        { key: 'profile-picture', label: 'Profile Picture' },
+        { key: 'account-info', label: 'Account Info' },
+        { key: 'kids-info', label: 'Kids Info' },
+        { key: 'verification', label: 'Verification' }
     ];
 
     return (
         <ul className="steps steps-vertical w-full font-raleway">
             {steps.map((step) => (
-                <li
-                    key={step.id}
-                    className={`step ${currentStep === step.id ||
-                            steps.findIndex(s => s.id === currentStep) >
-                            steps.findIndex(s => s.id === step.id)
-                            ? 'step-secondary'
+                <li 
+                    key={step.key} 
+                    className={`step ${
+                        currentStep === step.key || 
+                        steps.findIndex(s => s.key === currentStep) > 
+                        steps.findIndex(s => s.key === step.key) 
+                            ? 'step-primary' 
                             : ''
-                        }`}
+                    }`}
                 >
                     {step.label}
                 </li>
