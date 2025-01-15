@@ -12,11 +12,12 @@ export const AccountInfoStep = () => {
     return (
         <div className="space-y-4">
             <div className="form-control flex flex-col gap-6">
-                {/* <div className="divider">
+            {/* <div className="space-y-4 max-w-2xl mx-auto"> */}
+                <div className="divider">
                     <p className="text-xs text-gray-500">
-                        Quem é você
+                        Quem é você e como poderemos entrar em contato
                     </p>
-                </div> */}
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {/* name */}
                     <div className="flex flex-col">
@@ -45,6 +46,11 @@ export const AccountInfoStep = () => {
                         />
                     </div>
                 </div>
+                {/* <div className="divider">
+                    <p className="text-xs text-gray-500">
+                        Além do seu e-mail, como podemos entrar em contato com você
+                    </p>
+                </div> */}
                 <div className="grid grid-cols-3 gap-4">
                     {/* birth date */}
                     <div className="flex flex-col">
@@ -59,14 +65,6 @@ export const AccountInfoStep = () => {
                             required
                         />
                     </div>
-                    {/* <div className="flex col-span-1 items-center">
-                        <div className="flex flex-col gap-2">
-                            <InfoIcon width={18} height={18} />
-                            <p className="text-xs text-gray-500">
-                                Se não quiser informar, não se preocupe! 😊
-                            </p>
-                        </div>
-                    </div> */}
                     {/* genre */}
                     <div className="flex flex-col">
                         <label className="label">
@@ -83,11 +81,6 @@ export const AccountInfoStep = () => {
                             <option value="Outro">Outro</option>
                         </select>
                     </div>
-                {/* <div className="divider pt-12">
-                    <p className="text-xs text-gray-500">
-                        Além do seu e-mail, como podemos entrar em contato com você
-                    </p>
-                </div> */}
                     {/* phone number */}
                     <div className="flex flex-col">
                         <label className="label">
@@ -108,11 +101,13 @@ export const AccountInfoStep = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className="flex justify-end mt-8">
-                <p className="text-xs text-red-500">
-                    * Campos obrigatórios
-                </p>
+                <div>
+                    <div className="flex justify-end mt-12">
+                        <p className="text-xs text-red-500">
+                            * Campos obrigatórios
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

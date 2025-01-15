@@ -23,7 +23,7 @@ export const SignupProgress = ({ currentStep }: SignupProgressProps) => {
                         currentStep === step.key || 
                         steps.findIndex(s => s.key === currentStep) > 
                         steps.findIndex(s => s.key === step.key) 
-                            ? 'step-primary' 
+                            ? 'step-secondary' 
                             : ''
                     }`}
                 >

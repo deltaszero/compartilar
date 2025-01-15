@@ -21,7 +21,7 @@ export const ProfilePictureStep = () => {
         }
     };
 
-    const foregroundColor = 'primaryPurple';
+    // const foregroundColor = 'primary';
 
     return (
         <div className="flex flex-col items-center gap-6">
@@ -34,7 +34,8 @@ export const ProfilePictureStep = () => {
                         className="object-cover"
                     />
                 ) : (
-                    <div className={`w-full h-full bg-gray-200 flex items-center justify-center text-${foregroundColor}`}>
+                    // <div className={`w-full h-full bg-gray-200 flex items-center justify-center text-${foregroundColor}`}>
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-base-300">
                         <CameraIcon width={44} height={44} />
                     </div>
                 )}
@@ -51,7 +52,8 @@ export const ProfilePictureStep = () => {
             />
 
             <button
-                className={`btn rounded-lg hover:border-${foregroundColor} bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} font-raleway`}
+                // className={`btn rounded-lg hover:border-${foregroundColor} bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} font-raleway`}
+                className="btn rounded-lg hover:border-secondary bg-secondary text-base-100 hover:bg-base-100 hover:text-secondary font-raleway"
                 onClick={() => fileInputRef.current?.click()}
             >
                 {previewUrl ? 'Alterar Foto' : 'Escolher Foto'}

@@ -97,17 +97,19 @@ export default function SignupPage() {
         }
     };
 
-    const foregroundColor = 'primaryPurple';
+    // const foregroundColor = 'primaryPurple';
+    const foregroundColor = 'secondary';
 
     return (
-        <div className="min-h-screen flex flex-col px-72 py-12 bg-base-100 text-base-content">
+        <div className="min-h-screen max-w-screen-2xl mx-auto flex flex-col px-72 py-12 bg-base-100 text-base-content">
             {/* Header Section */}
             <div className="grid grid-cols-1 lg:grid-cols-4 mb-12">
                 <div className="hidden lg:block lg:col-span-1">
                     {/* empty div for desktop layout */}
                 </div>
                 <div className="col-span-1 lg:col-span-3">
-                    <div className={`flex justify-center lg:justify-start text-${foregroundColor}`}>
+                    {/* <div className={`flex justify-center lg:justify-start text-${foregroundColor}`}> */}
+                    <div className="flex justify-center lg:justify-start text-secondary">
                         <LoginHeader />
                     </div>
                 </div>
@@ -163,7 +165,7 @@ export default function SignupPage() {
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? 'Cadastrando...' : 'Finalizar Cadastro'}
+                                    {isSubmitting ? 'Cadastrando...' : 'Finalizar'}
                                 </button>
                             )}
                         </div>

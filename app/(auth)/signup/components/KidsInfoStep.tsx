@@ -4,7 +4,7 @@ import { useSignupForm } from '../hooks/useSignupForm';
 import { KidInfo } from '@/types/signup.types';
 
 export const KidsInfoStep: React.FC = () => {
-    const { formData, addKid, removeKid, setCurrentStep } = useSignupForm();
+    const { formData, addKid, removeKid } = useSignupForm();
     const [newKid, setNewKid] = useState<KidInfo>({
         firstName: '',
         lastName: '',
@@ -26,17 +26,27 @@ export const KidsInfoStep: React.FC = () => {
         }
     };
 
-    const handleNextStep = () => {
-        setCurrentStep('verification');
-    };
-
-    const handlePreviousStep = () => {
-        setCurrentStep('account-info');
-    };
+    const calculateAge = (birthDate: string) => {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let years = today.getFullYear() - birth.getFullYear();
+        let months = today.getMonth() - birth.getMonth();
+        if (months < 0) {
+            years -= 1;
+            months += 12;
+        }
+        const yearString = years > 0 ? `${years} ano${years > 1 ? "s" : ""}` : "";
+        const monthString = months > 0 ? `${months} mes${months > 1 ? "es" : ""}` : "";
+        return [yearString, monthString].filter(Boolean).join(" e ");
+    }
 
     return (
-        <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-center">Kids Information</h2>
+        <div className="space-y-4">
+            <div className="divider">
+                <p className="text-xs text-gray-500">
+                    Aqui você adiciona filhos e filhas, mas se quiser pode deixar pra depois
+                </p>
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
                 <input
@@ -70,25 +80,27 @@ export const KidsInfoStep: React.FC = () => {
                     <option value="other">Other</option>
                 </select>
             </div>
-
-            <button 
-                onClick={handleAddKid}
-                className="btn btn-primary w-full"
-                disabled={!newKid.firstName || !newKid.lastName || !newKid.birthDate}
-            >
-                Add Kid
-            </button>
-
+            <div className="flex justify-center">
+                <button 
+                    onClick={handleAddKid}
+                    className="btn btn-primary w-1/4"
+                    disabled={!newKid.firstName || !newKid.lastName || !newKid.birthDate}
+                >
+                    Adicionar
+                </button>
+            </div>
             {formData.kids && formData.kids.length > 0 && (
-                <div className="mt-4">
-                    <h3 className="text-xl font-semibold mb-2">Added Kids</h3>
+                <div className="mt-4 pt-4">
+                    <p className="my-2 font-semibold">
+                        Seus amoresss 💕
+                    </p>
                     <ul className="list-disc pl-5">
                         {formData.kids.map((kid, index) => (
-                            <li key={index} className="flex justify-between items-center">
-                                {kid.firstName} {kid.lastName}
+                            <li key={index} className="flex justify-between items-center my-2">
+                                {kid.firstName} {kid.lastName}, {calculateAge(kid.birthDate)}
                                 <button 
                                     onClick={() => removeKid(index)}
-                                    className="btn btn-error btn-xs"
+                                    className="btn btn-secondary btn-xs"
                                 >
                                     Remove
                                 </button>
@@ -97,22 +109,6 @@ export const KidsInfoStep: React.FC = () => {
                     </ul>
                 </div>
             )}
-
-            <div className="flex justify-between mt-4">
-                <button 
-                    onClick={handlePreviousStep} 
-                    className="btn btn-ghost"
-                >
-                    Back
-                </button>
-                <button 
-                    onClick={handleNextStep} 
-                    className="btn btn-primary"
-                    disabled={!formData.kids || formData.kids.length === 0}
-                >
-                    Next
-                </button>
-            </div>
         </div>
     );
 };
