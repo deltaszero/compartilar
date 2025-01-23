@@ -35,7 +35,7 @@ export const CustomTypingEffect = () => {
                 setTimeout(() => setIsDeleting(true), 2000); // Wait before starting to delete
             } else if (isDeleting && text === '') {
                 setIsDeleting(false);
-                console.log(currentWordIndex);
+                // console.log(currentWordIndex);
                 setDelta(500); // Pause before starting new word
                 let nextWordIndex = currentWordIndex;
                 while (nextWordIndex === currentWordIndex) {

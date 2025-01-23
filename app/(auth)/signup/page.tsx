@@ -1,177 +1,260 @@
-// app/signup/page.tsx
 'use client';
-// importing modules
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-// importing components
-import LoginHeader from "@components/layout/LoginHeader";
-import { SignupProgress } from '@auth/signup/components/SignupProgress';
-import { BasicInfoStep } from '@auth/signup/components/BasicInfoStep';
-import { ProfilePictureStep } from '@auth/signup/components/ProfilePictureStep';
-import { AccountInfoStep } from '@auth/signup/components/AccountInfoStep';
-import { useSignupForm } from '@auth/signup/hooks/useSignupForm';
-import { KidsInfoStep } from '@auth/signup/components/KidsInfoStep';
+// Firebase Core Imports
+// import { initializeApp } from 'firebase/app';
+// import { getAnalytics, Analytics } from 'firebase/analytics';
+// Firebase Authentication
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+// Firebase Firestore
+import {
+    // initializeFirestore,
+    // persistentLocalCache,
+    // persistentMultipleTabManager,
+    doc,
+    setDoc
+} from 'firebase/firestore';
+// Firebase Storage
+// import { getStorage } from 'firebase/storage';
+// Local Types and Config
+import { SignupFormData, SignupStep, KidInfo } from '@/types/signup.types';
+import { auth, db } from '@/app/lib/firebaseConfig';
+
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface SignupStore {
+    formData: SignupFormData;
+    currentStep: SignupStep;
+    updateFormData: (data: Partial<SignupFormData>) => void;
+    // resetFormData: () => void;
+    addKid: (kid: KidInfo) => void;
+    removeKid: (kidId: string) => void;
+    submitForm: () => Promise<void>;
+}
+
+const useSignupStore = create<SignupStore>()(
+    persist(
+        (set, get) => ({
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            // Initial Form Data
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            formData: {
+                email: '',
+                password: '',
+                confirmPassword: '',
+                username: '',
+                uid: '',
+                photoURL: '',
+                firstName: '',
+                lastName: '',
+                phoneNumber: '',
+                birthDate: '',
+                kids: {},
+            },
+            currentStep: SignupStep.BASIC_INFO,
+            //
+            updateFormData: (data) => set((state) => ({ formData: { ...state.formData, ...data } })),
+            //
+            // resetFormData: () => set({ formData: { email: '', password: '', confirmPassword: '', username: '', uid: '', photoURL: '', firstName: '', lastName: '', phoneNumber: '', birthDate: '', kids: {} } }),
+            //
+            addKid: (kid) => set((state) => ({ formData: { ...state.formData, kids: { ...state.formData.kids, [kid.id]: kid } } })),
+            removeKid: (kidId) => set((state) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { [kidId]: removedKid, ...remainingKids } = state.formData.kids;
+                return { formData: { ...state.formData, kids: remainingKids } };
+            }),
+            //
+            submitForm: async () => {
+                const { email, password, username, firstName, lastName, phoneNumber, birthDate, kids } = get().formData;
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    await updateProfile(user, { displayName: username });
+
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        username,
+                        firstName,
+                        lastName,
+                        phoneNumber,
+                        birthDate,
+                        kids: Object.keys(kids),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    };
+
+                    await setDoc(doc(db, 'account_info', user.uid), userData);
+
+                    for (const kidId in kids) {
+                        const kid = kids[kidId];
+                        await setDoc(doc(db, 'children', kidId), {
+                            ...kid,
+                            parentId: user.uid,
+                        });
+                    }
+
+                    console.log('User created successfully:', user.uid);
+                } catch (error) {
+                    console.error('Error during signup:', error);
+                }
+            },
+        }),
+        {
+            name: 'signup-store',
+            partialize: (state) => ({
+                formData: state.formData,
+                currentStep: state.currentStep,
+            }),
+        }
+    )
+);
 
 export default function SignupPage() {
-    // setting up hooks
-    const {
-        currentStep,
-        setCurrentStep,
-        submitForm,
-        isSubmitting,
-        error,
-        formData
-    } = useSignupForm();
-    const router = useRouter();
-
-    // setting up functions 
-    const handleNext = () => {
-        switch (currentStep) {
-            case 'basic-info':
-                if (!formData.email || !formData.password || !formData.username) {
-                    alert('Please fill in all required fields');
-                    return;
-                }
-                setCurrentStep('profile-picture');
-                break;
-            case 'profile-picture':
-                setCurrentStep('account-info');
-                break;
-            case 'account-info':
-                setCurrentStep('kids-info');
-                break;
-            case 'kids-info':
-                setCurrentStep('verification');
-                break;
-            case 'verification':
-                handleSubmit();
-        }
-    };
-
-    const handleBack = () => {
-        switch (currentStep) {
-            case 'profile-picture':
-                setCurrentStep('basic-info');
-                break;
-            case 'account-info':
-                setCurrentStep('profile-picture');
-                break;
-            case 'kids-info':
-                setCurrentStep('account-info');
-                break;
-            case 'verification':
-                setCurrentStep('kids-info');
-                break;
-        }
-    };
-
-    const handleSubmit = async () => {
-        try {
-            await submitForm();
-            router.push('/');
-        } catch (error) {
-            console.error('Signup error:', error);
-            // Error is already handled in the store
-        }
-    };
-
-    // Display error if exists
-    useEffect(() => {
-        if (error) {
-            alert(error);
-        }
-    }, [error]);
-
-    const renderStep = () => {
-        switch (currentStep) {
-            case 'basic-info':
-                return <BasicInfoStep />;
-            case 'profile-picture':
-                return <ProfilePictureStep />;
-            case 'account-info':
-                return <AccountInfoStep />;
-            case 'kids-info':
-                return <KidsInfoStep />;
-            default:
-                return null;
-        }
-    };
-
-    // const foregroundColor = 'primaryPurple';
-    const foregroundColor = 'secondary';
+    const { 
+        formData,
+        // currentStep,
+        updateFormData,
+        addKid,
+        removeKid,
+        submitForm 
+    } = useSignupStore();
 
     return (
-        <div className="min-h-screen max-w-screen-2xl mx-auto flex flex-col px-72 py-12 bg-base-100 text-base-content">
-            {/* Header Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 mb-12">
-                <div className="hidden lg:block lg:col-span-1">
-                    {/* empty div for desktop layout */}
-                </div>
-                <div className="col-span-1 lg:col-span-3">
-                    {/* <div className={`flex justify-center lg:justify-start text-${foregroundColor}`}> */}
-                    <div className="flex justify-center lg:justify-start text-secondary">
-                        <LoginHeader />
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content Section */}
-            <div className="flex-1 flex">
-                <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Sidebar */}
-                    <div className="hidden lg:block lg:col-span-1">
-                        <SignupProgress currentStep={currentStep} />
-                    </div>
-
-                    {/* Form Content */}
-                    <div className="col-span-1 lg:col-span-3 flex flex-col justify-between">
-                        <div className="flex-1">
-                            {renderStep()}
+        <div className="p-4">
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                submitForm();
+            }} className="flex flex-col gap-4">
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={(e) => updateFormData({ email: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => updateFormData({ password: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={formData.username}
+                    onChange={(e) => updateFormData({ username: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="text"
+                    placeholder="First Name"
+                    value={formData.firstName}
+                    onChange={(e) => updateFormData({ firstName: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={formData.lastName}
+                    onChange={(e) => updateFormData({ lastName: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="text"
+                    placeholder="Phone Number"
+                    value={formData.phoneNumber}
+                    onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
+                    className="input input-bordered"
+                />
+                <input
+                    type="date"
+                    placeholder="Birth Date"
+                    value={formData.birthDate}
+                    onChange={(e) => updateFormData({ birthDate: e.target.value })}
+                    className="input input-bordered"
+                />
+                <div className="flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold">Add Kids</h3>
+                    {Object.values(formData.kids).map((kid) => (
+                        <div key={kid.id} className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="Kid's First Name"
+                                value={kid.firstName}
+                                onChange={(e) => addKid({ ...kid, firstName: e.target.value })}
+                                className="input input-bordered"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Kid's Last Name"
+                                value={kid.lastName}
+                                onChange={(e) => addKid({ ...kid, lastName: e.target.value })}
+                                className="input input-bordered"
+                            />
+                            <input
+                                type="date"
+                                placeholder="Kid's Birth Date"
+                                value={kid.birthDate}
+                                onChange={(e) => addKid({ ...kid, birthDate: e.target.value })}
+                                className="input input-bordered"
+                            />
+                            <select
+                                value={kid.gender || ''}
+                                onChange={(e) => addKid({ ...kid, gender: e.target.value as 'male' | 'female' | 'other' | null })}
+                                className="select select-bordered"
+                            >
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <select
+                                value={kid.relationship || ''}
+                                onChange={(e) => addKid({ ...kid, relationship: e.target.value as 'biological' | 'adopted' | 'guardian' | null })}
+                                className="select select-bordered"
+                            >
+                                <option value="">Select Relationship</option>
+                                <option value="biological">Biological</option>
+                                <option value="adopted">Adopted</option>
+                                <option value="guardian">Guardian</option>
+                            </select>
+                            <button
+                                type="button"
+                                onClick={() => removeKid(kid.id)}
+                                className="btn btn-error"
+                            >
+                                Remove
+                            </button>
                         </div>
-
-                        {/* Navigation Buttons */}
-                        <div className="flex justify-between">
-                            {currentStep !== 'basic-info' && (
-                                <button
-                                    className={`
-                                        btn rounded-md
-                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
-                                    `}
-                                    onClick={handleBack}
-                                    disabled={isSubmitting}
-                                >
-                                    Voltar
-                                </button>
-                            )}
-                            <div></div>
-                            {currentStep !== 'kids-info' && (
-                                <button
-                                    className={`
-                                        btn rounded-md
-                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
-                                    `}
-                                    onClick={handleNext}
-                                    disabled={isSubmitting}
-                                >
-                                    Próximo
-                                </button>
-                            )}
-                            {currentStep === 'kids-info' && (
-                                <button
-                                    className={`
-                                        btn rounded-md
-                                        bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} hover:border-${foregroundColor} font-raleway
-                                    `}
-                                    onClick={handleSubmit}
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? 'Cadastrando...' : 'Finalizar'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => addKid({
+                            id: Date.now().toString(),
+                            firstName: '',
+                            lastName: '',
+                            birthDate: '',
+                            gender: null,
+                            relationship: null
+                        })}
+                        className="btn btn-secondary"
+                    >
+                        Add Kid
+                    </button>
                 </div>
-            </div>
+                <button type="submit" className="btn btn-primary">
+                    Sign Up
+                </button>
+            </form>
         </div>
     );
 }

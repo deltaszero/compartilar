@@ -1,157 +1,130 @@
-// hooks/useSignupForm.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { SignupFormData, SignupStep, KidInfo } from '../../../../types/signup.types';
-import { auth, db } from '@/app/lib/firebaseConfig';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, runTransaction, serverTimestamp, collection } from 'firebase/firestore';
+// // app/(auth)/signup/hooks/useSignupForm.tsx
+// import { useState } from 'react';
+// import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+// import { doc, setDoc } from 'firebase/firestore';
+// import { SignupFormData, SignupStep, KidInfo } from '@/types/signup.types';
+// import { auth, db } from '@/app/lib/firebaseConfig';
 
-// Type guard improvement
-const isValidUsername = (username: string | undefined): username is string => {
-    return typeof username === 'string' && username.length >= 3; // Added minimum length check
-};
+// export const useSignupForm = () => {
+//     const [formData, setFormData] = useState<SignupFormData>({
+//         email: '',
+//         password: '',
+//         confirmPassword: '',
+//         username: '',
+//         uid: '',
+//         photoURL: '',
+//         firstName: '',
+//         lastName: '',
+//         phoneNumber: '',
+//         birthDate: '',
+//         kids: {},
+//     });
 
-interface SignupStore {
-    currentStep: SignupStep;
-    formData: Partial<SignupFormData>;
-    isSubmitting: boolean;
-    error: string | null;
-    setCurrentStep: (step: SignupStep) => void;
-    updateFormData: (data: Partial<SignupFormData>) => void;
-    resetForm: () => void;
-    submitForm: () => Promise<void>;
-    addKid: (kid: KidInfo) => void;
-    removeKid: (index: number) => void;
-}
+//     const [currentStep, setCurrentStep] = useState<SignupStep>('basic-info');
+//     const [isSubmitting, setIsSubmitting] = useState(false);
+//     const [error, setError] = useState<string | null>(null);
 
-export const useSignupForm = create<SignupStore>()(
-    persist(
-        (set, get) => ({
-            currentStep: 'basic-info',
-            formData: {
-                email: '',
-                password: '',
-                username: '',
-                photoURL: '',
-                firstName: '',
-                lastName: '',
-                phoneNumber: '',
-                birthDate: '',
-            },
-            isSubmitting: false,
-            error: null,
-            addKid: (kid) => {
-                set(state => ({
-                    formData: {
-                        ...state.formData,
-                        kids: [...(state.formData.kids || []), kid]
-                    }
-                }));
-            },
-            removeKid: (index) => {
-                set(state => ({
-                    formData: {
-                        ...state.formData,
-                        kids: state.formData.kids?.filter((_, i) => i !== index)
-                    }
-                }));
-            },
-            setCurrentStep: (step) => set({ currentStep: step }),
-            updateFormData: (data) =>
-                set((state) => ({
-                    formData: { ...state.formData, ...data },
-                })),
-            resetForm: () =>
-                set({
-                    currentStep: 'basic-info',
-                    formData: {},
-                    error: null,
-                    isSubmitting: false,
-                }),
-            submitForm: async () => {
-                const { formData } = get();
-                set({ isSubmitting: true, error: null });
+//     const updateFormData = (newData: Partial<SignupFormData>) => {
+//         setFormData((prevData) => ({
+//             ...prevData,
+//             ...newData,
+//         }));
+//     };
 
-                try {
-                    // Validation
-                    if (!formData.email || !formData.password || !isValidUsername(formData.username)) {
-                        throw new Error('Please fill in all required fields');
-                    }
+//     const addKid = (kid: KidInfo) => {
+//         setFormData((prevData) => ({
+//             ...prevData,
+//             kids: {
+//                 ...prevData.kids,
+//                 [kid.id]: kid,
+//             },
+//         }));
+//     };
 
-                    // Create user account
-                    const userCredential = await createUserWithEmailAndPassword(
-                        auth,
-                        formData.email,
-                        formData.password
-                    );
-                    const user = userCredential.user;
+//     const updateKid = (kidId: string, updatedKid: Partial<KidInfo>) => {
+//         setFormData((prevData) => ({
+//             ...prevData,
+//             kids: {
+//                 ...prevData.kids,
+//                 [kidId]: {
+//                     ...prevData.kids[kidId],
+//                     ...updatedKid,
+//                 },
+//             },
+//         }));
+//     };
 
-                    // Prepare user data
-                    const userData = {
-                        username: formData.username,
-                        email: formData.email,
-                        photoURL: formData.photoURL || '',
-                        firstName: formData.firstName || '',
-                        lastName: formData.lastName || '',
-                        phoneNumber: formData.phoneNumber || '',
-                        birthDate: formData.birthDate || '',
-                        createdAt: serverTimestamp(),
-                        uid: user.uid
-                    };
+//     const removeKid = (kidId: string) => {
+//         setFormData((prevData) => {
+//             const updatedKids = { ...prevData.kids };
+//             delete updatedKids[kidId];
+//             return {
+//                 ...prevData,
+//                 kids: updatedKids,
+//             };
+//         });
+//     };
 
-                    // Transaction to create both documents
-                    await runTransaction(db, async (transaction) => {
-                        // Use collection references
-                        const usernamesRef = collection(db, 'usernames');
-                        const usernameDocRef = doc(usernamesRef, formData.username);
-                        const userDocRef = doc(db, 'account_info', user.uid);
+//     const submitForm = async () => {
+//         setIsSubmitting(true);
+//         setError(null);
 
-                        const usernameDoc = await transaction.get(usernameDocRef);
+//         try {
+//             // Create user with email and password
+//             const userCredential = await createUserWithEmailAndPassword(
+//                 auth,
+//                 formData.email,
+//                 formData.password
+//             );
 
-                        if (usernameDoc.exists()) {
-                            throw new Error('Username is already taken');
-                        }
+//             const user = userCredential.user;
 
-                        // Set both documents
-                        transaction.set(usernameDocRef, {
-                            uid: user.uid,
-                            username: formData.username,
-                            createdAt: serverTimestamp()
-                        });
+//             // Update user profile with additional information
+//             await updateProfile(user, {
+//                 displayName: formData.username,
+//                 photoURL: formData.photoURL,
+//             });
 
-                        transaction.set(userDocRef, userData);
-                    });
+//             // Save user data to Firestore
+//             const userDocRef = doc(db, 'users', user.uid);
+//             await setDoc(userDocRef, {
+//                 uid: user.uid,
+//                 email: formData.email,
+//                 username: formData.username,
+//                 photoURL: formData.photoURL,
+//                 firstName: formData.firstName,
+//                 lastName: formData.lastName,
+//                 phoneNumber: formData.phoneNumber,
+//                 birthDate: formData.birthDate,
+//                 kids: formData.kids,
+//                 createdAt: new Date(),
+//                 updatedAt: new Date(),
+//             });
 
-                    // Update auth profile
-                    await updateProfile(user, {
-                        displayName: formData.username,
-                        photoURL: formData.photoURL || ''
-                    });
+//             // Redirect to home page after successful signup
+//             window.location.href = '/';
+//         } catch (err) {
+//             if (err instanceof Error) {
+//                 setError(err.message);
+//             } else {
+//                 setError('An error occurred. Please try again later.');
+//             }
+//         } finally {
+//             setIsSubmitting(false);
+//         }
+//     };
 
-                    // Reset form
-                    get().resetForm();
-
-                    // Force reload user data
-                    await user.reload();
-
-                    // Redirect
-                    window.location.href = `/${formData.username}`;
-
-                } catch (error) {
-                    console.error('Signup error:', error);
-                    set({ error: error instanceof Error ? error.message : 'An error occurred' });
-                    throw error;
-                } finally {
-                    set({ isSubmitting: false });
-                }
-            }
-        }),
-        {
-            name: 'signup-storage',
-            partialize: (state) => ({
-                formData: state.formData,
-                currentStep: state.currentStep
-            })
-        }
-    )
-);
+//     return {
+//         formData,
+//         updateFormData,
+//         addKid,
+//         updateKid,
+//         removeKid,
+//         currentStep,
+//         setCurrentStep,
+//         submitForm,
+//         isSubmitting,
+//         error,
+//         setFormData
+//     };
+// };

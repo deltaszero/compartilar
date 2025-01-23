@@ -1,9 +1,11 @@
+// context/userContext.tsx
 'use client';
 
 import React, { createContext, useState, useEffect } from 'react';
 import { auth, db } from '@/app/lib/firebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { KidInfo } from '@/types/signup.types';
 
 interface UserData {
     username: string;
@@ -13,6 +15,7 @@ interface UserData {
     lastName?: string;
     phoneNumber?: string;
     birthDate?: string;
+    kids?: Record<string, KidInfo>;
     createdAt?: typeof serverTimestamp;
     uid: string;
 }
@@ -38,18 +41,23 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         let unsubscribeFirestore: (() => void) | undefined;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-            console.log('Auth state changed:', currentUser?.uid);
             setUser(currentUser);
-            
+
             if (currentUser) {
                 try {
                     const userDocRef = doc(db, 'account_info', currentUser.uid);
                     unsubscribeFirestore = onSnapshot(
-                        userDocRef, 
+                        userDocRef,
                         (doc) => {
-                            console.log('Firestore data:', doc.data());
                             if (doc.exists()) {
-                                setUserData(doc.data() as UserData);
+                                const userData = doc.data() as UserData;
+                                // Enhanced verification
+                                if (userData.uid === currentUser.uid) {
+                                    setUserData(userData);
+                                } else {
+                                    console.error('User ID mismatch');
+                                    setUserData(null);
+                                }
                             } else {
                                 console.error('No user data found in Firestore');
                                 setUserData(null);
@@ -57,7 +65,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                             setLoading(false);
                         },
                         (error) => {
-                            console.error('Error fetching user data:', error);
+                            console.error('Firestore permissions error:', error);
+                            if (error.code === 'permission-denied') {
+                                console.error('Check Firestore security rules and authentication');
+                            }
+                            setUserData(null);
                             setLoading(false);
                         }
                     );
