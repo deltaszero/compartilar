@@ -1,11 +1,13 @@
 'use client';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile, deleteUser, User } from 'firebase/auth';
+import { doc, setDoc, runTransaction, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, FirebaseStorage, deleteObject } from 'firebase/storage';
 import { SignupFormData, SignupStep, KidInfo } from '@/types/signup.types';
-import { auth, db } from '@/app/lib/firebaseConfig';
+import { auth, db, storage } from '@/app/lib/firebaseConfig';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { FirebaseError } from 'firebase/app';
 
 interface SignupStore {
     formData: SignupFormData;
@@ -52,41 +54,116 @@ const useSignupStore = create<SignupStore>()(
             }),
             submitForm: async () => {
                 const { formData } = get();
+                let user: User | null = null;
+                let photoURL = formData.photoURL;
+                
                 try {
+                    // Validate username format
+                    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+                    if (!usernameRegex.test(formData.username)) {
+                        throw new Error('Invalid username format');
+                    }
+            
+                    // Create Firebase auth user
                     const userCredential = await createUserWithEmailAndPassword(
                         auth, 
                         formData.email, 
                         formData.password
                     );
-                    const user = userCredential.user;
-
-                    await updateProfile(user, { displayName: formData.username });
-
-                    const userData = {
+                    user = userCredential.user;
+            
+                    // Force token refresh to ensure valid credentials for subsequent operations
+                    await user.getIdToken(true);
+            
+                    // Handle profile photo upload directly to permanent location
+                    if (photoURL.startsWith('data:image')) {
+                        const storageRef = ref(storage, `profile_photos/${user.uid}/profile.jpg`);
+                        const blob = await fetch(photoURL).then(r => r.blob());
+                        await uploadBytes(storageRef, blob);
+                        photoURL = await getDownloadURL(storageRef);
+                    }
+            
+                    // Update user profile
+                    await updateProfile(user, {
+                        displayName: formData.username,
+                        photoURL: photoURL
+                    });
+            
+                    // Prepare atomic batched writes
+                    const batch = writeBatch(db);
+                    
+                    // Reserve username
+                    const usernameRef = doc(db, 'usernames', formData.username);
+                    batch.set(usernameRef, {
                         uid: user.uid,
-                        email: formData.email,
-                        username: formData.username,
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        phoneNumber: formData.phoneNumber,
-                        birthDate: formData.birthDate,
+                        createdAt: new Date()
+                    });
+                        
+                    // Create account info
+                    const accountInfoRef = doc(db, 'account_info', user.uid);
+                    batch.set(accountInfoRef, {
+                        ...formData,
+                        uid: user.uid,
+                        photoURL: photoURL,
                         kids: Object.keys(formData.kids),
                         createdAt: new Date(),
                         updatedAt: new Date(),
-                    };
-
-                    await setDoc(doc(db, 'account_info', user.uid), userData);
-
-                    for (const kidId in formData.kids) {
-                        const kid = formData.kids[kidId];
-                        await setDoc(doc(db, 'children', kidId), {
+                    });
+            
+                    // Create children documents
+                    Object.entries(formData.kids).forEach(([kidId, kid]) => {
+                        const childRef = doc(db, 'children', kidId);
+                        batch.set(childRef, {
                             ...kid,
-                            parentId: user.uid,
+                            parentId: user!.uid,
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
                         });
-                    }
+                    });
+            
+                    // Commit all writes atomically
+                    await batch.commit();
+            
+                    // Clear persisted data
+                    localStorage.removeItem('signup-store');
+                    window.location.href = `/${formData.username}`;
                 } catch (error) {
                     console.error('Signup error:', error);
-                    throw error;
+                    // Cleanup created resources on failure
+                    try {              
+                        // Cleanup any successfully created Firestore documents
+                        if (user?.uid) {
+                            const batch = writeBatch(db);
+                            batch.delete(doc(db, 'usernames', formData.username));
+                            batch.delete(doc(db, 'account_info', user.uid));
+                            Object.keys(formData.kids).forEach(kidId => 
+                                batch.delete(doc(db, 'children', kidId))
+                            );
+                            await batch.commit();
+                        }
+                        
+                    } catch (cleanupError) {
+                        console.error('Cleanup error:', cleanupError);
+                    }
+                    try {
+                        if (user) {
+                            const photoRef = ref(storage, `profile_photos/${user.uid}/profile.jpg`);
+                            await deleteObject(photoRef);
+                        }
+                        
+                    } catch (deleteError) {
+                        console.error('Photo cleanup error:', deleteError);
+                    }
+            
+                    // Handle specific error cases
+                    const err = error as FirebaseError;
+                    if (err.code === 'auth/email-already-in-use') {
+                        throw new Error('This email is already registered');
+                    }
+                    if (err.code === 'permission-denied') {
+                        throw new Error('Username is already taken');
+                    }
+                    throw new Error('Registration failed. Please try again');
                 }
             },
             setCurrentStep: (step) => set({ currentStep: step }),
@@ -108,7 +185,13 @@ const useSignupStore = create<SignupStore>()(
         {
             name: 'signup-store',
             partialize: (state) => ({
-                formData: state.formData,
+                formData: {
+                    ...state.formData,
+                    // Don't persist data URLs to prevent storage bloat
+                    photoURL: state.formData.photoURL.startsWith('data:image') 
+                        ? '' 
+                        : state.formData.photoURL
+                },
                 currentStep: state.currentStep
             }),
         }
@@ -116,6 +199,7 @@ const useSignupStore = create<SignupStore>()(
 );
 
 export default function SignupPage() {
+    const [hasHydrated, setHasHydrated] = useState(false);
     const { 
         formData,
         currentStep,
@@ -126,6 +210,11 @@ export default function SignupPage() {
         setCurrentStep,
         validateCurrentStep
     } = useSignupStore();
+
+    // Add hydration effect
+    useEffect(() => {
+        setHasHydrated(true);
+    }, []);
     
     const currentStepIndex = stepsOrder.indexOf(currentStep);
 
@@ -139,13 +228,27 @@ export default function SignupPage() {
         setCurrentStep(stepsOrder[newIndex]);
     };
 
+    const [submissionError, setSubmissionError] = useState<string | null>(null);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (currentStep !== SignupStep.VERIFICATION) return;
         try {
+            setSubmissionError(null);
             await submitForm();
         } catch (error) {
             console.error('Submission error:', error);
+            if (error instanceof Error) {
+                setSubmissionError(
+                    error.message || 'An error occurred during registration. Please try again.'
+                );
+            } else {
+                setSubmissionError('An error occurred during registration. Please try again.');
+            }
+            // Reset to account info step on validation errors
+            if (error instanceof Error && error.message.includes('email')) {
+                setCurrentStep(SignupStep.BASIC_INFO);
+            }
         }
     };
 
@@ -160,6 +263,16 @@ export default function SignupPage() {
                         value={formData.email}
                         onChange={(e) => updateFormData({ email: e.target.value })}
                         className="input input-bordered"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={formData.username}
+                        onChange={(e) => updateFormData({ username: e.target.value })}
+                        className="input input-bordered"
+                        pattern="^[a-zA-Z0-9_-]{3,20}$"
+                        title="Username must be 3-20 characters (letters, numbers, underscores, hyphens)"
                         required
                     />
                     <input
@@ -186,19 +299,34 @@ export default function SignupPage() {
             {currentStep === SignupStep.PROFILE_PICTURE && (
                 <div className="flex flex-col items-center gap-4">
                     <input
-                        type="url"
-                        placeholder="Profile Image URL"
-                        value={formData.photoURL}
-                        onChange={(e) => updateFormData({ photoURL: e.target.value })}
-                        className="input input-bordered w-full"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                    updateFormData({ 
+                                        photoURL: reader.result as string 
+                                    });
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                        className="file-input file-input-bordered w-full"
                         required
                     />
                     {formData.photoURL && (
-                        <img 
-                            src={formData.photoURL} 
-                            alt="Profile Preview" 
-                            className="w-32 h-32 rounded-full object-cover"
-                        />
+                        <div className="relative group">
+                            <img 
+                                src={formData.photoURL} 
+                                alt="Profile preview" 
+                                className="w-32 h-32 rounded-full object-cover shadow-lg"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-white text-sm">Change Photo</span>
+                            </div>
+                        </div>
                     )}
                 </div>
             )}
@@ -329,35 +457,47 @@ export default function SignupPage() {
             )}
 
             {/* NAVIGATION CONTROLS */}
-            <div className="flex justify-between">
-                {currentStepIndex > 0 && (
-                    <button
-                        type="button"
-                        onClick={() => handleStepNavigation('prev')}
-                        className="btn btn-ghost"
-                    >
-                        ← Previous
-                    </button>
-                )}
-                
-                {currentStepIndex < stepsOrder.length - 1 ? (
-                    <button
-                        type="button"
-                        onClick={() => handleStepNavigation('next')}
-                        className="btn btn-primary ml-auto"
-                        disabled={!validateCurrentStep()}
-                    >
-                        Next →
-                    </button>
-                ) : (
-                    <button
-                        type="submit"
-                        className="btn btn-success ml-auto"
-                    >
-                        Complete Registration
-                    </button>
-                )}
-            </div>
+            {hasHydrated && ( // Add conditional rendering
+                <div className="flex justify-between">
+                    {currentStepIndex > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => handleStepNavigation('prev')}
+                            className="btn btn-ghost"
+                        >
+                            ← Previous
+                        </button>
+                    )}
+                    
+                    {currentStepIndex < stepsOrder.length - 1 ? (
+                        <button
+                            type="button"
+                            onClick={() => handleStepNavigation('next')}
+                            className="btn btn-primary ml-auto"
+                            disabled={!validateCurrentStep()}
+                        >
+                            Next →
+                        </button>
+                    ) : (
+                        <button
+                            type="submit"
+                            className="btn btn-success ml-auto"
+                        >
+                            Complete Registration
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* ERROR DISPLAY */}
+            {submissionError && (
+                <div className="alert alert-error mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{submissionError}</span>
+                </div>
+            )}
         </form>
     );
 }

@@ -1,10 +1,10 @@
 // context/userContext.tsx
 'use client';
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useContext } from 'react';
 import { auth, db } from '@/app/lib/firebaseConfig';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged, User, setPersistence, browserSessionPersistence } from 'firebase/auth';
+import { collection, doc, onSnapshot, query, serverTimestamp, where } from 'firebase/firestore';
 import { KidInfo } from '@/types/signup.types';
 
 interface UserData {
@@ -15,7 +15,7 @@ interface UserData {
     lastName?: string;
     phoneNumber?: string;
     birthDate?: string;
-    kids?: Record<string, KidInfo>;
+    kids?: Record<string, { id: string }>;
     createdAt?: typeof serverTimestamp;
     uid: string;
 }
@@ -32,76 +32,111 @@ export const UserContext = createContext<UserContextType>({
     loading: true,
 });
 
+export const useUser = () => {
+    const context = useContext(UserContext);
+    if (!context) {
+        throw new Error('useUser must be used within a UserProvider');
+    }
+    return context;
+};
+
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [kidsData, setKidsData] = useState<Record<string, KidInfo>>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let unsubscribeFirestore: (() => void) | undefined;
+        let unsubscribeAccount: () => void;
+        let unsubscribeKids: () => void;
 
-        const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
+        const initializeAuth = async () => {
+            await setPersistence(auth, browserSessionPersistence);
+            return onAuthStateChanged(auth, async (currentUser) => {
+                setUser(currentUser);
+                if (!currentUser) {
+                    setUserData(null);
+                    setKidsData({});
+                    setLoading(false);
+                    return;
+                }
 
-            if (currentUser) {
                 try {
-                    const userDocRef = doc(db, 'account_info', currentUser.uid);
-                    unsubscribeFirestore = onSnapshot(
-                        userDocRef,
-                        (doc) => {
-                            if (doc.exists()) {
-                                const userData = doc.data() as UserData;
-                                // Enhanced verification
-                                if (userData.uid === currentUser.uid) {
-                                    setUserData(userData);
-                                } else {
-                                    console.error('User ID mismatch');
-                                    setUserData(null);
-                                }
-                            } else {
-                                console.error('No user data found in Firestore');
-                                setUserData(null);
+                    // Force token refresh to ensure latest claims
+                    await currentUser.getIdToken(true);
+
+                    // Subscribe to account info
+                    const accountRef = doc(db, 'account_info', currentUser.uid);
+                    unsubscribeAccount = onSnapshot(accountRef, 
+                        async (doc) => {
+                            if (!doc.exists()) {
+                                console.log('Account document not found');
+                                setLoading(false);
+                                return;
                             }
+
+                            const accountData = doc.data() as UserData;
+                            
+                            // Validate document ownership
+                            if (accountData.uid !== currentUser.uid) {
+                                console.error('Document UID mismatch');
+                                setLoading(false);
+                                return;
+                            }
+
+                            // Subscribe to children data
+                            const kidsQuery = query(
+                                collection(db, 'children'),
+                                where('parentId', '==', currentUser.uid)
+                            );
+                            
+                            unsubscribeKids = onSnapshot(kidsQuery, (snapshot) => {
+                                const kids = snapshot.docs.reduce((acc, doc) => {
+                                    const data = doc.data() as KidInfo;
+                                    acc[doc.id] = data;
+                                    return acc;
+                                }, {} as Record<string, KidInfo>);
+                                
+                                setKidsData(kids);
+                            });
+
+                            // Merge account data with kids list
+                            setUserData({
+                                ...accountData,
+                                kids: accountData.kids || {}
+                            });
                             setLoading(false);
                         },
                         (error) => {
-                            console.error('Firestore permissions error:', error);
-                            if (error.code === 'permission-denied') {
-                                console.error('Check Firestore security rules and authentication');
-                            }
-                            setUserData(null);
+                            console.error('Account info error:', error);
                             setLoading(false);
                         }
                     );
                 } catch (error) {
-                    console.error('Error setting up Firestore listener:', error);
+                    console.error('Auth sync error:', error);
                     setLoading(false);
                 }
-            } else {
-                setUserData(null);
-                setLoading(false);
-            }
-        });
+            });
+        };
+
+        const unsubscribeAuth = initializeAuth();
 
         return () => {
-            unsubscribeAuth();
-            if (unsubscribeFirestore) {
-                unsubscribeFirestore();
-            }
+            unsubscribeAuth.then(fn => fn());
+            unsubscribeAccount?.();
+            unsubscribeKids?.();
         };
     }, []);
 
+    const contextValue = useMemo(() => ({
+        user,
+        userData: userData ? { ...userData, kids: kidsData } : null,
+        loading
+    }), [user, userData, kidsData, loading]);
+
     return (
-        <UserContext.Provider value={{ user, userData, loading }}>
+        <UserContext.Provider value={contextValue}>
             {children}
         </UserContext.Provider>
     );
-};
-
-export const useUser = () => {
-    const context = React.useContext(UserContext);
-    if (context === undefined) {
-        throw new Error('useUser must be used within a UserProvider');
-    }
-    return context;
 };

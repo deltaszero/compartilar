@@ -17,7 +17,6 @@ import { SignupFormData } from '@/types/signup.types';
 // importing assets
 import CameraIcon from '@assets/icons/camera.svg';
 
-
 interface KidInfo {
     id: string;
     firstName: string;
@@ -46,13 +45,23 @@ const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
 );
 
 
-const fetchChildren = async (parentId: string) => {
+const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
     const q = query(
         collection(db, 'children'),
         where('parentId', '==', parentId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            birthDate: data.birthDate,
+            gender: data.gender,
+            relationship: data.relationship
+        };
+    });
 };
 
 
