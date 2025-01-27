@@ -190,7 +190,7 @@ export default function UserPage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <div className="flex flex-row flex-start gap-8 p-8">
+        <div className="flex flex-row flex-start gap-8 p-2">
             <section className="w-2/3 flex flex-col min-h-screen">
                 {userData ? (
                     <div className="flex flex-col items-left gap-4">
@@ -202,7 +202,7 @@ export default function UserPage() {
                     <UserNotFound />
                 )}
             </section >
-            <section className="w-1/3">
+            <section className="card w-1/3 bg-yellow-500 p-4">
                 <KidsGrid parentId={userData.uid} />
             </section>
         </div >

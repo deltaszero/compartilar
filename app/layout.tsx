@@ -3,7 +3,7 @@
 // importing modules and components
 import Script from 'next/script';
 import Analytics from '@components/Analytics';
-import { Inter, Raleway, Playfair_Display } from 'next/font/google';
+import { Inter, Raleway, Playfair_Display, Nunito_Sans } from 'next/font/google';
 import { UserProvider } from '@context/userContext';
 // importing types
 import type { Metadata } from "next";
@@ -21,6 +21,11 @@ const playfair = Playfair_Display({
     subsets: ['latin'],
     display: 'swap',
     variable: '--font-playfair',
+})
+const nunito = Nunito_Sans({
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-nunito',
 })
 
 // setting up metadata
@@ -86,7 +91,7 @@ export default function RootLayout({
         <html
             data-theme="garden"
             suppressHydrationWarning
-            className={`${raleway.variable} ${playfair.variable} scroll-smooth antialiased`}
+            className={`${raleway.variable} ${playfair.variable} ${nunito.variable} scroll-smooth antialiased`}
         >
             <head>
                 {/* Google Analytics */}

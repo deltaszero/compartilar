@@ -68,6 +68,29 @@ const NavItem = ({ href, currentPath, children }: NavItemProps) => {
     );
 };
 
+const PremiumCard = () => (
+<div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
+    <Image
+        src={premiumImage}
+        alt="Call to Action Image: Hand holding a house"
+        className='rounded-t-xl'
+    />
+    <div className="card-body flex flex-col gap-2">
+        <p className="card-title font-Raleway text-md">
+            Aprimore Sua Experiência
+        </p>
+        <p className="font-Raleway text-sm">
+            Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
+        </p>
+        <div className="card-actions justify-end">
+            <button className={`btn rounded-lg hover:border-primaryPurple bg-primaryPurple text-base-100 hover:bg-white hover:text-primaryPurple font-raleway`}>
+                Ver Planos
+            </button>
+        </div>
+    </div>
+</div>
+);
+
 export default function Sidebar() {
     const { userData, loading } = useUser();
     const pathname = usePathname();
@@ -86,7 +109,6 @@ export default function Sidebar() {
         { path: `/${userData.username}/settings`,  label: 'Configurações' },
     ] : [];
 
-    const foregroundColor = 'primaryPurple';
     const avatarSize = 68;
 
     return (
@@ -163,26 +185,7 @@ export default function Sidebar() {
                 </motion.nav>
             </div>
             <div>
-                <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
-                    <Image
-                        src={premiumImage}
-                        alt="Call to Action Image: Hand holding a house"
-                        className='rounded-t-xl'
-                    />
-                    <div className="card-body flex flex-col gap-2">
-                        <p className="card-title font-Raleway text-md">
-                            Aprimore Sua Experiência
-                        </p>
-                        <p className="font-Raleway text-sm">
-                            Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
-                        </p>
-                        <div className="card-actions justify-end">
-                            <button className={`btn rounded-lg hover:border-${foregroundColor} bg-${foregroundColor} text-base-100 hover:bg-white hover:text-${foregroundColor} font-raleway`}>
-                                Ver Planos
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <PremiumCard />
             </div>
         </div>
         );
