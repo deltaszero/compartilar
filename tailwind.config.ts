@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import daisyui from 'daisyui';
 
 const config: Config = {
     content: [
@@ -18,8 +19,8 @@ const config: Config = {
                 secondaryPurple: '#a45fac',
             },
             fontFamily: {
-                playfair: ["Playfair Display", "serif"],
-                raleway: ["Raleway", "sans-serif"],
+                raleway: ['var(--font-raleway)'],
+                playfair: ['var(--font-playfair)'],
                 cinzel: ["Cinzel Decorative", "serif"],
             },
             fontWeight: {
@@ -31,14 +32,12 @@ const config: Config = {
                 black: '900',
             },
         },
-        themes: [
-
-        ]
     },
     // plugins: [require("@tailwindcss/typography"), require("daisyui")],
-    plugins: [require("daisyui")],
+    // plugins: [require("daisyui")],
+    plugins: [daisyui],
     daisyui: {
-        themes: ["forest",],
+        themes: ["garden",],
     },
 };
 export default config;

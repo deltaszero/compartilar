@@ -1,16 +1,20 @@
 // app/page.tsx
+
+// importing modules
+import Image from 'next/image';
+// importing components
 import Header from "@components/layout/Header";
 import Footer from "@components/layout/Footer";
-
 import MobileFooter from "@components/layout/MobileFooter";
-
-import Image from 'next/image';
+// importing assets
 import hero_img from "@assets/images/cellphone_01.gif";
 
 export default function Home() {
     return (
         <div>
+            {/* header */}
             <Header />
+            {/* hero */}
             <section className="relative hero min-h-screen flex items-center">
                 <div className="absolute inset-0">
                     <Image
@@ -27,22 +31,35 @@ export default function Home() {
                     <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-playfair font-bold mb-6">
                         Facilite a coparentalidade organizando tudo em um só lugar
                     </h1>
-                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-extralight mb-8">
+                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-8 font-raleway font-light">
                         Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                     </p>
-                    <button className="btn bg-secondaryPurple border-none flex flex-col px-6 py-3 text-lg sm:text-xl md:text-2xl font-light text-black hover:text-white hover:bg-info hover:border-none rounded-md">
-                        <div className="flex items-center space-x-2">
+                    <button 
+                        className="
+                            btn border-none flex flex-col px-6 py-3 text-lg rounded-md font-raleway
+                            bg-primaryPurple text-base-100 hover:bg-accent-base-100 hover:text-primaryPurple
+                            sm:text-xl 
+                            md:text-2xl 
+                            hover:border-none 
+                        ">
+                        <div className="flex items-center space-x-2 ">
                             <span>&nbsp;</span>
-                            <p className="text-2xl text-info-content font-light">
+                            <p>
                                 Comece agora
                             </p>
                             <span>&nbsp;</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Arrow-Right--Streamline-Ultimate" height={24} width={24} ><desc>{"Arrow Right Streamline Icon: https://streamlinehq.com"}</desc><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M0.75 12h22.5" strokeWidth={1.5} /><path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M12.75 22.5 23.25 12 12.75 1.5" strokeWidth={1.5} /></svg>
+                            {/* small right arrow icon */}
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Arrow-Right--Streamline-Ultimate" width="24" height="24">
+                                <desc>{"Arrow Right Streamline Icon: https://streamlinehq.com"}</desc>
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M0.75 12h22.5" strokeWidth="1" />
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M12.75 22.5 23.25 12 12.75 1.5" strokeWidth="1" />
+                            </svg>
                             <span>&nbsp;</span>
                         </div>
                     </button>
                 </div>
             </section >
+            {/* footer */}
             <div className="block md:hidden">
                 <MobileFooter />
             </div>

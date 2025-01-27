@@ -1,24 +1,25 @@
 // app/components/layout/Header.tsx
 'use client';
-
+// importing modules
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
+// importing components
 import NavLink from '@components/ui/NavLink';
 import { auth } from '@lib/firebaseConfig';
 import { useUser } from '@context/userContext';
-
+// importing assets
 import HamburgerIcon from '@assets/icons/hamburger.svg';
 import TreeIcon from '@assets/icons/tree.svg';
 import CameraIcon from '@assets/icons/camera.svg';
 import LoginIcon from '@assets/icons/login.svg';
 
-
 const Header = () => {
+    // setting up hooks
     const { user, userData, loading } = useUser();
     const router = useRouter();
-
+    // setting up functions
     const handleSignOut = async () => {
         try {
             await signOut(auth);
@@ -27,9 +28,9 @@ const Header = () => {
             console.error('Error signing out:', error);
         }
     };
-
+    // rendering
     return (
-        <header className="navbar bg-neutral text-neutral-content lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
+        <header className="navbar bg-base-100 text-neutral lg:fixed lg:top-0 lg:left-0 lg:right-0 px-6 z-30">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden"> {/* lg:hidden */}
@@ -37,7 +38,7 @@ const Header = () => {
                     </div>
                     <ul
                         tabIndex={0}
-                        className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                        className="menu menu-sm dropdown-content rounded-md z-[1] mt-3 w-52 p-2 shadow">
                         <li><a>Organize</a></li>
                         <li><a>Descomplique</a></li>
                         <li><a>Proteja</a></li>
@@ -48,7 +49,7 @@ const Header = () => {
                     <div className="flex items-center justify-center space-x-2">
                         {/* tree icon */}
                         <TreeIcon width={44} height={44} />
-                        <a href="/" className="btn btn-ghost text-xl rounded-none p-0">
+                        <a href="/" className="btn btn-ghost text-xl rounded-md p-0">
                             <p className="text-2xl font-cinzel">
                                 CompartiLar
                             </p>
@@ -56,9 +57,9 @@ const Header = () => {
                     </div>
                 </div>
             </div>
-            <div className="navbar-center hidden lg:flex"> {/* hidden lg:flex */}
-                <ul className="menu menu-horizontal px-1">
-                    <li><NavLink href="/">Organize</NavLink></li>
+            <div className="navbar-center hidden lg:flex font-raleway font-semibold"> {/* hidden lg:flex */}
+                <ul className="menu menu-horizontal px-1 [&_li>*]:rounded-md">
+                    <li ><NavLink href="/">Organize</NavLink></li>
                     <li><NavLink href="/">Descomplique</NavLink></li>
                     <li><NavLink href="/">Proteja</NavLink></li>
                     <li><NavLink href="/">Despreocupe-se</NavLink></li>
@@ -73,30 +74,31 @@ const Header = () => {
                     {user && userData ? (
                         <div className="flex items-center space-x-2 z-50">
                             <NavLink href={`/${userData.username}`}>
-                                <span className="font-medium text-lg">
-                                    {userData.username}
+                                <span className="text-lg">
+                                    <p>{userData.username}</p>
                                 </span>
                             </NavLink>
                             <div className="dropdown dropdown-end">
                                 <label tabIndex={0}>
-                                    <div className="avatar">
+                                    <div className="avatar hover:cursor-pointer">
                                         {userData.photoURL ? (
-                                            <Image 
-                                                src={userData.photoURL}
-                                                width={32}
-                                                height={32}
-                                                alt="Avatar"
-                                                className="ring-secondaryPurple ring-offset-neutral w-12 rounded-full ring ring-offset-1 hover:ring-offset-2 hover:ring-info"
-                                            />
+                                            <div className="mask mask-squircle">
+                                                <Image 
+                                                    src={userData.photoURL}
+                                                    width={34}
+                                                    height={34}
+                                                    alt="Avatar"
+                                                />
+                                            </div>
                                         ) : (
-                                            <CameraIcon width={32} height={32} />
+                                            <CameraIcon width={34} height={34} />
                                         )}
                                     </div>
                                 </label>
-                                <ul
-                                    tabIndex={0}
-                                    className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
-                                >
+                                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52 bg-base-100 text-neutral">
+                                    <li>
+                                        <NavLink href={`/${userData.username}/`}>Perfil</NavLink>
+                                    </li>
                                     <li>
                                         <NavLink href={`/${userData.username}/settings`}>Configurações</NavLink>
                                     </li>
@@ -107,11 +109,11 @@ const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <a
-                            href="/login"
-                            className="btn btn-outline rounded-none flex items-center justify-center space-x-2 bg-secondaryPurple text-black hover:bg-info hover:border-none"
-                        >
-                            <p className="font-normal">
+                        <a href="/login" className="
+                            btn btn-outline rounded-md flex items-center justify-center space-x-2 hover:border-primaryPurple
+                            bg-primaryPurple text-base-100 hover:bg-base-100 hover:text-primaryPurple font-raleway
+                        ">
+                            <p>
                                 Entrar
                             </p>
                             {/* login icon */}
