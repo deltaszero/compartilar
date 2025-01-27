@@ -42,3 +42,4 @@ firebase-debug.log
 app/lib/firebaseConfig.ts
 tree.txt
 .firestore-rules
+.storage-rules

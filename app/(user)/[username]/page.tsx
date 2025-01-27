@@ -76,37 +76,111 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 
 
 const ChildCard = ({ kid }: { kid: KidInfo }) => (
-<article className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
-    <div className="card-body">
-        <h3 className="card-title text-lg">
-            {kid.firstName} {kid.lastName}
-        </h3>
-        <dl className="space-y-2">
-            <div>
-                <dt className="text-sm text-gray-500">Birth Date</dt>
-                <dd className="font-medium">{kid.birthDate}</dd>
-            </div>
-            {kid.gender && (
-                <div>
-                    <dt className="text-sm text-gray-500">Gender</dt>
-                    <dd className="font-medium capitalize">{kid.gender}</dd>
+    <div className="flex items-center justify-center w-full">
+        <article className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow w-2/3">
+            <div className="card-body">
+                <div className="avatar placeholder">
+                    <div className="bg-neutral text-neutral-content rounded-full w-16 h-16 flex items-center justify-center">
+                        <span className="text-3xl">
+                            {kid.firstName[0].toUpperCase()}
+                        </span>
+                    </div>
                 </div>
-            )}
-        </dl>
-        <div className="card-actions justify-end">
-            <button className="btn btn-ghost text-primary">
-                View Details
-            </button>
-        </div>
+                <h3 className="card-title text-lg">
+                    {kid.firstName} {kid.lastName}
+                </h3>
+                <dl className="space-y-2">
+                    <div>
+                        <dt className="text-sm text-gray-500">Birth Date</dt>
+                        <dd className="font-medium">{kid.birthDate}</dd>
+                    </div>
+                    {kid.gender && (
+                        <div>
+                            <dt className="text-sm text-gray-500">Gender</dt>
+                            <dd className="font-medium capitalize">{kid.gender}</dd>
+                        </div>
+                    )}
+                </dl>
+                <div className="card-actions justify-end">
+                    <button className="btn btn-ghost text-primary">
+                        View Details
+                    </button>
+                </div>
+            </div>
+        </article>
     </div>
-</article>
 );
 
+
+// const KidsGrid = ({ parentId }: { parentId: string }) => {
+//     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
+//     const [currentIndex, setCurrentIndex] = useState(0);
+//     const [loading, setLoading] = useState(true);
+//     // here we are fetching the children of the parent
+//     useEffect(() => {
+//         const loadChildren = async () => {
+//             try {
+//                 const data = await fetchChildren(parentId);
+//                 setKidsArray(data);
+//             } catch (error) {
+//                 console.error('Error fetching children:', error);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+//         loadChildren();
+//     }, [parentId]);
+//     // here we are handling the next and previous buttons
+//     const handleNext = () => {
+//         setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
+//     };
+//     const handlePrev = () => {
+//         setCurrentIndex((prevIndex) => 
+//             prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
+//         );
+//     };
+//     // here we are checking if the data is loading or if there is no data
+//     if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
+//     if (!kidsArray.length) return null;
+//     // here we are returning the children profiles
+//     return (
+//         <section>
+//             <h2 className="text-2xl font-semibold mb-6">
+//                 Children Profiles
+//             </h2>
+//             <div className="carousel w-full flex items-center justify-center">
+//                 <div className="carousel-item w-full max-w-md relative">
+//                     <ChildCard kid={kidsArray[currentIndex]} />
+//                     {/* Navigation Buttons */}
+//                     <div className="absolute z-10 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
+//                         <button 
+//                             onClick={handlePrev} 
+//                             className="btn btn-circle btn-outline"
+//                             aria-label="Previous Child"
+//                         >
+//                             ❮
+//                         </button>
+//                         <button 
+//                             onClick={handleNext} 
+//                             className="btn btn-circle btn-outline"
+//                             aria-label="Next Child"
+//                         >
+//                             ❯
+//                         </button>
+//                     </div>
+//                 </div>
+//             </div>
+//         </section>
+//     );
+// };
 
 
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [transitionDirection, setTransitionDirection] = useState<'left'|'right'>('right');
 
     useEffect(() => {
         const loadChildren = async () => {
@@ -119,21 +193,65 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                 setLoading(false);
             }
         };
-
         loadChildren();
     }, [parentId]);
 
-    if (loading) return <div className="text-center py-4">Loading children...</div>;
+    const handleNext = () => {
+        setTransitionDirection('right');
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
+    };
+    const handlePrev = () => {
+        setTransitionDirection('left');
+        setCurrentIndex((prevIndex) => 
+            prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
+        );
+    };
+
+    if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
     if (!kidsArray.length) return null;
 
     return (
         <section>
             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> */}
-            <div>
-                {kidsArray.map((kid) => (
-                    <ChildCard key={kid.id} kid={kid} />
-                ))}
+            <div className="carousel w-full flex items-center justify-center overflow-hidden relative">
+                {/* Carousel Items Container */}
+                <div className={`flex transition-transform duration-500 ease-in-out`} style={{ transform: `translateX(-${currentIndex * 100}%)`, width: `${kidsArray.length * 100}%`}}>
+                    {kidsArray.map((kid, index) => (
+                        <div key={kid.id} className="w-full max-w-md flex-shrink-0 relative">
+                            <div className={`transition-opacity duration-300 ${currentIndex === index ? 'opacity-100' : 'opacity-0'}`}>
+                                <ChildCard kid={kid} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                {/* Navigation Buttons */}
+                <div className="absolute z-20 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
+                    <button 
+                        onClick={handlePrev} 
+                        className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        aria-label="Previous Child"
+                    >
+                        ❮
+                    </button>
+                    <button 
+                        onClick={handleNext} 
+                        className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        aria-label="Next Child"
+                    >
+                        ❯
+                    </button>
+                </div>
+                {/* Progress Indicators */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {kidsArray.map((_, index) => (
+                        <div 
+                            key={index}
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                currentIndex === index ? 'bg-primary scale-125' : 'bg-gray-300'
+                            }`}
+                        />
+                    ))}
+                </div>
             </div>
         </section>
     );

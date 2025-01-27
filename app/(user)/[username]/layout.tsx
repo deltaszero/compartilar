@@ -4,9 +4,9 @@ import ContentArea from "@components/ContentArea";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex">
+        <div className="flex font-raleway">
             {/* Sidebar */}
-            <div className="w-1/5 bg-primaryPurple text-base-100 font-raleway">
+            <div className="w-1/5 bg-primaryPurple text-base-100">
                 <Sidebar />
             </div>
             {/* Content Area */}

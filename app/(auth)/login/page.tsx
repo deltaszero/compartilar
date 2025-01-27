@@ -1,7 +1,7 @@
 // app/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -11,10 +11,15 @@ import LoginHeader from "@components/layout/LoginHeader";
 import { CustomTypingEffect } from '@/app/components/layout/CustomTypingEffect';
 
 export default function LoginPage() {
+    const [hasHydrated, setHasHydrated] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        setHasHydrated(true);
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,7 +47,9 @@ export default function LoginPage() {
                 <section className="flex-1 flex flex-col justify-center items-center">
                     <div className="flex flex-col gap-4">
                         <div className="flex-col">
-                            <form onSubmit={handleLogin} className="form-control gap-4">
+                            <form onSubmit={handleLogin} className="form-control gap-4" suppressHydrationWarning>
+                            {hasHydrated ? (
+                            <>
                                 {/* email */}
                                 <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2">
                                     <svg
@@ -55,7 +62,14 @@ export default function LoginPage() {
                                         <path
                                             d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" />
                                     </svg>
-                                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                    <input 
+                                        type="email"
+                                        placeholder="Email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        suppressHydrationWarning 
+                                    />
                                 </label>
                                 {/* password */}
                                 <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2">
@@ -75,6 +89,7 @@ export default function LoginPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        suppressHydrationWarning
                                     />
                                     <button
                                         type="button"
@@ -94,7 +109,14 @@ export default function LoginPage() {
                                 >
                                     Entrar
                                 </button>
+                                </>
+                            ) : (
+                                <div className="w-full h-48 flex items-center justify-center">
+                                    <span className="loading loading-spinner loading-lg"></span>
+                                </div>
+                            )}
                             </form>
+                        
                         </div>
                         <div className="divider"></div>
                         <div className="flex-col">

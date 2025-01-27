@@ -62,3 +62,47 @@ export default function SignupPage() {
     );
 }
 ```
+
+
+```tsx
+'use client'; // Add this at the top to make it a client component
+import React from 'react';
+import { usePathname } from 'next/navigation';
+import { SignupStep } from '@/types/signup.types';
+
+export default function SignupLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const currentStep = pathname.split('/').pop() as SignupStep;
+    const stepsOrder = Object.values(SignupStep);
+
+    return (
+        <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg p-6 flex flex-row space-x-12">
+                {/* STEP INDICATOR */}
+                <div className="steps steps-vertical w-1/4">
+                    {stepsOrder.map((step, index) => {
+                        const isActive = step === currentStep;
+                        const isCompleted = stepsOrder.indexOf(step) < stepsOrder.indexOf(currentStep);
+                        
+                        return (
+                            <div 
+                                key={step}
+                                className={`step ${isActive ? 'step-primary' : ''} ${isCompleted ? 'step-success' : ''}`}
+                                data-content={isCompleted ? '✓' : index + 1}
+                            >
+                                <span className="hidden md:inline">
+                                    {step.replace(/-/g, ' ').toUpperCase()}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+                {/* CONTENT CONTAINER */}
+                <div className="step-content w-3/4">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+}
+```
