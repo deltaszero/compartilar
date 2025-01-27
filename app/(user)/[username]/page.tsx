@@ -2,6 +2,7 @@
 'use client';
 // imoprting built-in modules
 import { useEffect, useState } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -13,9 +14,18 @@ import {
 import { db } from '@/app/lib/firebaseConfig';
 // importing components
 import { useUser } from '@context/userContext';
-import { SignupFormData } from '@/types/signup.types';
+// import { SignupFormData } from '@/types/signup.types';
 // importing assets
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CameraIcon from '@assets/icons/camera.svg';
+
+export interface SignupFormData {
+    username: string;
+    email: string;
+    password?: string;
+    confirmPassword?: string;
+    photoURL?: string;
+}
 
 interface KidInfo {
     id: string;
@@ -27,22 +37,22 @@ interface KidInfo {
   }
 
 
-const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
-    <div className="mask mask-squircle w-32 h-32 bg-gray-100 flex items-center justify-center">
-        {photoURL ? (
-            <Image
-                src={photoURL}
-                width={128}
-                height={128}
-                alt="User avatar"
-                className="object-cover"
-                priority
-            />
-        ) : (
-            <CameraIcon className="w-12 h-12 text-gray-400" />
-        )}
-    </div>
-);
+// const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
+//     <div className="mask mask-squircle w-32 h-32 bg-gray-100 flex items-center justify-center">
+//         {photoURL ? (
+//             <Image
+//                 src={photoURL}
+//                 width={128}
+//                 height={128}
+//                 alt="User avatar"
+//                 className="object-cover"
+//                 priority
+//             />
+//         ) : (
+//             <CameraIcon className="w-12 h-12 text-gray-400" />
+//         )}
+//     </div>
+// );
 
 
 const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
@@ -83,7 +93,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
                 </div>
             )}
         </dl>
-        <div className="card-actions justify-end mt-4">
+        <div className="card-actions justify-end">
             <button className="btn btn-ghost text-primary">
                 View Details
             </button>
@@ -119,7 +129,8 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     return (
         <section>
             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> */}
+            <div>
                 {kidsArray.map((kid) => (
                     <ChildCard key={kid.id} kid={kid} />
                 ))}
@@ -131,7 +142,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
 
 const UserProfile = ({ userData }: { userData: SignupFormData }) => (
     <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-primary">
+        <h1 className="text-4xl font-bold">
             Welcome, {userData.username}!
         </h1>
         <p className="text-lg text-gray-600">
@@ -179,18 +190,21 @@ export default function UserPage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <div className="flex flex-col">
-            <section className="flex flex-col justify-center items-center min-h-screen">
+        <div className="flex flex-row flex-start gap-8 p-8">
+            <section className="w-2/3 flex flex-col min-h-screen">
                 {userData ? (
                     <div className="flex flex-col items-left gap-4">
-                        <AvatarSection photoURL={userData?.photoURL} />
+                        {/* <AvatarSection photoURL={userData?.photoURL} /> */}
                         <UserProfile userData={userData} />
-                        <KidsGrid parentId={userData.uid} />
+                        
                     </div>
                 ) : (
                     <UserNotFound />
                 )}
             </section >
+            <section className="w-1/3">
+                <KidsGrid parentId={userData.uid} />
+            </section>
         </div >
     );
 }

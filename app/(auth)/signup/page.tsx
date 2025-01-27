@@ -1,6 +1,9 @@
 'use client';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createUserWithEmailAndPassword, updateProfile, deleteUser, User } from 'firebase/auth';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { doc, setDoc, runTransaction, writeBatch } from 'firebase/firestore';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ref, uploadBytes, getDownloadURL, FirebaseStorage, deleteObject } from 'firebase/storage';
 import { SignupFormData, SignupStep, KidInfo } from '@/types/signup.types';
 import { auth, db, storage } from '@/app/lib/firebaseConfig';
@@ -49,6 +52,7 @@ const useSignupStore = create<SignupStore>()(
                 }
             })),
             removeKid: (kidId) => set((state) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { [kidId]: _, ...remainingKids } = state.formData.kids;
                 return { formData: { ...state.formData, kids: remainingKids } };
             }),
