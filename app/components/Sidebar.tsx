@@ -11,6 +11,7 @@ import { useUser } from '@context/userContext';
 // importing assets
 import CameraIcon from '@assets/icons/camera.svg';
 import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import TreeIcon from '@assets/icons/tree.svg';
 
 // animation variants
