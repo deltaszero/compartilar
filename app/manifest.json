@@ -1,8 +1,9 @@
 {
-    "name": "My Co-parenting App",
-    "short_name": "CoParent",
+    "name": "CompartiLar",
+    "short_name": "CompartiLar",
+    "description": "Facilite a coparentalidade organizando tudo em um só lugar!",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "description": "A PWA for co-parenting aimed at divorced parents and their children."
+    "theme_color": "#000000"
 }
