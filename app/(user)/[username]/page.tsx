@@ -112,69 +112,6 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
 );
 
 
-// const KidsGrid = ({ parentId }: { parentId: string }) => {
-//     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
-//     const [currentIndex, setCurrentIndex] = useState(0);
-//     const [loading, setLoading] = useState(true);
-//     // here we are fetching the children of the parent
-//     useEffect(() => {
-//         const loadChildren = async () => {
-//             try {
-//                 const data = await fetchChildren(parentId);
-//                 setKidsArray(data);
-//             } catch (error) {
-//                 console.error('Error fetching children:', error);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         loadChildren();
-//     }, [parentId]);
-//     // here we are handling the next and previous buttons
-//     const handleNext = () => {
-//         setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
-//     };
-//     const handlePrev = () => {
-//         setCurrentIndex((prevIndex) => 
-//             prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
-//         );
-//     };
-//     // here we are checking if the data is loading or if there is no data
-//     if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
-//     if (!kidsArray.length) return null;
-//     // here we are returning the children profiles
-//     return (
-//         <section>
-//             <h2 className="text-2xl font-semibold mb-6">
-//                 Children Profiles
-//             </h2>
-//             <div className="carousel w-full flex items-center justify-center">
-//                 <div className="carousel-item w-full max-w-md relative">
-//                     <ChildCard kid={kidsArray[currentIndex]} />
-//                     {/* Navigation Buttons */}
-//                     <div className="absolute z-10 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
-//                         <button 
-//                             onClick={handlePrev} 
-//                             className="btn btn-circle btn-outline"
-//                             aria-label="Previous Child"
-//                         >
-//                             ❮
-//                         </button>
-//                         <button 
-//                             onClick={handleNext} 
-//                             className="btn btn-circle btn-outline"
-//                             aria-label="Next Child"
-//                         >
-//                             ❯
-//                         </button>
-//                     </div>
-//                 </div>
-//             </div>
-//         </section>
-//     );
-// };
-
-
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -228,14 +165,15 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                 <div className="absolute z-20 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
                     <button 
                         onClick={handlePrev} 
-                        className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        className="btn btn-circle btn-outline shadow-lg"
                         aria-label="Previous Child"
                     >
                         ❮
                     </button>
                     <button 
                         onClick={handleNext} 
-                        className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        // className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        className="btn btn-circle btn-outline shadow-lg"
                         aria-label="Next Child"
                     >
                         ❯
