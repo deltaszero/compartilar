@@ -21,6 +21,7 @@ const config: Config = {
             fontFamily: {
                 raleway: ['var(--font-raleway)'],
                 playfair: ['var(--font-playfair)'],
+                nunito: ['var(--font-nunito)'],
                 cinzel: ["Cinzel Decorative", "serif"],
             },
             fontWeight: {
@@ -37,7 +38,7 @@ const config: Config = {
     // plugins: [require("daisyui")],
     plugins: [daisyui],
     daisyui: {
-        themes: ["garden",],
+        themes: ["lemonade",],
     },
 };
 export default config;

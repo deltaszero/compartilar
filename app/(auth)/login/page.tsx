@@ -1,6 +1,6 @@
 // app/login/page.tsx
 'use client';
-
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,8 @@ import { auth } from '@lib/firebaseConfig';
 import NavLink from '@components/ui/NavLink';
 import LoginHeader from "@components/layout/LoginHeader";
 import { CustomTypingEffect } from '@/app/components/layout/CustomTypingEffect';
+
+import background_img from "@assets/images/8e96f071-f681-4fe3-b12c-6275503f963e.png";
 
 export default function LoginPage() {
     const [hasHydrated, setHasHydrated] = useState(false);
@@ -31,17 +33,29 @@ export default function LoginPage() {
         }
     };
 
-    const foregroundColor = 'primaryPurple';
-
     return (
         <div className="h-screen grid grid-cols-1 lg:grid-cols-2">
-        {/* Left Sidebar */}
-            <div className="hidden lg:flex flex-col justify-center items-center text-4xl font-raleway bg-neutral text-base-100">
+            {/* Left Sidebar */}
+            <div className="hidden lg:flex relative w-full h-full text-4xl font-nunito bg-neutral text-base-100">
+                {/* Absolute Image */}
+                <Image
+                    src={background_img}
+                    alt="Background"
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    priority
+                    unoptimized
+                />
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-gray-900 opacity-90" />
+                {/* Typing Effect on Top */}
+                <div className="relative z-10 flex flex-col justify-center items-center w-full h-full">
                 <CustomTypingEffect />
-            </div>
-        {/* Right Content */}
-            <div className="flex flex-col bg-base-100 text-base-content">
-                <div className={`text-${foregroundColor}`}>
+                </div>
+                </div>
+            {/* Right Content */}
+            <div className="flex flex-col bg-base-200 text-base-content">
+                <div className="text-primary">
                     <LoginHeader />
                 </div>
                 <section className="flex-1 flex flex-col justify-center items-center">
@@ -51,7 +65,7 @@ export default function LoginPage() {
                             {hasHydrated ? (
                             <>
                                 {/* email */}
-                                <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2">
+                                <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2 bg-base-200">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 16 16"
@@ -68,11 +82,11 @@ export default function LoginPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        suppressHydrationWarning 
+                                        suppressHydrationWarning
                                     />
                                 </label>
                                 {/* password */}
-                                <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2">
+                                <label className="input input-bordered w-full max-w-xs rounded-lg flex items-center gap-2 bg-base-200">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 16 16"
@@ -105,7 +119,7 @@ export default function LoginPage() {
                                 {/* submit */}
                                 <button
                                     type="submit"
-                                    className={`btn w-full max-w-xs rounded-lg hover:border-${foregroundColor} bg-${foregroundColor} text-base-100 hover:bg-base-100 hover:text-${foregroundColor} font-raleway`}
+                                    className="btn w-full max-w-xs rounded-lg hover:border-primary bg-primary text-base-100 hover:bg-base-100 hover:text-primary font-raleway"
                                 >
                                     Entrar
                                 </button>
@@ -121,10 +135,10 @@ export default function LoginPage() {
                         <div className="divider"></div>
                         <div className="flex-col">
                             <p>
-                                Não tem uma conta? <span className={`text-${foregroundColor} hover:underline`}><NavLink href="/signup">Cadastre-se</NavLink></span>
+                                Não tem uma conta? <span className="text-primary hover:underline"><NavLink href="/signup">Cadastre-se</NavLink></span>
                             </p>
                             <p>
-                                Esqueceu a senha? <span className={`text-${foregroundColor} hover:underline`}><NavLink href="/reset-password">Recuperar Senha</NavLink></span>
+                                Esqueceu a senha? <span className="text-primary hover:underline"><NavLink href="/reset-password">Recuperar Senha</NavLink></span>
                             </p>
                         </div>
                     </div>

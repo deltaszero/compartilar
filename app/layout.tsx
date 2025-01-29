@@ -3,7 +3,7 @@
 // importing modules and components
 import Script from 'next/script';
 import Analytics from '@components/Analytics';
-import { Inter, Raleway, Playfair_Display, Nunito_Sans } from 'next/font/google';
+import { Inter, Raleway, Playfair_Display, Nunito } from 'next/font/google';
 import { UserProvider } from '@context/userContext';
 // importing types
 import type { Metadata } from "next";
@@ -14,17 +14,17 @@ import "@app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 const raleway = Raleway({
     subsets: ['latin'],
-    display: 'swap',
+    // display: 'swap',
     variable: '--font-raleway',
 })
 const playfair = Playfair_Display({
     subsets: ['latin'],
-    display: 'swap',
+    // display: 'swap',
     variable: '--font-playfair',
 })
-const nunito = Nunito_Sans({
+const nunito = Nunito({
     subsets: ['latin'],
-    display: 'swap',
+    // display: 'swap',
     variable: '--font-nunito',
 })
 
@@ -89,7 +89,7 @@ export default function RootLayout({
 }>) {
     return (
         <html
-            data-theme="garden"
+            data-theme="lemonade"
             suppressHydrationWarning
             className={`${raleway.variable} ${playfair.variable} ${nunito.variable} scroll-smooth antialiased`}
         >
