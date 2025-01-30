@@ -31,13 +31,13 @@ export default function Home() {
                     <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-playfair font-bold mb-6">
                         Facilite a coparentalidade organizando tudo em um só lugar
                     </h1>
-                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-8 font-raleway font-light">
+                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-8 font-nunito font-light">
                         Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                     </p>
                     <button 
                         className="
-                            btn border-none flex flex-col px-6 py-3 text-lg rounded-md font-raleway
-                            bg-primaryPurple text-base-100 hover:bg-accent-base-100 hover:text-primaryPurple
+                            btn border-none flex flex-col px-6 py-3 text-lg rounded-md font-nunito
+                            bg-primary text-base-100 hover:bg-accent-base-100 hover:text-primary
                             sm:text-xl 
                             md:text-2xl 
                             hover:border-none 

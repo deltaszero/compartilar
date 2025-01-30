@@ -259,29 +259,31 @@ export default function SignupPage() {
         }
     };
     return (
-        <div className="w-full flex flex-col items-center justify-center p-4">
+        <div className="w-full flex flex-col items-center justify-center align-start p-4">
             <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg px-6 py-3 space-y-12">
                 <div className="text-primary">
                     <LoginHeader />
                 </div>
                 <div className="flex flex-row space-x-12">
-                    <ul className="steps steps-vertical w-1/4">
-                        {stepsOrder.map((step, index) => (
-                            <div 
-                                key = {step}
-                                className = {`step ${index < currentStepIndex + 1 ? 'step-primary' : ''}`}
-                                data-content = {
-                                    index === currentStepIndex ? '' : 
-                                        // index < currentStepIndex + 1 ? '✓' : ''
-                                        index < currentStepIndex + 1 ? '' : ''
-                                }
-                            >
-                                <span className="hidden md:inline">
-                                    {step.replace('-', ' ').toUpperCase()}
-                                </span>
-                            </div>
-                        ))}
-                    </ul>
+                    <div className="flex flex-col w-1/4">
+                        <ul className="steps steps-vertical">
+                            {stepsOrder.map((step, index) => (
+                                <div 
+                                    key = {step}
+                                    className = {`step ${index < currentStepIndex + 1 ? 'step-primary' : ''}`}
+                                    data-content = {
+                                        index === currentStepIndex ? '' : 
+                                            // index < currentStepIndex + 1 ? '✓' : ''
+                                            index < currentStepIndex + 1 ? '' : ''
+                                    }
+                                >
+                                    <span className="hidden md:inline">
+                                        {step.replace('-', ' ').toUpperCase()}
+                                    </span>
+                                </div>
+                            ))}
+                        </ul>
+                    </div>
                     <div className="step-content w-3/4">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* BASIC INFO STEP */}
@@ -350,7 +352,9 @@ export default function SignupPage() {
                                             <Image 
                                                 src={formData.photoURL} 
                                                 alt="Profile preview" 
-                                                className="w-32 h-32 rounded-full object-cover shadow-lg"
+                                                className="w-48 h-48 rounded-full object-cover shadow-lg"
+                                                width={48}
+                                                height={48}
                                             />
                                             <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <span className="text-white text-sm">Change Photo</span>
@@ -396,7 +400,7 @@ export default function SignupPage() {
 
                             {/* KIDS INFO STEP */}
                             {currentStep === SignupStep.KIDS_INFO && (
-                                <div className="space-y-4">
+                                <div className="flex flex-col space-y-4 items-center">
                                     {Object.values(formData.kids).map((kid) => (
                                         <div key={kid.id} className="card bg-base-100 p-4 shadow">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -453,7 +457,7 @@ export default function SignupPage() {
                                             gender: null,
                                             relationship: null
                                         })}
-                                        className="btn btn-secondary w-full"
+                                        className="btn btn-ghost max-w-xs text-primary"
                                     >
                                         Add Child
                                     </button>

@@ -110,8 +110,8 @@ const Header = () => {
                         </div>
                     ) : (
                         <a href="/login" className="
-                            btn btn-outline rounded-md flex items-center justify-center space-x-2 hover:border-primaryPurple
-                            bg-primaryPurple text-base-100 hover:bg-base-100 hover:text-primaryPurple font-raleway
+                            btn btn-outline rounded-md flex items-center justify-center space-x-2 hover:border-primary
+                            bg-primary text-base-100 hover:bg-base-100 hover:text-primary font-raleway
                         ">
                             <p>
                                 Entrar
