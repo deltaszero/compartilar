@@ -20,6 +20,7 @@ import { useUser } from '@context/userContext';
 import CameraIcon from '@assets/icons/camera.svg';
 
 export interface SignupFormData {
+    firstName: string;
     username: string;
     email: string;
     password?: string;
@@ -76,35 +77,42 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 
 
 const ChildCard = ({ kid }: { kid: KidInfo }) => (
-    <div className="flex items-center justify-center w-full">
-        <article className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow w-2/3">
+    // <div className="flex items-center justify-center w-full">
+    //     <article className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow w-2/3">
+    <div className="flex items-center w-full">
+        <article className="card bg-base-100 hover:shadow-xl transition-shadow w-full max-w-md">
             <div className="card-body">
-                <div className="avatar placeholder">
-                    <div className="bg-neutral text-neutral-content rounded-full w-16 h-16 flex items-center justify-center">
-                        <span className="text-3xl">
-                            {kid.firstName[0].toUpperCase()}
-                        </span>
-                    </div>
-                </div>
-                <h3 className="card-title text-lg">
-                    {kid.firstName} {kid.lastName}
-                </h3>
-                <dl className="space-y-2">
-                    <div>
-                        <dt className="text-sm text-gray-500">Birth Date</dt>
-                        <dd className="font-medium">{kid.birthDate}</dd>
-                    </div>
-                    {kid.gender && (
-                        <div>
-                            <dt className="text-sm text-gray-500">Gender</dt>
-                            <dd className="font-medium capitalize">{kid.gender}</dd>
+                <div className="flex flex-row items-start gap-6">
+                    <div className="avatar placeholder">
+                        <div className="bg-neutral text-neutral-content rounded-full w-24 h-24 flex items-center justify-center">
+                            <span className="text-3xl">
+                                {kid.firstName[0].toUpperCase()}
+                            </span>
                         </div>
-                    )}
-                </dl>
-                <div className="card-actions justify-end">
-                    <button className="btn btn-ghost text-primary">
-                        View Details
-                    </button>
+                    </div>
+                    <div className="flex flex-col gap-2 ml-4">
+                        <h3 className="card-title text-lg">
+                            {kid.firstName} {kid.lastName}
+                        </h3>
+                        <dl className="space-y-2">
+                            <div>
+                                {/* <dt className="text-sm text-gray-500">Birth Date</dt> */}
+                                <dd className="font-medium">{kid.birthDate}</dd>
+                            </div>
+                            {/* {kid.gender && (
+                                <div>
+                                    <dt className="text-sm text-gray-500">Gender</dt>
+                                    <dd className="font-medium capitalize">{kid.gender}</dd>
+                                </div>
+                            )} */}
+                        </dl>
+                        {/* <div className="divider"></div> */}
+                        <div className="card-actions">
+                            <button className="text-primary">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </article>
@@ -112,12 +120,92 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
 );
 
 
+// const KidsGrid = ({ parentId }: { parentId: string }) => {
+//     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
+//     const [currentIndex, setCurrentIndex] = useState(0);
+//     const [loading, setLoading] = useState(true);
+//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//     const [transitionDirection, setTransitionDirection] = useState<'left'|'right'>('right');
+
+//     useEffect(() => {
+//         const loadChildren = async () => {
+//             try {
+//                 const data = await fetchChildren(parentId);
+//                 setKidsArray(data);
+//             } catch (error) {
+//                 console.error('Error fetching children:', error);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+//         loadChildren();
+//     }, [parentId]);
+
+//     const handleNext = () => {
+//         setTransitionDirection('right');
+//         setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
+//     };
+//     const handlePrev = () => {
+//         setTransitionDirection('left');
+//         setCurrentIndex((prevIndex) => 
+//             prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
+//         );
+//     };
+
+//     if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
+//     if (!kidsArray.length) return null;
+
+//     return (
+//         <section>
+//             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
+//             <div className="carousel w-full flex items-center justify-center overflow-hidden relative">
+//                 {/* Carousel Items Container */}
+//                 <div className={`flex transition-transform duration-500 ease-in-out`} style={{ transform: `translateX(-${currentIndex * 100}%)`, width: `${kidsArray.length * 100}%`}}>
+//                     {kidsArray.map((kid, index) => (
+//                         <div key={kid.id} className="w-full max-w-md flex-shrink-0 relative">
+//                             <div className={`transition-opacity duration-300 ${currentIndex === index ? 'opacity-100' : 'opacity-0'}`}>
+//                                 <ChildCard kid={kid} />
+//                             </div>
+//                         </div>
+//                     ))}
+//                 </div>
+//                 {/* Navigation Buttons */}
+//                 <div className="absolute z-20 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
+//                     <button 
+//                         onClick={handlePrev} 
+//                         className="btn btn-circle btn-outline shadow-lg"
+//                         aria-label="Previous Child"
+//                     >
+//                         ❮
+//                     </button>
+//                     <button 
+//                         onClick={handleNext} 
+//                         // className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+//                         className="btn btn-circle btn-outline shadow-lg"
+//                         aria-label="Next Child"
+//                     >
+//                         ❯
+//                     </button>
+//                 </div>
+//                 {/* Progress Indicators */}
+//                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+//                     {kidsArray.map((_, index) => (
+//                         <div 
+//                             key={index}
+//                             className={`w-3 h-3 rounded-full transition-all duration-300 ${
+//                                 currentIndex === index ? 'bg-primary scale-125' : 'bg-gray-300'
+//                             }`}
+//                         />
+//                     ))}
+//                 </div>
+//             </div>
+//         </section>
+//     );
+// };
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [transitionDirection, setTransitionDirection] = useState<'left'|'right'>('right');
 
     useEffect(() => {
         const loadChildren = async () => {
@@ -133,60 +221,69 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
         loadChildren();
     }, [parentId]);
 
-    const handleNext = () => {
-        setTransitionDirection('right');
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
-    };
     const handlePrev = () => {
-        setTransitionDirection('left');
-        setCurrentIndex((prevIndex) => 
-            prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
-        );
+        setCurrentIndex(prev => (prev === 0 ? kidsArray.length - 1 : prev - 1));
     };
 
-    if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
+    const handleNext = () => {
+        setCurrentIndex(prev => (prev === kidsArray.length - 1 ? 0 : prev + 1));
+    };
+
+    if (loading) return <div className="w-full h-48 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+    </div>;
+
     if (!kidsArray.length) return null;
 
     return (
-        <section>
+        <section className="w-full">
             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
-            <div className="carousel w-full flex items-center justify-center overflow-hidden relative">
-                {/* Carousel Items Container */}
-                <div className={`flex transition-transform duration-500 ease-in-out`} style={{ transform: `translateX(-${currentIndex * 100}%)`, width: `${kidsArray.length * 100}%`}}>
-                    {kidsArray.map((kid, index) => (
-                        <div key={kid.id} className="w-full max-w-md flex-shrink-0 relative">
-                            <div className={`transition-opacity duration-300 ${currentIndex === index ? 'opacity-100' : 'opacity-0'}`}>
-                                <ChildCard kid={kid} />
-                            </div>
+            
+            <div className="carousel w-full relative">
+                {/* Slides Container */}
+                <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ 
+                        transform: `translateX(-${currentIndex * 100}%)`,
+                        width: `${kidsArray.length * 100}%`
+                    }}
+                >
+                    {kidsArray.map((kid) => (
+                        <div 
+                            key={kid.id} 
+                            className="carousel-item relative w-full flex justify-center"
+                        >
+                            <ChildCard kid={kid} />
                         </div>
                     ))}
                 </div>
-                {/* Navigation Buttons */}
-                <div className="absolute z-20 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
+                {/* Navigation Controls */}
+                <div className="absolute flex justify-between transform -translate-y-1/2 left-2 right-2 top-1/2 mx-4">
                     <button 
-                        onClick={handlePrev} 
-                        className="btn btn-circle btn-outline shadow-lg"
-                        aria-label="Previous Child"
+                        onClick={handlePrev}
+                        // className="btn btn-circle btn-outline shadow-lg"
                     >
-                        ❮
+                        {/* ❮ */}
                     </button>
                     <button 
-                        onClick={handleNext} 
-                        // className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
+                        onClick={handleNext}
                         className="btn btn-circle btn-outline shadow-lg"
-                        aria-label="Next Child"
                     >
                         ❯
                     </button>
                 </div>
+
                 {/* Progress Indicators */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                <div className="flex justify-center gap-2 mt-4">
                     {kidsArray.map((_, index) => (
-                        <div 
+                        <button
                             key={index}
-                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                currentIndex === index ? 'bg-primary scale-125' : 'bg-gray-300'
-                            }`}
+                            onClick={() => setCurrentIndex(index)}
+                            className={`w-3 h-3 rounded-full ${
+                                currentIndex === index 
+                                    ? 'bg-primary scale-125' 
+                                    : 'bg-gray-300'
+                            } transition-all duration-300`}
                         />
                     ))}
                 </div>
@@ -195,16 +292,15 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     );
 };
 
-
 const UserProfile = ({ userData }: { userData: SignupFormData }) => (
     <div className="space-y-2">
         <h1 className="text-4xl font-bold">
-            Welcome, {userData.username}!
+            Welcome, {userData.firstName}!
         </h1>
-        <p className="text-lg text-gray-600">
+        {/* <p className="text-lg text-gray-600">
             Registered email: {userData.email}
-        </p>
-        <div className="divider" />
+        </p> */}
+        {/* <div className="divider" /> */}
     </div>
 );
 
@@ -229,6 +325,63 @@ const UserNotFound = () => (
 );
 
 
+const capitalizeFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+const AvatarPhoto = () => {
+    const { userData, loading } = useUser();
+    const avatarSize = 68;
+    return (
+        <div className='flex flex-col items-center space-y-2'>
+            <div className="avatar">
+                {loading ? (
+                    <div className={`mask mask-squircle w-${avatarSize}`}>
+                        <div className={`skeleton h-${avatarSize} w-${avatarSize} rounded-md`}></div>
+                    </div>
+                ) : (
+                    <div className={`mask mask-squircle w-${avatarSize}`}>
+                        {userData && userData.photoURL ? (
+                            <Image
+                                src={userData.photoURL}
+                                width={avatarSize}
+                                height={avatarSize}
+                                alt="Avatar"
+                                priority
+                            />
+                        ) : (
+                            <CameraIcon width={avatarSize} height={avatarSize} />
+                        )}
+                    </div>
+                )}
+            </div>
+            <div>
+                {loading ? (
+                    <div className="flex flex-col gap-4">
+                        <div className="skeleton h-4 w-72 rounded-md"></div>
+                    </div>
+                ) : (
+                    <div>
+                        {userData && userData.lastName && userData.firstName && userData.username ? (
+                            <div className="flex flex-col">
+                                <div className="text-secondary-content">
+                                    {capitalizeFirstLetter(userData.firstName)} {capitalizeFirstLetter(userData.lastName)}
+                                </div>
+                                <div className="text-gray-500">
+                                    {userData.username}
+                                </div>
+                            </div>
+                        ) : (
+                            <p>User not found</p>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+
 export default function UserPage() {
     const { username } = useParams();
     const router = useRouter();
@@ -248,18 +401,26 @@ export default function UserPage() {
     return (
         <div className="flex flex-row flex-start gap-8 p-2">
             <section className="w-2/3 flex flex-col min-h-screen">
-                {userData ? (
+                {userData?.firstName ? (
                     <div className="flex flex-col items-left gap-4">
                         {/* <AvatarSection photoURL={userData?.photoURL} /> */}
-                        <UserProfile userData={userData} />
+                        <UserProfile userData={{
+                            firstName: userData.firstName,
+                            username: userData.username || '',
+                            email: userData.email || '',
+                            photoURL: userData.photoURL
+                        }} />
                         
                     </div>
                 ) : (
                     <UserNotFound />
                 )}
             </section >
-            <section className="card w-1/3 bg-yellow-500 p-4">
-                <KidsGrid parentId={userData.uid} />
+            <section className="card w-1/3 bg-secondary p-4">
+                <div className="flex flex-col items-center space-y-12">
+                    <AvatarPhoto />
+                    <KidsGrid parentId={userData.uid} />
+                </div>
             </section>
         </div >
     );

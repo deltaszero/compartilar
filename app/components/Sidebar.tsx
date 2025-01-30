@@ -9,10 +9,10 @@ import NavLink from '@components/ui/NavLink';
 // import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
 // importing assets
-import CameraIcon from '@assets/icons/camera.svg';
 import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import TreeIcon from '@assets/icons/tree.svg';
+import LoginHeader from "@components/layout/LoginHeader";
 
 // animation variants
 const sidebarVariants = {
@@ -57,7 +57,7 @@ const NavItem = ({ href, currentPath, children }: NavItemProps) => {
             whileHover={{ x: isActive ? 0 : 10 }}
             className={`pl-2 ${
                 isActive 
-                    ? 'text-lg font-Raleway font-bold' 
+                    ? 'text-lg font-bold text-primary'
                     : 'font-light'
             }`}
         >
@@ -83,7 +83,7 @@ const PremiumCard = () => (
             Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
         </p>
         <div className="card-actions justify-end">
-            <button className={`btn rounded-lg hover:border-primaryPurple bg-primaryPurple text-base-100 hover:bg-white hover:text-primaryPurple font-raleway`}>
+            <button className={`btn rounded-lg hover:border-primary bg-primary text-base-100 hover:bg-white hover:text-primary font-raleway`}>
                 Ver Planos
             </button>
         </div>
@@ -95,10 +95,6 @@ export default function Sidebar() {
     const { userData, loading } = useUser();
     const pathname = usePathname();
 
-    const capitalizeFirstLetter = (string: string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-    }
-
     const navItems = userData ? [
         { path: `/${userData.username}`,           label: 'Meu Lar' },
         { path: `/${userData.username}/info`,      label: 'Informações' },
@@ -109,13 +105,16 @@ export default function Sidebar() {
         { path: `/${userData.username}/settings`,  label: 'Configurações' },
     ] : [];
 
-    const avatarSize = 68;
+    
 
     return (
         <div className="sticky top-0 h-screen overflow-y-none flex flex-col justify-between pb-6 pt-3">
             <div className={`text-neutral-content`}>
+                <div className="text-primary">
+                    <LoginHeader />
+                </div>
                 {/* avatar */}
-                <div className='flex flex-col items-center space-y-2'>
+                {/* <div className='flex flex-col items-center space-y-2'>
                     <div className="avatar">
                         {loading ? (
                             <div className={`mask mask-squircle w-${avatarSize}`}>
@@ -154,7 +153,8 @@ export default function Sidebar() {
                             </div>
                         )}
                     </div>
-                </div>
+                </div> */}
+                <div className="divider mx-6"></div>
                 {/* menu */}
                 <motion.nav
                     initial="hidden"
@@ -184,6 +184,7 @@ export default function Sidebar() {
                     )}
                 </motion.nav>
             </div>
+            <div className="divider mx-6"></div>
             <div>
                 <PremiumCard />
             </div>
