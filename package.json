@@ -14,7 +14,12 @@
         "serve": "firebase serve"
     },
     "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@mui/material": "^6.4.3",
+        "@mui/x-date-pickers": "^7.25.0",
         "daisyui": "^4.12.13",
+        "dayjs": "^1.11.13",
         "firebase": "^10.14.1",
         "firebase-functions": "^6.0.1",
         "firebase-tools": "^1.2.0",
