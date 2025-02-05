@@ -1,13 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DateCalendar, PickersDay, PickersDayProps } from '@mui/x-date-pickers';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { styled } from '@mui/material/styles';
 
-// Custom styled day component for highlighting days when the child is with the other parent
+// Mapeamento de dias da semana para números (0 = Domingo, 6 = Sábado)
+const DAY_NAME_TO_NUMBER: Record<string, number> = {
+    sundays: 0,
+    mondays: 1,
+    tuesdays: 2,
+    wednesdays: 3,
+    thursdays: 4,
+    fridays: 5,
+    saturdays: 6,
+};
+
+// Componente estilizado para dias de custódia
 const CustomPickersDay = styled(PickersDay, {
     shouldForwardProp: (prop) => prop !== 'isWithOtherParent',
 })<PickersDayProps<Dayjs> & { isWithOtherParent?: boolean }>(({ theme, isWithOtherParent }) => ({
@@ -27,15 +38,39 @@ interface CoParentingCalendarProps {
 const CoParentingCalendar: React.FC<CoParentingCalendarProps> = ({ coParentingDays }) => {
     const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
 
-    // Convert co-parenting days to Dayjs objects
-    const custodyDays = coParentingDays.map(day => dayjs(day));
+    // Processa os dias de co-parentalidade
+    const { specificDates, recurringDays } = useMemo(() => {
+        const specific: Dayjs[] = [];
+        const recurring: number[] = [];
 
-    // Function to check if a day is when the child is with the other parent
+        coParentingDays.forEach(entry => {
+            // Tenta parsear como data específica
+            const date = dayjs(entry, 'YYYY-MM-DD', true);
+            if (date.isValid()) {
+                specific.push(date);
+            }
+            // Verifica se é um dia recorrente
+            else {
+                const normalized = entry.toLowerCase().replace(/s$/, '') + 's'; // Garante plural
+                if (DAY_NAME_TO_NUMBER[normalized] !== undefined) {
+                    recurring.push(DAY_NAME_TO_NUMBER[normalized]);
+                }
+            }
+        });
+
+        return {
+            specificDates: specific,
+            recurringDays: Array.from(new Set(recurring)) // Remove duplicatas
+        };
+    }, [coParentingDays]);
+
+    // Verifica se um dia deve ser destacado
     const isWithOtherParent = (day: Dayjs) => {
-        return custodyDays.some(custodyDay => custodyDay.isSame(day, 'day'));
+        return specificDates.some(d => d.isSame(day, 'day')) ||
+            recurringDays.includes(day.day());
     };
 
-    // Custom day renderer to highlight custody days
+    // Renderiza os dias personalizados
     const renderDay = (props: PickersDayProps<Dayjs>) => {
         const { day, ...other } = props;
         return (
@@ -47,11 +82,6 @@ const CoParentingCalendar: React.FC<CoParentingCalendarProps> = ({ coParentingDa
         );
     };
 
-    // Handle month navigation
-    const handleMonthChange = (newMonth: Dayjs) => {
-        setCurrentDate(newMonth);
-    };
-
     return (
         <div className="w-full max-w-md mx-auto p-4">
             <div className="card bg-base-100 shadow-xl">
@@ -61,10 +91,7 @@ const CoParentingCalendar: React.FC<CoParentingCalendarProps> = ({ coParentingDa
                         <DateCalendar
                             value={currentDate}
                             onChange={(newValue) => setCurrentDate(newValue)}
-                            onMonthChange={handleMonthChange}
-                            slots={{
-                                day: renderDay,
-                            }}
+                            slots={{ day: renderDay }}
                             className="w-full"
                         />
                     </LocalizationProvider>
@@ -74,16 +101,15 @@ const CoParentingCalendar: React.FC<CoParentingCalendarProps> = ({ coParentingDa
     );
 };
 
-// Simulated backend response
+// Uso mantido conforme solicitado
 const mockCoParentingDays = [
-    "2025-02-05", // Specific date
-    "2025-02-06", // Specific date
-    "2025-02-12", // Specific date
-    "2025-02-13", // Specific date
-    "fridays", "saturdays", "sundays" // Recurring events
+    "2025-02-05",
+    "2025-02-06",
+    "2025-02-12",
+    "2025-02-13",
+    "tuesdays",
 ];
 
-// Usage
 export default function CalendarPage() {
     return <CoParentingCalendar coParentingDays={mockCoParentingDays} />;
 }

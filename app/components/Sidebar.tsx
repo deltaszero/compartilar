@@ -125,9 +125,7 @@ export default function Sidebar() {
     return (
         <div className="sticky top-0 h-screen overflow-y-none flex flex-col justify-between pb-6 pt-3">
             <div className={`text-neutral-content`}>
-                <div className="text-primary">
                     <LoginHeader />
-                </div>
                 <div className="divider mx-6"></div>
                 {/* menu */}
                 <motion.nav
