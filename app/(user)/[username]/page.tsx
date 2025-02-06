@@ -2,7 +2,6 @@
 'use client';
 // imoprting built-in modules
 import { useEffect, useState } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -16,8 +15,9 @@ import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@context/userContext';
 // import { SignupFormData } from '@/types/signup.types';
 // importing assets
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CameraIcon from '@assets/icons/camera.svg';
+// importring components 
+import CalendarPage from "@components/CoparentingCalendar";
 
 export interface SignupFormData {
     firstName: string;
@@ -119,89 +119,6 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
     </div>
 );
 
-
-// const KidsGrid = ({ parentId }: { parentId: string }) => {
-//     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
-//     const [currentIndex, setCurrentIndex] = useState(0);
-//     const [loading, setLoading] = useState(true);
-//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//     const [transitionDirection, setTransitionDirection] = useState<'left'|'right'>('right');
-
-//     useEffect(() => {
-//         const loadChildren = async () => {
-//             try {
-//                 const data = await fetchChildren(parentId);
-//                 setKidsArray(data);
-//             } catch (error) {
-//                 console.error('Error fetching children:', error);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         loadChildren();
-//     }, [parentId]);
-
-//     const handleNext = () => {
-//         setTransitionDirection('right');
-//         setCurrentIndex((prevIndex) => (prevIndex + 1) % kidsArray.length);
-//     };
-//     const handlePrev = () => {
-//         setTransitionDirection('left');
-//         setCurrentIndex((prevIndex) => 
-//             prevIndex === 0 ? kidsArray.length - 1 : prevIndex - 1
-//         );
-//     };
-
-//     if (loading) return <div className="w-full h-48 flex items-center justify-center"><span className="loading loading-spinner loading-lg"></span></div>;
-//     if (!kidsArray.length) return null;
-
-//     return (
-//         <section>
-//             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
-//             <div className="carousel w-full flex items-center justify-center overflow-hidden relative">
-//                 {/* Carousel Items Container */}
-//                 <div className={`flex transition-transform duration-500 ease-in-out`} style={{ transform: `translateX(-${currentIndex * 100}%)`, width: `${kidsArray.length * 100}%`}}>
-//                     {kidsArray.map((kid, index) => (
-//                         <div key={kid.id} className="w-full max-w-md flex-shrink-0 relative">
-//                             <div className={`transition-opacity duration-300 ${currentIndex === index ? 'opacity-100' : 'opacity-0'}`}>
-//                                 <ChildCard kid={kid} />
-//                             </div>
-//                         </div>
-//                     ))}
-//                 </div>
-//                 {/* Navigation Buttons */}
-//                 <div className="absolute z-20 flex justify-between transform -translate-y-1/2 left-0 right-0 top-1/2">
-//                     <button 
-//                         onClick={handlePrev} 
-//                         className="btn btn-circle btn-outline shadow-lg"
-//                         aria-label="Previous Child"
-//                     >
-//                         ❮
-//                     </button>
-//                     <button 
-//                         onClick={handleNext} 
-//                         // className="btn btn-circle btn-outline shadow-lg hover:scale-110 transition-transform"
-//                         className="btn btn-circle btn-outline shadow-lg"
-//                         aria-label="Next Child"
-//                     >
-//                         ❯
-//                     </button>
-//                 </div>
-//                 {/* Progress Indicators */}
-//                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-//                     {kidsArray.map((_, index) => (
-//                         <div 
-//                             key={index}
-//                             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-//                                 currentIndex === index ? 'bg-primary scale-125' : 'bg-gray-300'
-//                             }`}
-//                         />
-//                     ))}
-//                 </div>
-//             </div>
-//         </section>
-//     );
-// };
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -415,6 +332,9 @@ export default function UserPage() {
                 ) : (
                     <UserNotFound />
                 )}
+                <div className="w-full">
+                    <CalendarPage />
+                </div>
             </section >
             <section className="card w-1/3 bg-secondary p-4">
                 <div className="flex flex-col items-center space-y-12">
