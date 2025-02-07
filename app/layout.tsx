@@ -1,34 +1,25 @@
 // app/layout.tsx
-
-// importing modules and components
 import Script from 'next/script';
 import Analytics from '@components/Analytics';
 import { Inter, Raleway, Playfair_Display, Nunito } from 'next/font/google';
 import { UserProvider } from '@context/userContext';
-// importing types
 import type { Metadata } from "next";
-// importing styles
 import "@app/globals.css";
 
-// setting up fonts
 const inter = Inter({ subsets: ["latin"] });
 const raleway = Raleway({
     subsets: ['latin'],
-    // display: 'swap',
     variable: '--font-raleway',
 })
 const playfair = Playfair_Display({
     subsets: ['latin'],
-    // display: 'swap',
     variable: '--font-playfair',
 })
 const nunito = Nunito({
     subsets: ['latin'],
-    // display: 'swap',
     variable: '--font-nunito',
 })
 
-// setting up metadata
 export const metadata: Metadata = {
     title: "CompartiLar - Facilite a coparentalidade organizando tudo em um só lugar!",
     description: "Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.",
@@ -94,7 +85,7 @@ export default function RootLayout({
             className={`${raleway.variable} ${playfair.variable} ${nunito.variable} scroll-smooth antialiased`}
         >
             <head>
-                {/* Google Analytics */}
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
                 <Script
                     src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}`}
                     strategy="afterInteractive"
@@ -108,9 +99,9 @@ export default function RootLayout({
                     `}
                 </Script>
             </head>
-            <body className={`${inter.className} flex flex-col`}>
+            <body className={`${inter.className} min-h-screen flex flex-col`}>
                 <UserProvider>
-                    <main>
+                    <main className="flex-grow">
                         <Analytics />
                         {children}
                     </main>
