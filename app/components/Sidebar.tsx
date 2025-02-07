@@ -12,7 +12,7 @@ import { useUser } from '@context/userContext';
 import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 import LoginHeader from "@components/layout/LoginHeader";
 import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
-import IconInfo from '@assets/icons/icon_meu_lar_info.svg';
+// import IconInfo from '@assets/icons/icon_meu_lar_info.svg';
 import IconPlan from '@assets/icons/icon_meu_lar_plan.svg';
 import IconCalendar from '@assets/icons/icon_meu_lar_calendar.svg';
 import IconFinance from '@assets/icons/icon_meu_lar_finance.svg';
@@ -85,7 +85,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
                 <div className="collapse-content">
                     {subpages.map(subpage => (
                         <NavLink key={subpage.path} href={subpage.path}>
-                            <p className={`text-sm hover:text-primary ${currentPath === subpage.path ? 'text-primary text-lg' : ''}`}>
+                            <p className={`pl-10 pb-1 text-sm hover:text-primary ${currentPath === subpage.path ? 'text-primary text-lg' : ''}`}>
                                 {subpage.label}
                             </p>
                         </NavLink>
@@ -128,23 +128,17 @@ export default function Sidebar() {
     const navItems = userData ? [
         {
             path: `/${userData.username}`, label: 'Meu Lar', icon: <IconMeuLar width={24} height={24} />,
-        },
-        { 
-            path: `/${userData.username}/info`, label: 'Informações', icon: <IconInfo width={24} height={24} /> ,
             subpages: [
-                {
-                    path: `/${userData.username}/plan/resumo`,
-                    label: 'Resumo'
-                }
+                { path: `/${userData.username}/`, label: 'Início' },
+                { path: `/${userData.username}/info`, label: 'Informações' },
+                { path: `/${userData.username}/friends`, label: 'Rede de Apoio' }
             ]
         },
         {
-            path: `/${userData.username}/plan`, label: 'Plano de Parentalidade', icon: <IconPlan width={24} height={24} />,
+            path: `/${userData.username}/plan/resumo`, label: 'Plano de Parentalidade', icon: <IconPlan width={24} height={24} />,
             subpages: [
-                {
-                    path: `/${userData.username}/plan/resumo`,
-                    label: 'Resumo'
-                }
+                { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
+                { path: `/${userData.username}/plan/form`, label: 'Formulário'},
             ]
         },
         { path: `/${userData.username}/calendar`, label: 'Calendário', icon: <IconCalendar width={24} height={24} /> },

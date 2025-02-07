@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import {
     collection,
-    query, 
+    query,
     where,
     getDocs
 } from 'firebase/firestore';
@@ -16,11 +16,15 @@ import { useUser } from '@context/userContext';
 // import { SignupFormData } from '@/types/signup.types';
 // importing assets
 import CameraIcon from '@assets/icons/camera.svg';
+import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
+import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
+// import IconMsg from '@assets/icons/icon_meu_lar_msg.svg';
 // importring components 
 import CalendarPage from "@components/CoparentingCalendar";
 
 export interface SignupFormData {
     firstName: string;
+    lastName: string;
     username: string;
     email: string;
     password?: string;
@@ -35,25 +39,25 @@ interface KidInfo {
     birthDate: string;
     gender: 'male' | 'female' | 'other' | null;
     relationship: 'biological' | 'adopted' | 'guardian' | null;
-  }
+}
 
 
-// const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
-//     <div className="mask mask-squircle w-32 h-32 bg-gray-100 flex items-center justify-center">
-//         {photoURL ? (
-//             <Image
-//                 src={photoURL}
-//                 width={128}
-//                 height={128}
-//                 alt="User avatar"
-//                 className="object-cover"
-//                 priority
-//             />
-//         ) : (
-//             <CameraIcon className="w-12 h-12 text-gray-400" />
-//         )}
-//     </div>
-// );
+const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
+    <div className="mask mask-squircle w-10 h-10 bg-gray-100 flex items-center justify-center">
+        {photoURL ? (
+            <Image
+                src={photoURL}
+                width={128}
+                height={128}
+                alt="User avatar"
+                className="object-cover"
+                priority
+            />
+        ) : (
+            <CameraIcon className="w-12 h-12 text-gray-400" />
+        )}
+    </div>
+);
 
 
 const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
@@ -155,19 +159,19 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     return (
         <section className="w-full">
             <h2 className="text-2xl font-semibold mb-6">Children Profiles</h2>
-            
+
             <div className="carousel w-full relative">
                 {/* Slides Container */}
-                <div 
+                <div
                     className="flex transition-transform duration-500 ease-in-out"
-                    style={{ 
+                    style={{
                         transform: `translateX(-${currentIndex * 100}%)`,
                         width: `${kidsArray.length * 100}%`
                     }}
                 >
                     {kidsArray.map((kid) => (
-                        <div 
-                            key={kid.id} 
+                        <div
+                            key={kid.id}
                             className="carousel-item relative w-full flex justify-center"
                         >
                             <ChildCard kid={kid} />
@@ -176,13 +180,13 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                 </div>
                 {/* Navigation Controls */}
                 <div className="absolute flex justify-between transform -translate-y-1/2 left-2 right-2 top-1/2 mx-4">
-                    <button 
+                    <button
                         onClick={handlePrev}
-                        // className="btn btn-circle btn-outline shadow-lg"
+                    // className="btn btn-circle btn-outline shadow-lg"
                     >
                         {/* ❮ */}
                     </button>
-                    <button 
+                    <button
                         onClick={handleNext}
                         className="btn btn-circle btn-outline shadow-lg"
                     >
@@ -196,11 +200,10 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                         <button
                             key={index}
                             onClick={() => setCurrentIndex(index)}
-                            className={`w-3 h-3 rounded-full ${
-                                currentIndex === index 
-                                    ? 'bg-primary scale-125' 
-                                    : 'bg-gray-300'
-                            } transition-all duration-300`}
+                            className={`w-3 h-3 rounded-full ${currentIndex === index
+                                ? 'bg-primary scale-125'
+                                : 'bg-gray-300'
+                                } transition-all duration-300`}
                         />
                     ))}
                 </div>
@@ -246,64 +249,102 @@ const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
-const AvatarPhoto = () => {
-    const { userData, loading } = useUser();
-    const avatarSize = 68;
-    return (
-        <div className='flex flex-col items-center space-y-2'>
-            <div className="avatar">
-                {loading ? (
-                    <div className={`mask mask-squircle w-${avatarSize}`}>
-                        <div className={`skeleton h-${avatarSize} w-${avatarSize} rounded-md`}></div>
-                    </div>
-                ) : (
-                    <div className={`mask mask-squircle w-${avatarSize}`}>
-                        {userData && userData.photoURL ? (
-                            <Image
-                                src={userData.photoURL}
-                                width={avatarSize}
-                                height={avatarSize}
-                                alt="Avatar"
-                                priority
-                            />
-                        ) : (
-                            <CameraIcon width={avatarSize} height={avatarSize} />
-                        )}
-                    </div>
-                )}
+// const AvatarPhoto = () => {
+//     const { userData, loading } = useUser();
+//     const avatarSize = 68;
+//     return (
+//         <div className='flex flex-col items-center space-y-2'>
+//             <div className="avatar">
+//                 {loading ? (
+//                     <div className={`mask mask-squircle w-${avatarSize}`}>
+//                         <div className={`skeleton h-${avatarSize} w-${avatarSize} rounded-md`}></div>
+//                     </div>
+//                 ) : (
+//                     <div className={`mask mask-squircle w-${avatarSize}`}>
+//                         {userData && userData.photoURL ? (
+//                             <Image
+//                                 src={userData.photoURL}
+//                                 width={avatarSize}
+//                                 height={avatarSize}
+//                                 alt="Avatar"
+//                                 priority
+//                             />
+//                         ) : (
+//                             <CameraIcon width={avatarSize} height={avatarSize} />
+//                         )}
+//                     </div>
+//                 )}
+//             </div>
+//             <div>
+//                 {loading ? (
+//                     <div className="flex flex-col gap-4">
+//                         <div className="skeleton h-4 w-72 rounded-md"></div>
+//                     </div>
+//                 ) : (
+//                     <div>
+//                         {userData && userData.lastName && userData.firstName && userData.username ? (
+//                             <div className="flex flex-col">
+//                                 <div className="text-secondary-content">
+//                                     {capitalizeFirstLetter(userData.firstName)} {capitalizeFirstLetter(userData.lastName)}
+//                                 </div>
+//                                 <div className="text-gray-500">
+//                                     {userData.username}
+//                                 </div>
+//                             </div>
+//                         ) : (
+//                             <p>User not found</p>
+//                         )}
+//                     </div>
+//                 )}
+//             </div>
+//         </div>
+//     )
+// }
+
+
+const UserNavbar = ({ userData }: { userData: Partial<SignupFormData> }) => (
+    <div className="navbar bg-base-100">
+        <div className="flex-1">
+                <IconMeuLar width={32} height={32} />
+                {/* <p className="font-normal">Início</p> */}
+        </div>
+        <div className="flex-none gap-4">
+            <IconBell width={32} height={32} />
+            <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                    <AvatarSection photoURL={userData?.photoURL} />
+                </div>
+                <ul
+                    tabIndex={0}
+                    className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                    <li>
+                        <a className="justify-between">
+                            Profile
+                            <span className="badge">New</span>
+                        </a>
+                    </li>
+                    <li><a>Settings</a></li>
+                    <li><a>Logout</a></li>
+                </ul>
             </div>
-            <div>
-                {loading ? (
-                    <div className="flex flex-col gap-4">
-                        <div className="skeleton h-4 w-72 rounded-md"></div>
-                    </div>
-                ) : (
-                    <div>
-                        {userData && userData.lastName && userData.firstName && userData.username ? (
-                            <div className="flex flex-col">
-                                <div className="text-secondary-content">
-                                    {capitalizeFirstLetter(userData.firstName)} {capitalizeFirstLetter(userData.lastName)}
-                                </div>
-                                <div className="text-gray-500">
-                                    {userData.username}
-                                </div>
-                            </div>
-                        ) : (
-                            <p>User not found</p>
-                        )}
-                    </div>
-                )}
+            <div className="flex flex-col justify-around">
+                <div className="text-secondary-content">
+                    {userData.firstName && capitalizeFirstLetter(userData.firstName)} {userData.lastName && capitalizeFirstLetter(userData.lastName)}
+                </div>
+                <div className="text-gray-500">
+                    {userData.username}
+                </div>
             </div>
         </div>
-    )
-}
+    </div>
+);
 
 
 export default function UserPage() {
     const { username } = useParams();
     const router = useRouter();
     const { user, userData, loading } = useUser();
-    
+
     // check if user is logged in and if the user is the same as the one being accessed
     useEffect(() => {
         if (!loading) {
@@ -316,32 +357,36 @@ export default function UserPage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <div className="flex flex-row flex-start gap-8 p-2">
-            <section className="w-2/3 flex flex-col min-h-screen">
-                {userData?.firstName ? (
-                    <div className="flex flex-col items-left gap-4">
-                        {/* <AvatarSection photoURL={userData?.photoURL} /> */}
-                        <UserProfile userData={{
-                            firstName: userData.firstName,
-                            username: userData.username || '',
-                            email: userData.email || '',
-                            photoURL: userData.photoURL
-                        }} />
-                        
+        <div className="flex flex-col items-start space-y-3">
+            {/* NAVBAR */}
+            <UserNavbar userData={userData} />
+            <div className="flex flex-row flex-start gap-8 w-full">
+                <section className="w-2/3 flex flex-col min-h-screen">
+                    {userData?.firstName ? (
+                        <div className="flex flex-col items-left gap-4">
+                            {/* <AvatarSection photoURL={userData?.photoURL} /> */}
+                            <UserProfile userData={{
+                                firstName: userData.firstName,
+                                lastName: userData.lastName || '',
+                                username: userData.username || '',
+                                email: userData.email || '',
+                                photoURL: userData.photoURL
+                            }} />
+                        </div>
+                    ) : (
+                        <UserNotFound />
+                    )}
+                    <div className="w-full">
+                        <CalendarPage />
                     </div>
-                ) : (
-                    <UserNotFound />
-                )}
-                <div className="w-full">
-                    <CalendarPage />
-                </div>
-            </section >
-            <section className="card w-1/3 bg-secondary p-4">
-                <div className="flex flex-col items-center space-y-12">
-                    <AvatarPhoto />
-                    <KidsGrid parentId={userData.uid} />
-                </div>
-            </section>
-        </div >
+                </section >
+                <section className="card w-1/3 bg-secondary p-4">
+                    <div className="flex flex-col items-center space-y-12">
+                        {/* <AvatarPhoto /> */}
+                        <KidsGrid parentId={userData.uid} />
+                    </div>
+                </section>
+            </div >
+        </div>
     );
 }
