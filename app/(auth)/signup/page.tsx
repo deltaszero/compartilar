@@ -258,95 +258,129 @@ export default function SignupPage() {
             }
         }
     };
+    const stepName = {
+        'basic-info': 'Nova Conta',
+        'profile-picture': 'Avatar',
+        'account-info': 'Informações',
+        'kids-info': 'Filhotes',
+        'verification': 'Verification'
+    }
     return (
         <div className="w-full flex flex-col items-center justify-center align-start p-4">
             <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg px-6 py-3 space-y-12">
                 <div className="text-primary">
                     <LoginHeader />
                 </div>
-                <div className="flex flex-row space-x-12">
-                    <div className="flex flex-col w-1/4">
+                <div className="flex flex-col md:flex-row md:space-x-12">
+                    <div className="hidden md:flex md:flex-col w-1/4">
                         <ul className="steps steps-vertical">
                             {stepsOrder.map((step, index) => (
                                 <div 
-                                    key = {step}
-                                    className = {`step ${index < currentStepIndex + 1 ? 'step-primary' : ''}`}
-                                    data-content = {
-                                        index === currentStepIndex ? '' : 
-                                            // index < currentStepIndex + 1 ? '✓' : ''
-                                            index < currentStepIndex + 1 ? '' : ''
-                                    }
+                                    key={step}
+                                    className={`step ${index < currentStepIndex + 1 ? 'step-primary' : ''}`}
+                                    data-content={index < currentStepIndex + 1 ? '' : ''}
                                 >
-                                    <span className="hidden md:inline">
-                                        {step.replace('-', ' ').toUpperCase()}
+                                    <span className={`hidden md:inline font-bold text-gray-500 font-nunito ${index <= currentStepIndex ? 'text-primary' : ''}`}>
+                                        {/* {step.replace('-', ' ').toUpperCase()} */}
+                                        {stepName[step]}
                                     </span>
                                 </div>
                             ))}
                         </ul>
                     </div>
-                    <div className="step-content w-3/4">
+                    <div className="w-full md:w-3/4">
+                        {/* Mobile Progress Indicator */}
+                        <div className="md:hidden mb-6 text-md font-bold text-center text-gray-500 font-nunito">
+                            {/* Step {currentStepIndex + 1} of {stepsOrder.length}: {stepsOrder[currentStepIndex].replace('-', ' ').toUpperCase()} */}
+                            {stepName[stepsOrder[currentStepIndex]]}
+                        </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* BASIC INFO STEP */}
                             {currentStep === SignupStep.BASIC_INFO && (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <input
-                                        type="email"
-                                        placeholder="Email"
-                                        value={formData.email}
-                                        onChange={(e) => updateFormData({ email: e.target.value })}
-                                        className="input input-bordered"
-                                        required
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Username"
-                                        value={formData.username}
-                                        onChange={(e) => updateFormData({ username: e.target.value })}
-                                        className="input input-bordered"
-                                        pattern="^[a-zA-Z0-9_-]{3,20}$"
-                                        title="Username must be 3-20 characters (letters, numbers, underscores, hyphens)"
-                                        required
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        value={formData.password}
-                                        onChange={(e) => updateFormData({ password: e.target.value })}
-                                        className="input input-bordered"
-                                        minLength={8}
-                                        required
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Confirm Password"
-                                        value={formData.confirmPassword}
-                                        onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                                        className="input input-bordered"
-                                        required
-                                    />
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Esse e-mail será utilizado no login
+                                        </p>
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={formData.email}
+                                            onChange={(e) => updateFormData({ email: e.target.value })}
+                                            className="input input-bordered"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Escolha um nome de usuário sem espaços
+                                        </p>
+                                        <input
+                                            type="text"
+                                            placeholder="Username"
+                                            value={formData.username}
+                                            onChange={(e) => updateFormData({ username: e.target.value })}
+                                            className="input input-bordered"
+                                            pattern="^[a-zA-Z0-9_-]{3,20}$"
+                                            title="Username must be 3-20 characters (letters, numbers, underscores, hyphens)"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Escolha uma senha segura, com no mínimo 6 caracteres
+                                        </p>
+                                        <input
+                                            type="password"
+                                            placeholder="Password"
+                                            value={formData.password}
+                                            onChange={(e) => updateFormData({ password: e.target.value })}
+                                            className="input input-bordered"
+                                            minLength={8}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Digite a mesma senha escolhida acima
+                                        </p>
+                                        <input
+                                            type="password"
+                                            placeholder="Confirm Password"
+                                            value={formData.confirmPassword}
+                                            onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
+                                            className="input input-bordered"
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             )}
                             {/* PROFILE PICTURE STEP */}
                             {currentStep === SignupStep.PROFILE_PICTURE && (
                                 <div className="flex flex-col items-center gap-4">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = () => {
-                                                    updateFormData({ 
-                                                        photoURL: reader.result as string 
-                                                    });
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }}
-                                        className="file-input file-input-bordered file-input-primary w-full"
-                                        required
-                                    />
+                                    <div className="flex flex-col gap-1">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Escolha uma imagem de perfil 😊 Essa imagem será visível apenas pela sua rede de apoio na área logada do site
+                                        </p>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => {
+                                                        updateFormData({ 
+                                                            photoURL: reader.result as string 
+                                                        });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            className="file-input file-input-bordered file-input-primary w-full"
+                                            required
+                                        />
+                                    </div>
                                     {formData.photoURL && (
                                         <div className="relative group">
                                             <Image 
@@ -366,35 +400,55 @@ export default function SignupPage() {
                             {/* ACCOUNT INFO STEP */}
                             {currentStep === SignupStep.ACCOUNT_INFO && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input
-                                        type="text"
-                                        placeholder="First Name"
-                                        value={formData.firstName}
-                                        onChange={(e) => updateFormData({ firstName: e.target.value })}
-                                        className="input input-bordered"
-                                        required
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Last Name"
-                                        value={formData.lastName}
-                                        onChange={(e) => updateFormData({ lastName: e.target.value })}
-                                        className="input input-bordered"
-                                        required
-                                    />
-                                    <input
-                                        type="tel"
-                                        placeholder="Phone Number"
-                                        value={formData.phoneNumber}
-                                        onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
-                                        className="input input-bordered"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={formData.birthDate}
-                                        onChange={(e) => updateFormData({ birthDate: e.target.value })}
-                                        className="input input-bordered"
-                                    />
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Primeiro nome
+                                        </p>
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            value={formData.firstName}
+                                            onChange={(e) => updateFormData({ firstName: e.target.value })}
+                                            className="input input-bordered"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Último nome
+                                        </p>
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            value={formData.lastName}
+                                            onChange={(e) => updateFormData({ lastName: e.target.value })}
+                                            className="input input-bordered"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Data de nascimento
+                                        </p>
+                                        <input
+                                            type="date"
+                                            value={formData.birthDate}
+                                            onChange={(e) => updateFormData({ birthDate: e.target.value })}
+                                            className="input input-bordered"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Número de telefone 🤙 Sem espaços
+                                        </p>
+                                        <input
+                                            type="tel"
+                                            placeholder="Phone Number"
+                                            value={formData.phoneNumber}
+                                            onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
+                                            className="input input-bordered"
+                                        />
+                                    </div>
                                 </div>
                             )}
 
@@ -404,45 +458,65 @@ export default function SignupPage() {
                                     {Object.values(formData.kids).map((kid) => (
                                         <div key={kid.id} className="card bg-base-100 p-4 shadow">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <input
-                                                    type="text"
-                                                    placeholder="First Name"
-                                                    value={kid.firstName}
-                                                    onChange={(e) => addKid({ ...kid, firstName: e.target.value })}
-                                                    className="input input-bordered"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Last Name"
-                                                    value={kid.lastName}
-                                                    onChange={(e) => addKid({ ...kid, lastName: e.target.value })}
-                                                    className="input input-bordered"
-                                                />
-                                                <input
-                                                    type="date"
-                                                    value={kid.birthDate}
-                                                    onChange={(e) => addKid({ ...kid, birthDate: e.target.value })}
-                                                    className="input input-bordered"
-                                                />
-                                                <select
-                                                    value={kid.gender || ''}
-                                                    onChange={(e) => addKid({ 
-                                                        ...kid, 
-                                                        gender: e.target.value as KidInfo['gender'] 
-                                                    })}
-                                                    className="select select-bordered"
-                                                >
-                                                    <option value="">Select Gender</option>
-                                                    <option value="male">Male</option>
-                                                    <option value="female">Female</option>
-                                                    <option value="other">Other</option>
-                                                </select>
+                                                <div className="flex flex-col">
+                                                    <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                                        Primeiro nome
+                                                    </p>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="First Name"
+                                                        value={kid.firstName}
+                                                        onChange={(e) => addKid({ ...kid, firstName: e.target.value })}
+                                                        className="input input-bordered"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                                        Último nome
+                                                    </p>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Last Name"
+                                                        value={kid.lastName}
+                                                        onChange={(e) => addKid({ ...kid, lastName: e.target.value })}
+                                                        className="input input-bordered"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                                        Data de nascimento
+                                                    </p>
+                                                    <input
+                                                        type="date"
+                                                        value={kid.birthDate}
+                                                        onChange={(e) => addKid({ ...kid, birthDate: e.target.value })}
+                                                        className="input input-bordered"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                                        Gênero
+                                                    </p>
+                                                    <select
+                                                        value={kid.gender || ''}
+                                                        onChange={(e) => addKid({ 
+                                                            ...kid, 
+                                                            gender: e.target.value as KidInfo['gender'] 
+                                                        })}
+                                                        className="select select-bordered"
+                                                    >
+                                                        <option value="">Select Gender</option>
+                                                        <option value="male">Masculino</option>
+                                                        <option value="female">Feminino</option>
+                                                        <option value="other">Outro</option>
+                                                    </select>
+                                                </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => removeKid(kid.id)}
                                                     className="btn btn-error"
                                                 >
-                                                    Remove
+                                                    Remover
                                                 </button>
                                             </div>
                                         </div>
@@ -457,9 +531,9 @@ export default function SignupPage() {
                                             gender: null,
                                             relationship: null
                                         })}
-                                        className="btn btn-ghost max-w-xs text-primary"
+                                        className="btn btn-ghost max-w-xs text-primary font-bold"
                                     >
-                                        Add Child
+                                        Adicionar
                                     </button>
                                 </div>
                             )}
@@ -497,7 +571,7 @@ export default function SignupPage() {
                                             onClick={() => handleStepNavigation('prev')}
                                             className="btn btn-ghost"
                                         >
-                                            ← Previous
+                                            ← Voltar
                                         </button>
                                     )}
                                     
@@ -508,7 +582,7 @@ export default function SignupPage() {
                                             className="btn btn-primary ml-auto text-white"
                                             disabled={!validateCurrentStep()}
                                         >
-                                            Next →
+                                            Avançar →
                                         </button>
                                     ) : (
                                         <button
