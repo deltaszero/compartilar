@@ -135,7 +135,7 @@ export default function Sidebar() {
             ]
         },
         {
-            path: `/${userData.username}/plan/resumo`, label: 'Plano de Parentalidade', icon: <IconPlan width={24} height={24} />,
+            path: `/${userData.username}/plan/resumo`, label: 'Plano Parental', icon: <IconPlan width={24} height={24} />,
             subpages: [
                 { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
                 { path: `/${userData.username}/plan/form`, label: 'Formulário'},
@@ -151,16 +151,17 @@ export default function Sidebar() {
 
     return (
         // <div className="flex flex-col justify-between sticky top-0 overflow-y-none pt-3">
-        <div className="flex flex-col justify-between h-screen overflow-y-none ">
-            <div className={`text-neutral-content`}>
-                <LoginHeader />
-                <div className="divider mx-6"></div>
+        <div className="flex flex-col justify-between xl:h-screen overflow-y-none ">
+            <div className="text-neutral-content pt-4">
+                <div className="hidden xl:flex flex-row justify-center items-center space-x-2">
+                    <LoginHeader />
+                </div>
                 {/* menu */}
                 <motion.nav
                     initial="hidden"
                     animate="visible"
                     variants={sidebarVariants}
-                    className="flex flex-col gap-2"
+                    className="flex flex-col gap-2 xl:my-4"
                 >
                     {loading ? (
                         <motion.div variants={itemVariants} className="flex flex-col gap-4 mx-6 my-6">
@@ -190,10 +191,10 @@ export default function Sidebar() {
                     )}
                 </motion.nav>
             </div>
-            <div className="divider mx-6"></div>
+            {/* <div className="divider mx-6"></div>
             <div>
                 <PremiumCard />
-            </div>
+            </div> */}
         </div>
     );
 }
