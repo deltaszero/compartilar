@@ -3,13 +3,13 @@
 // importing modules
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
+// import Image from 'next/image';
 // importing components
 import NavLink from '@components/ui/NavLink';
 // import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
 // importing assets
-import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
+// import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 import LoginHeader from "@components/layout/LoginHeader";
 import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
 // import IconInfo from '@assets/icons/icon_meu_lar_info.svg';
@@ -98,28 +98,28 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
     );
 };
 
-const PremiumCard = () => (
-    <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
-        <Image
-            src={premiumImage}
-            alt="Call to Action Image: Hand holding a house"
-            className='rounded-t-xl'
-        />
-        <div className="card-body flex flex-col gap-2">
-            <p className="card-title font-Raleway text-md">
-                Aprimore Sua Experiência
-            </p>
-            <p className="font-Raleway text-sm">
-                Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
-            </p>
-            <div className="card-actions justify-end">
-                <button className={`btn rounded-lg hover:border-primary bg-primary text-base-100 hover:bg-white hover:text-primary font-raleway`}>
-                    Ver Planos
-                </button>
-            </div>
-        </div>
-    </div>
-);
+// const PremiumCard = () => (
+//     <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
+//         <Image
+//             src={premiumImage}
+//             alt="Call to Action Image: Hand holding a house"
+//             className='rounded-t-xl'
+//         />
+//         <div className="card-body flex flex-col gap-2">
+//             <p className="card-title font-Raleway text-md">
+//                 Aprimore Sua Experiência
+//             </p>
+//             <p className="font-Raleway text-sm">
+//                 Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
+//             </p>
+//             <div className="card-actions justify-end">
+//                 <button className={`btn rounded-lg hover:border-primary bg-primary text-base-100 hover:bg-white hover:text-primary font-raleway`}>
+//                     Ver Planos
+//                 </button>
+//             </div>
+//         </div>
+//     </div>
+// );
 
 export default function Sidebar() {
     const { userData, loading } = useUser();

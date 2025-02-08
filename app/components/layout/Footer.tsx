@@ -37,18 +37,19 @@ const SocialLink = ({ Icon, label, href }: SocialLinkProps) => (
 );
 
 const Footer = () => (
-    <footer className="footer items-center p-4 bg-base-100 text-neutral">
+    <footer className="footer items-center p-2 bg-base-100 text-neutral">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <nav className="flex flex-col md:flex-row items-center gap-4">
+            <nav className="flex flex-col md:gap-2">
                 {socialLinks.map((link, index) => (
                     <SocialLink key={index} {...link} />
                 ))}
             </nav>
-            <aside className="flex items-center gap-4">
+            <aside className="flex items-center gap-2">
                 <DSZeroIcon width={50} height={50} className="flex-shrink-0" />
-                <div className="flex flex-col text-sm md:text-base">
+                <div className="flex flex-col text-xs md:text-sm">
                     <p>&copy; {new Date().getFullYear()} CompartiLar. Todos os direitos reservados.</p>
-                    <p>Desenvolvido por DSZero Consultoria &mdash; powered by ⌨</p>
+                    <p>Desenvolvido por DSZero Consultoria</p>
+                    <p>Powered by ⌨</p>
                 </div>
             </aside>
         </div>

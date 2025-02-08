@@ -1,7 +1,7 @@
 // app/layout.tsx
 import Script from 'next/script';
 import Analytics from '@components/Analytics';
-import { Inter, Raleway, Playfair_Display, Nunito } from 'next/font/google';
+import { Inter, Raleway, Playfair_Display, Nunito, Cinzel_Decorative } from 'next/font/google';
 import { UserProvider } from '@context/userContext';
 import type { Metadata } from "next";
 import "@app/globals.css";
@@ -18,6 +18,11 @@ const playfair = Playfair_Display({
 const nunito = Nunito({
     subsets: ['latin'],
     variable: '--font-nunito',
+})
+const cinzel = Cinzel_Decorative({
+    subsets: ['latin'],
+    variable: '--font-cinzel',
+    weight: ['400', '700', '900'],
 })
 
 export const metadata: Metadata = {
@@ -82,7 +87,7 @@ export default function RootLayout({
         <html
             data-theme="lemonade"
             suppressHydrationWarning
-            className={`${raleway.variable} ${playfair.variable} ${nunito.variable} scroll-smooth antialiased`}
+            className={`${raleway.variable} ${playfair.variable} ${nunito.variable} ${cinzel.variable} scroll-smooth antialiased`}
         >
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />

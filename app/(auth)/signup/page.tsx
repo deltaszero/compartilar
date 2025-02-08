@@ -263,10 +263,10 @@ export default function SignupPage() {
         'profile-picture': 'Avatar',
         'account-info': 'Informações',
         'kids-info': 'Filhotes',
-        'verification': 'Verification'
+        'verification': 'Verificação'
     }
     return (
-        <div className="w-full flex flex-col items-center justify-center align-start p-4">
+        <div className="w-full flex flex-col items-center justify-center align-start">
             <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg px-6 py-3 space-y-12">
                 <div className="text-primary">
                     <LoginHeader />
@@ -307,7 +307,7 @@ export default function SignupPage() {
                                             placeholder="Email"
                                             value={formData.email}
                                             onChange={(e) => updateFormData({ email: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             required
                                         />
                                     </div>
@@ -320,7 +320,7 @@ export default function SignupPage() {
                                             placeholder="Username"
                                             value={formData.username}
                                             onChange={(e) => updateFormData({ username: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             pattern="^[a-zA-Z0-9_-]{3,20}$"
                                             title="Username must be 3-20 characters (letters, numbers, underscores, hyphens)"
                                             required
@@ -335,7 +335,7 @@ export default function SignupPage() {
                                             placeholder="Password"
                                             value={formData.password}
                                             onChange={(e) => updateFormData({ password: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             minLength={8}
                                             required
                                         />
@@ -349,7 +349,7 @@ export default function SignupPage() {
                                             placeholder="Confirm Password"
                                             value={formData.confirmPassword}
                                             onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             required
                                         />
                                     </div>
@@ -409,7 +409,7 @@ export default function SignupPage() {
                                             placeholder="First Name"
                                             value={formData.firstName}
                                             onChange={(e) => updateFormData({ firstName: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             required
                                         />
                                     </div>
@@ -422,7 +422,7 @@ export default function SignupPage() {
                                             placeholder="Last Name"
                                             value={formData.lastName}
                                             onChange={(e) => updateFormData({ lastName: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                             required
                                         />
                                     </div>
@@ -434,7 +434,7 @@ export default function SignupPage() {
                                             type="date"
                                             value={formData.birthDate}
                                             onChange={(e) => updateFormData({ birthDate: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                         />
                                     </div>
                                     <div className="flex flex-col">
@@ -446,7 +446,7 @@ export default function SignupPage() {
                                             placeholder="Phone Number"
                                             value={formData.phoneNumber}
                                             onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
-                                            className="input input-bordered"
+                                            className="input input-bordered input-sm md:input-md"
                                         />
                                     </div>
                                 </div>
@@ -455,6 +455,9 @@ export default function SignupPage() {
                             {/* KIDS INFO STEP */}
                             {currentStep === SignupStep.KIDS_INFO && (
                                 <div className="flex flex-col space-y-4 items-center">
+                                        <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
+                                            Essa etapa é opcional, mas se preferir você pode deixar pra depois 😊
+                                        </p>
                                     {Object.values(formData.kids).map((kid) => (
                                         <div key={kid.id} className="card bg-base-100 p-4 shadow">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -467,7 +470,7 @@ export default function SignupPage() {
                                                         placeholder="First Name"
                                                         value={kid.firstName}
                                                         onChange={(e) => addKid({ ...kid, firstName: e.target.value })}
-                                                        className="input input-bordered"
+                                                        className="input input-bordered input-sm md:input-md"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col">
@@ -479,7 +482,7 @@ export default function SignupPage() {
                                                         placeholder="Last Name"
                                                         value={kid.lastName}
                                                         onChange={(e) => addKid({ ...kid, lastName: e.target.value })}
-                                                        className="input input-bordered"
+                                                        className="input input-bordered input-sm md:input-md"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col">
@@ -490,10 +493,10 @@ export default function SignupPage() {
                                                         type="date"
                                                         value={kid.birthDate}
                                                         onChange={(e) => addKid({ ...kid, birthDate: e.target.value })}
-                                                        className="input input-bordered"
+                                                        className="input input-bordered input-sm md:input-md"
                                                     />
                                                 </div>
-                                                <div className="flex flex-col">
+                                                {/* <div className="flex flex-col">
                                                     <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
                                                         Gênero
                                                     </p>
@@ -510,11 +513,11 @@ export default function SignupPage() {
                                                         <option value="female">Feminino</option>
                                                         <option value="other">Outro</option>
                                                     </select>
-                                                </div>
+                                                </div> */}
                                                 <button
                                                     type="button"
                                                     onClick={() => removeKid(kid.id)}
-                                                    className="btn btn-error"
+                                                    className="btn btn-ghost max-w-xs text-red-500 font-bold btn-sm md:btn-md"
                                                 >
                                                     Remover
                                                 </button>

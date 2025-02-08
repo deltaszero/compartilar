@@ -54,7 +54,7 @@ export default function LoginPage() {
                 </div>
                 </div>
             {/* Right Content */}
-            <div className="flex flex-col bg-base-200 text-base-content">
+            <div className="flex flex-col bg-base-200 text-base-content py-4">
                 <div className="text-primary">
                     <LoginHeader />
                 </div>
