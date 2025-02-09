@@ -91,6 +91,7 @@ export default function RootLayout({
         >
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+                <meta name="viewport" content="viewport-fit=cover" />
                 <Script
                     src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}`}
                     strategy="afterInteractive"
@@ -104,9 +105,9 @@ export default function RootLayout({
                     `}
                 </Script>
             </head>
-            <body className={`${inter.className} min-h-screen flex flex-col`}>
+            <body className={`${inter.className}`}>
                 <UserProvider>
-                    <main className="flex-grow">
+                    <main>
                         <Analytics />
                         {children}
                     </main>

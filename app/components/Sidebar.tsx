@@ -151,7 +151,10 @@ export default function Sidebar() {
 
     return (
         // <div className="flex flex-col justify-between sticky top-0 overflow-y-none pt-3">
-        <div className="flex flex-col justify-between xl:h-screen overflow-y-none ">
+        <div className="
+                flex flex-col justify-between
+                xl:h-screen overflow-y-none 
+            ">
             <div className="text-neutral-content pt-4">
                 <div className="hidden xl:flex flex-row justify-center items-center space-x-2">
                     <LoginHeader />

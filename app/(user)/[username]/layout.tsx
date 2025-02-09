@@ -1,37 +1,23 @@
 // app/(user)/[username]/layout.tsx
 'use client';
-import { useState } from 'react';
 import Sidebar from "@components/Sidebar";
 import ContentArea from "@components/ContentArea";
-import IconHamburger from '@assets/icons/hamburger.svg';
-import LoginHeader from "@components/layout/LoginHeader";
+import BottomNav from "@components/BottomNav";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
     return (
-        <div className="flex flex-col xl:flex-row font-nunito">
-            {/* Hamburger Menu Button for Mobile */}
-            <button 
-                className="xl:hidden px-4 py-2 bg-neutral text-neutral-content"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-                <div className="flex flex-row justify-center items-center">
-                    <IconHamburger width={24} height={24} />
-                    <div className="w-full flex flex-row justify-center items-center py-1">
-                        <LoginHeader />
-                    </div>
-                </div>
-            </button>
-
-            {/* Sidebar */}
-            <div className={`${isSidebarOpen ? 'block' : 'hidden'} xl:block w-full xl:w-1/5 bg-neutral text-neutral-content`}>
+        <div className="flex flex-col xl:flex-row font-nunito min-h-screen overflow-hidden">
+            {/* Sidebar (Browser) */}
+            <div className="hidden xl:block w-full xl:w-1/5 bg-neutral text-neutral-content">
                 <Sidebar />
             </div>
-
             {/* Content Area */}
-            <div className="w-full xl:w-4/5 p-6">
+            <div className="w-screen xl:w-4/5">
                 <ContentArea>{children}</ContentArea>
+            </div>
+            {/* Bottom Navigation (Mobile) */}
+            <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50">
+                <BottomNav />
             </div>
         </div>
     );

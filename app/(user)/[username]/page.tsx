@@ -357,14 +357,13 @@ export default function UserPage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <div className="flex flex-col items-start space-y-3">
+        <div className="flex flex-col items-start space-y-3 overflow-hidden">
             {/* NAVBAR */}
             <UserNavbar userData={userData} />
             <div className="flex flex-row flex-start gap-8 w-full">
                 <section className="w-2/3 flex flex-col min-h-screen">
                     {userData?.firstName ? (
                         <div className="flex flex-col items-left gap-4">
-                            {/* <AvatarSection photoURL={userData?.photoURL} /> */}
                             <UserProfile userData={{
                                 firstName: userData.firstName,
                                 lastName: userData.lastName || '',
@@ -376,13 +375,10 @@ export default function UserPage() {
                     ) : (
                         <UserNotFound />
                     )}
-                    <div className="w-full">
-                        <CalendarPage />
-                    </div>
+                    
                 </section >
                 <section className="card w-1/3 bg-secondary p-4">
                     <div className="flex flex-col items-center space-y-12">
-                        {/* <AvatarPhoto /> */}
                         <KidsGrid parentId={userData.uid} />
                     </div>
                 </section>
