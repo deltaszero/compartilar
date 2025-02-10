@@ -20,7 +20,6 @@ import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
 import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
 // import IconMsg from '@assets/icons/icon_meu_lar_msg.svg';
 // importring components 
-import CalendarPage from "@components/CoparentingCalendar";
 
 export interface SignupFormData {
     firstName: string;

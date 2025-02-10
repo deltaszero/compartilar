@@ -1,3 +1,7 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Sidebar from '@components/Sidebar';
+
 import { usePathname } from 'next/navigation';
 import NavLink from '@components/ui/NavLink';
 import { useUser } from '@context/userContext';
@@ -12,17 +16,21 @@ import IconCalendar from '@assets/icons/bottom_bar_calendar.svg';
 const BottomNav = () => {
     const { userData, loading } = useUser();
     const pathname = usePathname();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { y: number } }) => {
+        if (info.offset.y > 100) {
+            setIsModalOpen(false);
+        }
+    };
 
     if (loading) {
         return (
             <div className="btm-nav bg-neutral animate-pulse">
                 <div className="flex flex-row items-center justify-center gap-2">
-                    <div className="skeleton h-12 w-12"></div>
-                    <div className="skeleton h-12 w-12"></div>
-                    <div className="skeleton h-12 w-12"></div>
-                    <div className="skeleton h-12 w-12"></div>
-                    <div className="skeleton h-12 w-12"></div>
-                    <div className="skeleton h-12 w-12"></div>
+                    {[...Array(6)].map((_, index) => (
+                        <div key={index} className="skeleton h-12 w-12"></div>
+                    ))}
                 </div>
             </div>
         );
@@ -58,28 +66,68 @@ const BottomNav = () => {
         { 
             path: 'null',
             label: 'Mais', 
-            icon: <IconMore width={32} height={32} /> 
+            icon: <IconMore width={32} height={32} onClick={() => setIsModalOpen(true)}  /> 
         },
     ];
 
     return (
-        <div className="btm-nav btm-nav-sm text-primary bg-base-100">
-            {navItems.map((item) => {
-                const isActive = pathname === item.path;
-                return (
-                    <button className={`block ${isActive ? 'active' : ''}`}>
-                        <NavLink
-                            key={item.path}
-                            href={item.path}
+        <>
+            <div className="btm-nav btm-nav-sm text-primary bg-base-100">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.path;
+                    return (
+                        <button 
+                            key={item.path} 
+                            className={`block ${isActive ? 'active' : ''}`}
+                            onClick={item.label === 'Mais' ? () => setIsModalOpen(true) : undefined}
                         >
-                            <div className="flex flex-col items-center justify-center" >
-                                {item.icon}
-                            </div>
-                        </NavLink>
-                    </button>
-                );
-            })}
-        </div>
+                            <NavLink href={item.path}>
+                                <div className="flex flex-col items-center justify-center">
+                                    {item.icon}
+                                </div>
+                            </NavLink>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <AnimatePresence>
+                {isModalOpen && (
+                    <motion.div 
+                        className="fixed inset-0 z-50 bg-black/50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsModalOpen(false)}
+                    >
+                        <motion.div
+                            className="absolute bottom-0 left-0 right-0 bg-base-content rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            drag="y"
+                            dragConstraints={{ top: 0, bottom: 0 }}
+                            dragElastic={0.7}
+                            onDragEnd={handleDragEnd}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Drag handle */}
+                            <div className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                            
+                            <Sidebar />
+                            
+                            <button 
+                                className="btn btn-ghost w-full mt-4"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Fechar
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 };
 
