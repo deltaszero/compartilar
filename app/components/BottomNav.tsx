@@ -39,34 +39,35 @@ const BottomNav = () => {
     if (!userData) return null;
 
     const navItems = [
-        { 
-            path: `/${userData.username}`, 
+        {
+            path: `/${userData.username}`,
             label: 'Meu Lar',
-            icon: <IconHouse width={32} height={32} /> },
-        { 
-            path: `/${userData.username}/plan/calendar`, 
-            label: 'Plano', 
-            icon: <IconCalendar width={32} height={32} /> 
+            icon: <IconHouse width={32} height={32} />
         },
-        { 
-            path: `/${userData.username}/finances`, 
-            label: 'Finanças', 
-            icon: <IconGeolocation width={36} height={36} /> 
+        {
+            path: `/${userData.username}/plan/calendar`,
+            label: 'Plano',
+            icon: <IconCalendar width={32} height={32} />
         },
-        { 
-            path: `/${userData.username}/chat`, 
-            label: 'Chat', 
-            icon: <IconChat width={32} height={32} /> 
+        {
+            path: `/${userData.username}/finances`,
+            label: 'Finanças',
+            icon: <IconGeolocation width={36} height={36} />
         },
-        { 
-            path: `/${userData.username}/handshake`, 
-            label: 'Decisões', 
-            icon: <IconUser width={32} height={32} /> 
+        {
+            path: `/${userData.username}/chat`,
+            label: 'Chat',
+            icon: <IconChat width={32} height={32} />
         },
-        { 
-            path: 'null',
-            label: 'Mais', 
-            icon: <IconMore width={32} height={32} onClick={() => setIsModalOpen(true)}  /> 
+        {
+            path: `/${userData.username}/handshake`,
+            label: 'Decisões',
+            icon: <IconUser width={32} height={32} />
+        },
+        {
+            path: 'mais',
+            label: 'Mais',
+            icon: <IconMore width={32} height={32} onClick={() => setIsModalOpen(true)} />
         },
     ];
 
@@ -76,16 +77,24 @@ const BottomNav = () => {
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
-                        <button 
-                            key={item.path} 
+                        <button
+                            key={item.path}
                             className={`block ${isActive ? 'active' : ''}`}
                             onClick={item.label === 'Mais' ? () => setIsModalOpen(true) : undefined}
                         >
-                            <NavLink href={item.path}>
+                            {item.label === 'Mais' ? (
+                                // Render without NavLink for "Mais"
                                 <div className="flex flex-col items-center justify-center">
                                     {item.icon}
                                 </div>
-                            </NavLink>
+                            ) : (
+                                // Render with NavLink for other items
+                                <NavLink href={item.path}>
+                                    <div className="flex flex-col items-center justify-center">
+                                        {item.icon}
+                                    </div>
+                                </NavLink>
+                            )}
                         </button>
                     );
                 })}
@@ -93,7 +102,7 @@ const BottomNav = () => {
 
             <AnimatePresence>
                 {isModalOpen && (
-                    <motion.div 
+                    <motion.div
                         className="fixed inset-0 z-50 bg-black/50"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -114,10 +123,10 @@ const BottomNav = () => {
                         >
                             {/* Drag handle */}
                             <div className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                            
+
                             <Sidebar />
-                            
-                            <button 
+
+                            <button
                                 className="btn btn-ghost w-full mt-4"
                                 onClick={() => setIsModalOpen(false)}
                             >
