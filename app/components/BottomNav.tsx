@@ -50,8 +50,8 @@ const BottomNav = () => {
             icon: <IconCalendar width={32} height={32} />
         },
         {
-            path: `/${userData.username}/finances`,
-            label: 'Finanças',
+            path: `/${userData.username}/geolocation`,
+            label: 'Localização',
             icon: <IconGeolocation width={36} height={36} />
         },
         {
