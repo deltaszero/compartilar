@@ -13,6 +13,7 @@ import {
 import { db } from '@/app/lib/firebaseConfig';
 // importing components
 import { useUser } from '@context/userContext';
+import LoadingPage from '@components/ui/LoadingPage';
 // import { SignupFormData } from '@/types/signup.types';
 // importing assets
 import CameraIcon from '@assets/icons/camera.svg';
@@ -224,18 +225,18 @@ const UserProfile = ({ userData }: { userData: SignupFormData }) => (
 );
 
 
-const LoadingSkeleton = () => (
-    <div className="max-w-4xl w-full space-y-8 animate-pulse">
-        <div className="flex items-center gap-4">
-            <div className="mask mask-squircle w-32 h-32 bg-gray-200" />
-            <div className="space-y-2">
-                <div className="h-6 bg-gray-200 rounded w-48" />
-                <div className="h-4 bg-gray-200 rounded w-64" />
-            </div>
-        </div>
-        <div className="h-64 bg-gray-200 rounded-lg" />
-    </div>
-);
+// const LoadingSkeleton = () => (
+//     <div className="max-w-4xl w-full space-y-8 animate-pulse">
+//         <div className="flex items-center gap-4">
+//             <div className="mask mask-squircle w-32 h-32 bg-gray-200" />
+//             <div className="space-y-2">
+//                 <div className="h-6 bg-gray-200 rounded w-48" />
+//                 <div className="h-4 bg-gray-200 rounded w-64" />
+//             </div>
+//         </div>
+//         <div className="h-64 bg-gray-200 rounded-lg" />
+//     </div>
+// );
 
 const UserNotFound = () => (
     <div className="flex flex-1 items-center justify-center">
@@ -247,58 +248,6 @@ const UserNotFound = () => (
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
-
-// const AvatarPhoto = () => {
-//     const { userData, loading } = useUser();
-//     const avatarSize = 68;
-//     return (
-//         <div className='flex flex-col items-center space-y-2'>
-//             <div className="avatar">
-//                 {loading ? (
-//                     <div className={`mask mask-squircle w-${avatarSize}`}>
-//                         <div className={`skeleton h-${avatarSize} w-${avatarSize} rounded-md`}></div>
-//                     </div>
-//                 ) : (
-//                     <div className={`mask mask-squircle w-${avatarSize}`}>
-//                         {userData && userData.photoURL ? (
-//                             <Image
-//                                 src={userData.photoURL}
-//                                 width={avatarSize}
-//                                 height={avatarSize}
-//                                 alt="Avatar"
-//                                 priority
-//                             />
-//                         ) : (
-//                             <CameraIcon width={avatarSize} height={avatarSize} />
-//                         )}
-//                     </div>
-//                 )}
-//             </div>
-//             <div>
-//                 {loading ? (
-//                     <div className="flex flex-col gap-4">
-//                         <div className="skeleton h-4 w-72 rounded-md"></div>
-//                     </div>
-//                 ) : (
-//                     <div>
-//                         {userData && userData.lastName && userData.firstName && userData.username ? (
-//                             <div className="flex flex-col">
-//                                 <div className="text-secondary-content">
-//                                     {capitalizeFirstLetter(userData.firstName)} {capitalizeFirstLetter(userData.lastName)}
-//                                 </div>
-//                                 <div className="text-gray-500">
-//                                     {userData.username}
-//                                 </div>
-//                             </div>
-//                         ) : (
-//                             <p>User not found</p>
-//                         )}
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     )
-// }
 
 
 const UserNavbar = ({ userData }: { userData: Partial<SignupFormData> }) => (
@@ -352,7 +301,17 @@ export default function UserPage() {
         }
     }, [user, userData, loading, username, router]);
 
-    if (loading) return <LoadingSkeleton />;
+    // if (loading) return <LoadingSkeleton />;
+    const [initialLoading, setInitialLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setInitialLoading(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (loading || initialLoading) return <LoadingPage />;
     if (!userData) return <UserNotFound />;
 
     return (

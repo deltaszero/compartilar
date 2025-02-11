@@ -110,7 +110,7 @@ const BottomNav = () => {
                         onClick={() => setIsModalOpen(false)}
                     >
                         <motion.div
-                            className="absolute bottom-0 left-0 right-0 bg-base-content rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
+                            className="absolute bottom-0 left-0 right-0 bg-neutral rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
@@ -127,7 +127,7 @@ const BottomNav = () => {
                             <Sidebar />
 
                             <button
-                                className="btn btn-ghost w-full mt-4"
+                                className="btn  w-full mt-4"
                                 onClick={() => setIsModalOpen(false)}
                             >
                                 Fechar
