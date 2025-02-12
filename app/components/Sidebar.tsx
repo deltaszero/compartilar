@@ -151,7 +151,7 @@ export default function Sidebar() {
 
     return (
         // <div className="flex flex-col justify-between sticky top-0 overflow-y-none pt-3">
-        <div className="
+        <nav className="
                 flex flex-col justify-between
                 xl:h-screen overflow-y-none 
             ">
@@ -198,6 +198,6 @@ export default function Sidebar() {
             <div>
                 <PremiumCard />
             </div> */}
-        </div>
+        </nav>
     );
 }

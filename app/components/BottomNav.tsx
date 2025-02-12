@@ -67,7 +67,7 @@ const BottomNav = () => {
 
     return (
         <>
-            <div className="btm-nav btm-nav-sm text-primary bg-base-100">
+            <footer className="btm-nav btm-nav-sm text-primary bg-base-100">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -92,7 +92,7 @@ const BottomNav = () => {
                         </button>
                     );
                 })}
-            </div>
+            </footer>
 
             <AnimatePresence>
                 {isModalOpen && (

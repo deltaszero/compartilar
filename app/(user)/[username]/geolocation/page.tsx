@@ -81,7 +81,7 @@ export default function GeolocationPage() {
 
     return (
         <div className="h-screen flex flex-col">
-            <UserProfileBar />
+            <UserProfileBar pathname="Localização" />
             <div className="card max-w-xs bg-base-100 shadow-xl">
                 <div className="card-body">
                     <h2 className="card-title text-center">Location Tracker</h2>

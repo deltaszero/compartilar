@@ -3,11 +3,11 @@
 import React from 'react';
 import UserProfileBar from "@components/UserProfileBar";
 
-export default function SettingsPage() {
+export default function ChatPage() {
 
     return (
         <div className="h-screen flex flex-col">
-            <UserProfileBar />
+            <UserProfileBar pathname='Conversas' />
         </div>
     );
 }

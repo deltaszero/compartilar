@@ -13,19 +13,12 @@ export interface SignupFormData {
 }
 
 
-const UserNavbar = ({ userData }: { userData: Partial<SignupFormData> }) => {
-    const navItems = [
-        { path: `/${userData.username}`, label: 'Perfil', },
-        { path: `/${userData.username}/meu-lar`, label: 'Meu Lar', },
-        { path: `/${userData.username}/geolocation`, label: 'Localização',},
-        { path: `/${userData.username}/chat`, label: 'Chat',},
-        { path: 'mais', label: 'Mais',},
-    ];
+const UserNavbar = ({ pathname }: {  pathname: string }) => {
     return (
-        <header className="navbar text-base-content">
+        <header className="navbar">
             <div className="navbar-start">
                 <p className="text-2xl">
-                    {navItems.find(item => item.path === window.location.pathname)?.label}
+                    {pathname}
                 </p>
             </div>
             <div className="navbar-end">
@@ -42,12 +35,12 @@ const UserNotFound = () => (
     </div>
 );
 
-const UserProfileBar = () => {
-    const {userData } = useUser();
+const UserProfileBar = ({ pathname }: { pathname: string }) => {
+    const { userData } = useUser();
     if (!userData) return <UserNotFound />;
     return (
         <>
-            <UserNavbar userData={userData} />
+            <UserNavbar pathname={pathname} />
         </>
     );
 }
