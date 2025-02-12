@@ -13,7 +13,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             </div>
             {/* Content Area */}
             <div className="w-screen xl:w-4/5">
-                <ContentArea>{children}</ContentArea>
+                <ContentArea>
+                    {children}
+                </ContentArea>
             </div>
             {/* Bottom Navigation (Mobile) */}
             <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50">

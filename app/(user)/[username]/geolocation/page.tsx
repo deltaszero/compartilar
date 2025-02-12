@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import UserProfileBar from "@components/UserProfileBar";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -79,8 +80,9 @@ export default function GeolocationPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center p-4">
-            <div className="card w-full max-w-xl bg-base-100 shadow-xl">
+        <div className="h-screen flex flex-col">
+            <UserProfileBar />
+            <div className="card max-w-xs bg-base-100 shadow-xl">
                 <div className="card-body">
                     <h2 className="card-title text-center">Location Tracker</h2>
                     
