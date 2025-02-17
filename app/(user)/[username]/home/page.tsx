@@ -17,8 +17,8 @@ import { useUser } from '@context/userContext';
 import UserProfileBar from "@components/UserProfileBar";
 import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
-// import background_img from "@assets/images/2fcb3a44-26ce-41b7-a181-f6c55f663025.png";
-
+import CalendarPage from "@components/CoparentingCalendar";
+import NavLink from '@components/ui/NavLink';
 
 export interface SignupFormData {
     firstName: string;
@@ -135,7 +135,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
                         <p className="font-medium">
                             {kid.birthDate}
                         </p>
-                        <div className="py-1"/>
+                        <div className="py-1" />
                         {/* CARD ACTIONS */}
                         <div className="card-actions">
                             <button className="text-white font-semibold btn btn-sm btn-primary">
@@ -183,10 +183,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     if (!kidsArray.length) return null;
 
     return (
-        <div className="w-full">
-            <h2 className="text-xl font-semibold text-primary-content">
-                Família
-            </h2>
+        <>
             <div className="carousel w-full relative">
                 {/* Slides Container */}
                 <div
@@ -236,7 +233,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                     ))}
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -258,22 +255,47 @@ export default function HomePage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <article className="h-screen flex flex-col">
+        <article className="h-screen flex flex-col gap-4 mb-[8em]">
             <section className="flex flex-col">
                 <UserProfileBar pathname="Meu Lar" />
                 <UserProfileCard userData={userData} />
             </section>
+            {/* CALENDAR */}
+            <section className="px-2">
+                <div className="flex flex-row items-center justify-between px-2">
+                    <h2 className="text-xl font-semibold text-primary-content">
+                        Calendário
+                    </h2>
+                    <NavLink href="/calendario">
+                        <p className="text-gray-500 text-sm font-semibold">
+                            Ver mais
+                        </p>
+                    </NavLink>
+                </div>
+                <div className="bg-base-200 rounded-xl shadow-md">
+                    <CalendarPage />
+                </div>
+            </section>
             {/* KIDS */}
             {isMobile ? (
-                <section className="flex-1 mt-2 pt-2 px-2">
-                    <section className="p-4 relative">
+                <section className="px-2">
+                    <div className="flex flex-row items-center justify-between px-2">
+                        <h2 className="text-xl font-semibold text-primary-content">
+                            Família
+                        </h2>
+                        <NavLink href="/calendario">
+                            <p className="text-gray-500 text-sm font-semibold">
+                                Ver mais
+                            </p>
+                        </NavLink>
+                    </div>
+                    <div className="bg-base-200 rounded-xl shadow-md">
                         <KidsGrid parentId={userData.uid} />
-                    </section>
+                    </div>
                 </section>
             ) : (
                 null
             )}
-
         </article>
     );
 }

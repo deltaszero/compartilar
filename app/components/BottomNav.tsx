@@ -39,14 +39,14 @@ const BottomNav = () => {
 
     const navItems = [
         {
+            path: `/${userData.username}/home`,
+            label: 'Meu Lar',
+            icon: <IconHouse width={32} height={32} />
+        },
+        {
             path: `/${userData.username}`,
             label: 'Perfil',
             icon: <IconUser width={32} height={32} />
-        },
-        {
-            path: `/${userData.username}/meu-lar`,
-            label: 'Meu Lar',
-            icon: <IconHouse width={32} height={32} />
         },
         {
             path: `/${userData.username}/geolocation`,
@@ -67,7 +67,7 @@ const BottomNav = () => {
 
     return (
         <>
-            <footer className="btm-nav btm-nav-sm text-primary bg-base-100 z-[9999]">
+            <footer className="btm-nav btm-nav-sm text-primary bg-base-100 z-[9998]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -97,7 +97,7 @@ const BottomNav = () => {
             <AnimatePresence>
                 {isModalOpen && (
                     <motion.div
-                        className="fixed inset-0 z-50 bg-black/50"
+                        className="fixed inset-0 z-[9999] 50 bg-black/50"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

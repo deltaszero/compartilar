@@ -83,21 +83,14 @@ const CoParentingCalendar: React.FC<CoParentingCalendarProps> = ({ coParentingDa
     };
 
     return (
-        <div className="w-full max-w-md mx-auto p-4">
-            <div className="card bg-base-100 shadow-xl">
-                <div className="card-body">
-                    <h2 className="card-title text-center mb-4">Co-Parenting Calendar</h2>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateCalendar
-                            value={currentDate}
-                            onChange={(newValue) => setCurrentDate(newValue)}
-                            slots={{ day: renderDay }}
-                            className="w-full"
-                        />
-                    </LocalizationProvider>
-                </div>
-            </div>
-        </div>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateCalendar
+                value={currentDate}
+                onChange={(newValue) => setCurrentDate(newValue)}
+                slots={{ day: renderDay }}
+                className="w-full"
+            />
+        </LocalizationProvider>
     );
 };
 

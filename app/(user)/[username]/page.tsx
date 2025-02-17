@@ -151,7 +151,8 @@ export default function UserPage() {
         return () => clearTimeout(timer);
     }, []);
 
-    if (loading || initialLoading) return <LoadingPage />;
+    // if (loading || initialLoading) return <LoadingPage />;
+    if (loading && initialLoading) return <LoadingPage />;
     if (!userData) return <UserNotFound />;
 
     return (
@@ -160,7 +161,6 @@ export default function UserPage() {
             <UserProfileBar pathname="Perfil" />
             {/* BACKGROUND GRADIENT */}
             <motion.div
-                // className="h-48 bg-gradient-to-b from-base-content via-primary to-primary flex items-center justify-center w-full"
                 className="
                     h-48 flex items-center justify-center w-full
                     pattern-wavy pattern-green-300 pattern-bg-white pattern-size-2 pattern-opacity-20
@@ -170,23 +170,11 @@ export default function UserPage() {
                 exit={{ opacity: 0 }}
             >
             </motion.div>
+            {/* USER PROFILE CARD */}
             <UserProfileCard userData={userData} />
+            {/* CONTENT */}
             <section className="flex flex-row flex-start gap-8 w-full">
-                {/* <section className="w-2/3 flex flex-col min-h-screen">
-                    {userData?.firstName ? (
-                        <div className="flex flex-col items-left gap-4">
-                            <UserProfile userData={{
-                                firstName: userData.firstName,
-                                lastName: userData.lastName || '',
-                                username: userData.username || '',
-                                email: userData.email || '',
-                                photoURL: userData.photoURL
-                            }} />
-                        </div>
-                    ) : (
-                        <UserNotFound />
-                    )}
-                </section > */}
+                
             </section >
         </article>
     );
