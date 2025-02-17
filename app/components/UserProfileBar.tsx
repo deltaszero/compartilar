@@ -17,7 +17,7 @@ const UserNavbar = ({ pathname }: {  pathname: string }) => {
     return (
         <header className="navbar">
             <div className="navbar-start">
-                <p className="text-2xl">
+                <p className="text-2xl font-semibold">
                     {pathname}
                 </p>
             </div>

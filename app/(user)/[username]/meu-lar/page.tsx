@@ -16,6 +16,7 @@ import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@context/userContext';
 import UserProfileBar from "@components/UserProfileBar";
 import CameraIcon from '@assets/icons/camera.svg';
+import EditIcon from '@assets/icons/edit.svg';
 // import background_img from "@assets/images/2fcb3a44-26ce-41b7-a181-f6c55f663025.png";
 
 
@@ -109,38 +110,35 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 
 
 const ChildCard = ({ kid }: { kid: KidInfo }) => (
-    // <div className="flex items-center justify-center w-full">
-    //     <article className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow w-2/3">
     <div className="flex items-center w-full">
-        <article className="card bg-base-100 hover:shadow-xl transition-shadow w-full max-w-md">
-            <div className="card-body">
+        {/* CARD */}
+        <article className="card bg-base-100 hover:shadow-xl transition-shadow w-full max-w-md rounded-none">
+            {/* BODY */}
+            <div className="card-body px-4">
                 <div className="flex flex-row items-start gap-6">
+                    {/* AVATAR */}
                     <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-24 h-24 flex items-center justify-center">
-                            <span className="text-3xl">
+                        <div className="bg-neutral text-neutral-content rounded-full w-20 h-20 flex items-center justify-center">
+                            <span className="text-2xl">
                                 {kid.firstName[0].toUpperCase()}
                             </span>
                         </div>
+                        <div className="absolute bottom-0 right-0 p-[5px] bg-accent text-accent-content rounded-full">
+                            <EditIcon width={16} height={16} />
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-2 ml-4">
-                        <h3 className="card-title text-lg">
+                    <div className="flex flex-col">
+                        {/* CARD TITLE */}
+                        <h2 className="card-title">
                             {kid.firstName} {kid.lastName}
-                        </h3>
-                        <dl className="space-y-2">
-                            <div>
-                                {/* <dt className="text-sm text-gray-500">Birth Date</dt> */}
-                                <dd className="font-medium">{kid.birthDate}</dd>
-                            </div>
-                            {/* {kid.gender && (
-                                <div>
-                                    <dt className="text-sm text-gray-500">Gender</dt>
-                                    <dd className="font-medium capitalize">{kid.gender}</dd>
-                                </div>
-                            )} */}
-                        </dl>
-                        {/* <div className="divider"></div> */}
+                        </h2>
+                        <p className="font-medium">
+                            {kid.birthDate}
+                        </p>
+                        <div className="py-1"/>
+                        {/* CARD ACTIONS */}
                         <div className="card-actions">
-                            <button className="text-primary">
+                            <button className="text-white font-semibold btn btn-sm btn-primary">
                                 Detalhes
                             </button>
                         </div>
@@ -186,7 +184,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-semibold pb-4 text-primary-content">
+            <h2 className="text-xl font-semibold text-primary-content">
                 Família
             </h2>
             <div className="carousel w-full relative">
@@ -198,6 +196,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                         width: `${kidsArray.length * 100}%`
                     }}
                 >
+                    {/* Slides */}
                     {kidsArray.map((kid) => (
                         <div
                             key={kid.id}
@@ -208,7 +207,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
                     ))}
                 </div>
                 {/* Navigation Controls */}
-                <div className="absolute flex justify-between transform -translate-y-1/2 left-2 right-2 top-1/2 mx-4">
+                <div className="absolute flex justify-between transform -translate-y-1/2 left-2 right-2 top-1/2">
                     <button
                         onClick={handlePrev}
                     // className="btn btn-circle btn-outline shadow-lg"
@@ -242,11 +241,6 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
 };
 
 
-
-
-
-
-
 export default function HomePage() {
     const { userData } = useUser();
     const [isMobile, setIsMobile] = useState(false);
@@ -271,16 +265,8 @@ export default function HomePage() {
             </section>
             {/* KIDS */}
             {isMobile ? (
-                <section className="flex-1 mt-4 pt-4 px-2">
-                    <section 
-                        className="p-4 relative rounded-3xl shadow-xl bg-accent"
-                        // style={{
-                        //     backgroundImage: `url(${background_img.src})`,
-                        //     backgroundSize: 'cover',
-                        //     backgroundPosition: 'center',
-                        //     backgroundRepeat: 'no-repeat'
-                        // }}
-                    >
+                <section className="flex-1 mt-2 pt-2 px-2">
+                    <section className="p-4 relative">
                         <KidsGrid parentId={userData.uid} />
                     </section>
                 </section>

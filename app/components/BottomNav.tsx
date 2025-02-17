@@ -67,7 +67,7 @@ const BottomNav = () => {
 
     return (
         <>
-            <footer className="btm-nav btm-nav-sm text-primary bg-base-100">
+            <footer className="btm-nav btm-nav-sm text-primary bg-base-100 z-[9999]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (

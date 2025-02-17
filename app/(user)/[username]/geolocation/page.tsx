@@ -127,7 +127,7 @@ export default function GeolocationPage() {
                                 )}
                             </div>
                             
-                            <div className="w-full h-[400px]">
+                            <div className="w-full h-[400px] z-[50]">
                                 <MapContainer 
                                     center={[location.latitude, location.longitude]} 
                                     zoom={13} 

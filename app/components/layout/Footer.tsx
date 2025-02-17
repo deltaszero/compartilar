@@ -37,7 +37,7 @@ const SocialLink = ({ Icon, label, href }: SocialLinkProps) => (
 );
 
 const Footer = () => (
-    <footer className="footer items-center p-2 bg-base-100 text-neutral">
+    <footer className="footer items-center px-6 py-4 bg-base-100 text-neutral">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <nav className="flex flex-col md:gap-2">
                 {socialLinks.map((link, index) => (
