@@ -3,17 +3,15 @@
 // importing modules
 import React from 'react';
 // importing assets
-import TreeIcon from '@assets/icons/tree.svg';
+import HomeIcon from '@assets/icons/hive-home.svg';
 
 const LoginHeader = () => {
     return (
         <header className="flex justify-center items-center p-0">
             <a href="/">
                 <div className="flex items-center justify-center space-x-2">
-                    <TreeIcon width={32} height={32} />
-                    <p className="text-2xl font-cinzel font-bold">
-                        CompartiLar
-                    </p>
+                    <HomeIcon width={64} height={64} />
+                    {/* <h1 className="text-3xl font-nunito font-black uppercase">CompartiLar</h1> */}
                 </div>
             </a>
         </header>

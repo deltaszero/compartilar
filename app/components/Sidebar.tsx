@@ -60,7 +60,7 @@ interface NavItemProps {
 }
 
 const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) => {
-    const isActive = currentPath === href || subpages?.some(subpage => currentPath.startsWith(subpage.path));
+    const isActive = currentPath === href //&& subpages?.some(subpage => currentPath.startsWith(subpage.path));
     const hasSubpages = subpages && subpages.length > 0;
 
     return (
@@ -72,7 +72,9 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
             />
             {/* Title Section */}
             <div className="collapse-title flex flex-row min-h-0 gap-4">
-                <div>{icon}</div>
+                <div className={`${isActive ? 'text-primary' : ''}`}>
+                    {icon}
+                </div>
                 <NavLink href={href}>
                     <p className={`text-md hover:text-primary ${isActive ? 'text-primary font-bold text-lg' : ''}`}>
                         {children}
@@ -127,7 +129,7 @@ export default function Sidebar() {
 
     const navItems = userData ? [
         {
-            path: `/${userData.username}`, label: 'Meu Lar', icon: <IconMeuLar width={24} height={24} />,
+            path: `/${userData.username}`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
             subpages: [
                 { path: `/${userData.username}/`, label: 'Início' },
                 { path: `/${userData.username}/info`, label: 'Informações' },
@@ -141,7 +143,7 @@ export default function Sidebar() {
                 { path: `/${userData.username}/plan/form`, label: 'Formulário'},
             ]
         },
-        { path: `/${userData.username}/calendar`, label: 'Calendário', icon: <IconCalendar width={24} height={24} /> },
+        { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={24} height={24} /> },
         { path: `/${userData.username}/finances`, label: 'Finanças', icon: <IconFinance width={24} height={24} /> },
         { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={24} height={24} /> },
         { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={24} height={24} /> },
@@ -156,7 +158,7 @@ export default function Sidebar() {
                 xl:h-screen overflow-y-none 
             ">
             <div className="text-neutral-content pt-4">
-                <div className="hidden xl:flex flex-row justify-center items-center space-x-2">
+                <div className="hidden text-primary xl:flex flex-row justify-center items-center space-x-2">
                     <LoginHeader />
                 </div>
                 {/* menu */}

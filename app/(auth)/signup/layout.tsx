@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-import background_img from "@assets/images/2fcb3a44-26ce-41b7-a181-f6c55f663025.png";
+import background_img from "@assets/images/d381ebf2-00aa-4419-a6d8-6bb3b71880e8.png";
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
     return (

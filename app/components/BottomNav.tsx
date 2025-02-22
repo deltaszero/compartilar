@@ -104,7 +104,7 @@ const BottomNav = () => {
                         onClick={() => setIsModalOpen(false)}
                     >
                         <motion.div
-                            className="absolute bottom-0 left-0 right-0 bg-neutral rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
+                            className="absolute bottom-0 left-0 right-0 bg-primary-content rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
@@ -116,12 +116,12 @@ const BottomNav = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Drag handle */}
-                            <div className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                            <div className="w-16 h-1 bg-primary rounded-full mx-auto mb-4"></div>
 
                             <Sidebar />
 
                             <button
-                                className="btn  w-full mt-4"
+                                className="btn btn-outline btn-primary w-full mt-4"
                                 onClick={() => setIsModalOpen(false)}
                             >
                                 Fechar

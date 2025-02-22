@@ -163,7 +163,7 @@ export default function UserPage() {
             <motion.div
                 className="
                     h-48 flex items-center justify-center w-full
-                    pattern-wavy pattern-green-300 pattern-bg-white pattern-size-2 pattern-opacity-20
+                    pattern-wavy pattern-yellow-300 pattern-bg-white pattern-size-2 pattern-opacity-20
                 "
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

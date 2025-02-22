@@ -19,6 +19,10 @@ import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
 import CalendarPage from "@components/CoparentingCalendar";
 import NavLink from '@components/ui/NavLink';
+import FriendSearch from '@components/friendship/FriendSearch';
+import FriendRequests from '@components/friendship/FriendRequests';
+import FriendList from '@components/friendship/FriendList';
+
 
 export interface SignupFormData {
     firstName: string;
@@ -260,6 +264,16 @@ export default function HomePage() {
                 <UserProfileBar pathname="Meu Lar" />
                 <UserProfileCard userData={userData} />
             </section>
+            <div className="container mx-auto px-4">
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold mb-4">Find Friends</h2>
+                    <FriendSearch />
+                </div>
+                <FriendRequests />
+                <div>
+                    <FriendList userId={userData.uid} />
+                </div>
+            </div>
             {/* CALENDAR */}
             <section className="px-2">
                 <div className="flex flex-row items-center justify-between px-2">

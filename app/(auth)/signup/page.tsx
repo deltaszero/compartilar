@@ -1,3 +1,4 @@
+// /home/dusoudeth/Documentos/github/compartilar/app/(auth)/signup/page.tsx
 /* eslint-disable react/jsx-no-comment-textnodes */
 'use client';
 import Image from 'next/image';
@@ -267,8 +268,8 @@ export default function SignupPage() {
     }
     return (
         <div className="w-full flex flex-col items-center justify-center align-start">
-            <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg px-6 py-3 space-y-12">
-                <div className="text-primary">
+            <div className="w-full max-w-4xl bg-primary rounded-lg shadow-lg px-6 py-3 space-y-12">
+                <div className="text-primary-content">
                     <LoginHeader />
                 </div>
                 <div className="flex flex-col md:flex-row md:space-x-12">
@@ -277,10 +278,10 @@ export default function SignupPage() {
                             {stepsOrder.map((step, index) => (
                                 <div 
                                     key={step}
-                                    className={`step ${index < currentStepIndex + 1 ? 'step-primary' : ''}`}
+                                    className={`step ${index < currentStepIndex + 1 ? 'step-accent' : ''}`}
                                     data-content={index < currentStepIndex + 1 ? '' : ''}
                                 >
-                                    <span className={`hidden md:inline font-bold text-gray-500 font-nunito ${index <= currentStepIndex ? 'text-primary' : ''}`}>
+                                    <span className={`hidden md:inline font-bold text-primary-content font-nunito ${index <= currentStepIndex ? 'text-accent' : ''}`}>
                                         {/* {step.replace('-', ' ').toUpperCase()} */}
                                         {stepName[step]}
                                     </span>
@@ -307,7 +308,7 @@ export default function SignupPage() {
                                             placeholder="Email"
                                             value={formData.email}
                                             onChange={(e) => updateFormData({ email: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             required
                                         />
                                     </div>
@@ -320,7 +321,7 @@ export default function SignupPage() {
                                             placeholder="Username"
                                             value={formData.username}
                                             onChange={(e) => updateFormData({ username: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             pattern="^[a-zA-Z0-9_-]{3,20}$"
                                             title="Username must be 3-20 characters (letters, numbers, underscores, hyphens)"
                                             required
@@ -335,7 +336,7 @@ export default function SignupPage() {
                                             placeholder="Password"
                                             value={formData.password}
                                             onChange={(e) => updateFormData({ password: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             minLength={8}
                                             required
                                         />
@@ -349,7 +350,7 @@ export default function SignupPage() {
                                             placeholder="Confirm Password"
                                             value={formData.confirmPassword}
                                             onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             required
                                         />
                                     </div>
@@ -377,7 +378,7 @@ export default function SignupPage() {
                                                     reader.readAsDataURL(file);
                                                 }
                                             }}
-                                            className="file-input file-input-bordered file-input-primary w-full"
+                                            className="file-input file-input-bordered file-input-accent w-full bg-yellow-300"
                                             required
                                         />
                                     </div>
@@ -409,7 +410,7 @@ export default function SignupPage() {
                                             placeholder="First Name"
                                             value={formData.firstName}
                                             onChange={(e) => updateFormData({ firstName: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             required
                                         />
                                     </div>
@@ -422,7 +423,7 @@ export default function SignupPage() {
                                             placeholder="Last Name"
                                             value={formData.lastName}
                                             onChange={(e) => updateFormData({ lastName: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                             required
                                         />
                                     </div>
@@ -434,19 +435,19 @@ export default function SignupPage() {
                                             type="date"
                                             value={formData.birthDate}
                                             onChange={(e) => updateFormData({ birthDate: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                         />
                                     </div>
                                     <div className="flex flex-col">
                                         <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
-                                            Número de telefone 🤙 Sem espaços
+                                            Número de telefone ☎️ Sem espaços
                                         </p>
                                         <input
                                             type="tel"
                                             placeholder="Phone Number"
                                             value={formData.phoneNumber}
                                             onChange={(e) => updateFormData({ phoneNumber: e.target.value })}
-                                            className="input input-bordered input-sm md:input-md"
+                                            className="input input-bordered input-sm md:input-md bg-yellow-300"
                                         />
                                     </div>
                                 </div>
@@ -459,7 +460,7 @@ export default function SignupPage() {
                                             Essa etapa é opcional, mas se preferir você pode deixar pra depois 😊
                                         </p>
                                     {Object.values(formData.kids).map((kid) => (
-                                        <div key={kid.id} className="card bg-base-100 p-4 shadow">
+                                        <div key={kid.id} className="card bg-yellow-300 p-4 shadow">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="flex flex-col">
                                                     <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
@@ -470,7 +471,7 @@ export default function SignupPage() {
                                                         placeholder="First Name"
                                                         value={kid.firstName}
                                                         onChange={(e) => addKid({ ...kid, firstName: e.target.value })}
-                                                        className="input input-bordered input-sm md:input-md"
+                                                        className="input input-bordered input-sm md:input-md bg-yellow-300"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col">
@@ -482,7 +483,7 @@ export default function SignupPage() {
                                                         placeholder="Last Name"
                                                         value={kid.lastName}
                                                         onChange={(e) => addKid({ ...kid, lastName: e.target.value })}
-                                                        className="input input-bordered input-sm md:input-md"
+                                                        className="input input-bordered input-sm md:input-md bg-yellow-300"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col">
@@ -493,7 +494,7 @@ export default function SignupPage() {
                                                         type="date"
                                                         value={kid.birthDate}
                                                         onChange={(e) => addKid({ ...kid, birthDate: e.target.value })}
-                                                        className="input input-bordered input-sm md:input-md"
+                                                        className="input input-bordered input-sm md:input-md bg-yellow-300"
                                                     />
                                                 </div>
                                                 {/* <div className="flex flex-col">
@@ -534,7 +535,7 @@ export default function SignupPage() {
                                             gender: null,
                                             relationship: null
                                         })}
-                                        className="btn btn-ghost max-w-xs text-primary font-bold"
+                                        className="btn btn-ghost max-w-xs text-accent-content font-bold"
                                     >
                                         Adicionar
                                     </button>
@@ -582,7 +583,7 @@ export default function SignupPage() {
                                         <button
                                             type="button"
                                             onClick={() => handleStepNavigation('next')}
-                                            className="btn btn-primary ml-auto text-white"
+                                            className="btn btn-accent ml-auto text-accent-content"
                                             disabled={!validateCurrentStep()}
                                         >
                                             Avançar →

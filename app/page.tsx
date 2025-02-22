@@ -10,7 +10,7 @@ export default function Home() {
             {/* HEADER */}
             <Header />
             {/* HERO */}
-            <section className="relative flex-grow flex items-center">
+            <section className="relative flex-grow flex items-center min-h-[calc(100vh-5rem)]">
                 <div className="absolute inset-0">
                     <Image
                         src={hero_img}
@@ -26,7 +26,7 @@ export default function Home() {
                 {/* - */}
                 <div className="container relative z-10 mx-auto px-6 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
                     <div className="max-w-4xl">
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-playfair font-bold mb-4 sm:mb-6 leading-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-nunito font-bold mb-4 sm:mb-6 leading-tight">
                             Facilite a coparentalidade organizando tudo em um só lugar
                         </h1>
 
@@ -36,33 +36,43 @@ export default function Home() {
 
                         <button
                             className="
-                                group inline-flex items-center px-6 py-3 
+                                btn btn-outline btn-primary
+                                group inline-flex items-center px-6 
                                 text-base sm:text-lg md:text-xl 
-                                font-nunito font-medium rounded-md
-                                bg-primary text-base-100 
-                                transition-all duration-200
-                                hover:bg-accent hover:text-primary
-                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+                                font-nunito font-bold rounded-md
                             "
                         >
                             <span>Comece agora</span>
                             <svg
                                 className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             >
-                                <path
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                     d="M12.75 22.5 23.25 12 12.75 1.5"
                                 />
                             </svg>
                         </button>
                     </div>
                 </div>
+            </section>
+            {/* ORGANIZE */}
+            <section className="flex items-center" id="organize">
+                <h2>Organize</h2>
+            </section>
+            <div className="divider"/>
+            {/* DESCOMPLIQUE */}
+            <section className="flex items-center" id="descomplique">
+                <h2>Descomplique</h2>
+            </section>
+            <div className="divider"/>
+            {/* PROTEJA */}
+            <section className="flex items-center" id="proteja">
+                <h2>Proteja</h2>
+            </section>
+            <div className="divider"/>
+            {/* DESPREOCUPE-SE */}
+            <section className="flex items-center" id="despreocupe-se">
+                <h2>Despreocupe-se</h2>
             </section>
             {/* FOOTER */}
             <footer>
