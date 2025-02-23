@@ -280,7 +280,7 @@ export default function HomePage() {
                     <h2 className="text-xl font-semibold text-primary-content">
                         Calendário
                     </h2>
-                    <NavLink href="/calendario">
+                    <NavLink href="calendario">
                         <p className="text-gray-500 text-sm font-semibold">
                             Ver mais
                         </p>

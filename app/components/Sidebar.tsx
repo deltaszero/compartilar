@@ -131,9 +131,9 @@ export default function Sidebar() {
         {
             path: `/${userData.username}`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
             subpages: [
-                { path: `/${userData.username}/`, label: 'Início' },
+                { path: `/${userData.username}/home`, label: 'Início' },
                 { path: `/${userData.username}/info`, label: 'Informações' },
-                { path: `/${userData.username}/friends`, label: 'Rede de Apoio' }
+                { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
             ]
         },
         {
