@@ -23,6 +23,8 @@ import FriendSearch from '@components/friendship/FriendSearch';
 import FriendRequests from '@components/friendship/FriendRequests';
 import FriendList from '@components/friendship/FriendList';
 
+import background_img from "@assets/images/31cbe3cd-78aa-4dfc-9821-9e61ad7ee52b_3.png";
+import support_img from "@assets/images/support-icon.png";
 
 export interface SignupFormData {
     firstName: string;
@@ -47,7 +49,9 @@ interface KidInfo {
 
 const UserNotFound = () => (
     <div className="flex flex-1 items-center justify-center">
-        <p className="text-xl text-error">User not found</p>
+        <p className="text-xl text-error uppercase">
+            User not found
+        </p>
     </div>
 );
 
@@ -76,11 +80,11 @@ const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
 );
 
 const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) => (
-    <div className="flex flex-col items-center w-full px-4 gap-1">
+    <div className="flex flex-col items-center w-full px-4 gap-2">
         <AvatarSection photoURL={userData?.photoURL} />
         <div className="flex flex-col items-center gap-0">
-            <div className="text-xl font-semibold">
-                {capitalizeFirstLetter(userData.firstName || '')} {capitalizeFirstLetter(userData.lastName || '')}
+            <div className="text-2xl font-semibold">
+                Olá, {capitalizeFirstLetter(userData.firstName || '')}!
             </div>
             <div className="text-sm text-gray-400">
                 @{userData.username}
@@ -259,57 +263,90 @@ export default function HomePage() {
     if (!userData) return <UserNotFound />;
 
     return (
-        <article className="h-screen flex flex-col gap-4 mb-[8em]">
+        <div className='flex flex-col mb-[10em] sm:mb-0'>
+            {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                BACKGROUND IMAGE 
+             - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
+            <div>
+                <Image
+                    src={background_img}
+                    alt="Background"
+                    fill
+                    className="object-cover -z-10 -mt-48"
+                    priority
+                    quality={75}
+                />
+            </div>
+            {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                PROFILE BAR 
+             - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
             <section className="flex flex-col">
-                <UserProfileBar pathname="Meu Lar" />
+                <div className='text-primary'>
+                    <UserProfileBar pathname="Meu Lar" />
+                </div>
                 <UserProfileCard userData={userData} />
             </section>
-            <div className="container mx-auto px-4">
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Find Friends</h2>
-                    <FriendSearch />
-                </div>
-                <FriendRequests />
-                <div>
-                    <FriendList userId={userData.uid} />
-                </div>
-            </div>
-            {/* CALENDAR */}
-            <section className="px-2">
-                <div className="flex flex-row items-center justify-between px-2">
-                    <h2 className="text-xl font-semibold text-primary-content">
-                        Calendário
-                    </h2>
-                    <NavLink href="calendario">
-                        <p className="text-gray-500 text-sm font-semibold">
-                            Ver mais
-                        </p>
-                    </NavLink>
-                </div>
-                <div className="bg-base-200 rounded-xl shadow-md">
-                    <CalendarPage />
-                </div>
-            </section>
-            {/* KIDS */}
-            {isMobile ? (
-                <section className="px-2">
+            {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                CONTENT BAR 
+             - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
+            <article className="flex flex-col gap-4 mt-[25vh] bg-base-100 rounded-t-3xl">
+                {/* CALENDAR */}
+                <section className="container mx-auto p-4">
                     <div className="flex flex-row items-center justify-between px-2">
-                        <h2 className="text-xl font-semibold text-primary-content">
-                            Família
+                        <h2 className="text-xl font-bold">
+                            Calendário
                         </h2>
-                        <NavLink href="/calendario">
+                        <NavLink href="calendario">
                             <p className="text-gray-500 text-sm font-semibold">
                                 Ver mais
                             </p>
                         </NavLink>
                     </div>
                     <div className="bg-base-200 rounded-xl shadow-md">
-                        <KidsGrid parentId={userData.uid} />
+                        <CalendarPage />
                     </div>
                 </section>
-            ) : (
-                null
-            )}
-        </article>
+                {/* FRIENDS */}
+                <div className="container mx-auto p-4">
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-base-200 shadow-md bg-[#f4dd9b] relative mx-auto">
+                        <h2 className="text-xl font-bold z-10">
+                            Rede de Apoio
+                        </h2>
+                        <Image
+                            src={support_img}
+                            alt="Background"
+                            priority
+                            quality={75}
+                            className="object-contain"
+                            height={100}
+                        />
+                    </div>
+                    <FriendList userId={userData.uid} />
+                    <FriendSearch />
+                    <FriendRequests />
+                </div>
+
+                {/* KIDS */}
+                {isMobile ? (
+                    <section className="px-2">
+                        <div className="flex flex-row items-center justify-between px-2">
+                            <h2 className="text-xl font-semibold text-primary-content">
+                                Família
+                            </h2>
+                            <NavLink href="/calendario">
+                                <p className="text-gray-500 text-sm font-semibold">
+                                    Ver mais
+                                </p>
+                            </NavLink>
+                        </div>
+                        <div className="bg-base-200 rounded-xl shadow-md">
+                            <KidsGrid parentId={userData.uid} />
+                        </div>
+                    </section>
+                ) : (
+                    null
+                )}
+            </article>
+        </div>
     );
 }

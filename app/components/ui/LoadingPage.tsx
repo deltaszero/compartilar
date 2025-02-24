@@ -1,10 +1,10 @@
 // /components/ui/LoadingPage.tsx
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import tree_animation from "@assets/images/tree-animation.gif";
+import tree_animation from "@assets/images/puzzle-piece.gif";
 
 const LoadingPage: React.FC = () => {
-    const [isMobile, setIsMobile] = useState(false);
+    const [, setIsMobile] = useState(false);
 
     useEffect(() => {
         const checkMobileScreen = () => {
@@ -16,7 +16,7 @@ const LoadingPage: React.FC = () => {
         return () => window.removeEventListener('resize', checkMobileScreen);
     }, []);
 
-    if (!isMobile) return null;
+    // if (!isMobile) return null;
 
     return (
         <div
@@ -36,9 +36,6 @@ const LoadingPage: React.FC = () => {
                     priority
                     className="animate-pulse"
                 />
-                <p className="text-4xl font-cinzel font-semibold text-primary">
-                    CompartiLar
-                </p>
             </div>
         </div>
     );

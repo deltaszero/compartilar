@@ -25,7 +25,7 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                 // Query the nested friendsList collection
                 const friendsRef = collection(db, 'friends', userId, 'friendsList');
                 const snapshot = await getDocs(friendsRef);
-                
+
                 const friendsData: FriendListItem[] = [];
                 snapshot.forEach((doc) => {
                     friendsData.push({
@@ -69,8 +69,7 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
     }
 
     return (
-        <div className="w-full max-w-xl mx-auto p-4">
-            <h2 className="text-2xl font-semibold mb-4">Amigos</h2>
+        <div className="w-full max-w-xl mx-auto py-2">
             <div className="grid gap-3">
                 {friends.length === 0 ? (
                     <div className="text-center py-4 text-gray-500">
@@ -79,7 +78,7 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                 ) : (
                     friends.map((friend) => (
                         <Link
-                            href={`/${friend.username}/home`}
+                            href={`/${friend.username}`}
                             key={friend.username}
                             className="block transition-all hover:scale-[1.02]"
                         >

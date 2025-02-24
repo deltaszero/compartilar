@@ -157,8 +157,8 @@ export default function Sidebar() {
                 flex flex-col justify-between
                 xl:h-screen overflow-y-none 
             ">
-            <div className="text-neutral-content pt-4">
-                <div className="hidden text-primary xl:flex flex-row justify-center items-center space-x-2">
+            <div className="pt-4">
+                <div className="hidden text-primary-content xl:flex flex-row justify-center items-center space-x-2">
                     <LoginHeader />
                 </div>
                 {/* menu */}

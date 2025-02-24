@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-import background_img from "@assets/images/d381ebf2-00aa-4419-a6d8-6bb3b71880e8.png";
+import background_img from "@assets/images/7689e8be-e10b-4e5c-80b7-61e622491bf9.png";
 
 export default function SignupLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -14,7 +14,7 @@ export default function SignupLayout({ children }: { children: React.ReactNode }
                 priority
                 quality={75}
             />
-            <div className="absolute inset-0 bg-gray-900 opacity-30" />
+            <div className="absolute inset-0 bg-gray-900 opacity-80" />
             <div className="relative z-10 w-full">
                 {children}
             </div>

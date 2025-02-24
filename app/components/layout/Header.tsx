@@ -22,7 +22,7 @@ const Logo = () => (
     <div className="flex items-center gap-2">
         <HomeIcon width={32} height={32} />
         <a href="/" className="text-xl rounded-md p-0">
-            <h1 className="text-2xl font-nunito font-black uppercase">CompartiLar</h1>
+            <h1 className="text-3xl font-nunito font-black uppercase">CompartiLar</h1>
         </a>
     </div>
 );
@@ -96,10 +96,7 @@ const UserMenu = ({ userData, onSignOut }: {
 const LoginButton = () => (
     <a
         href="/login"
-        className="
-            btn btn-outline btn-accent-content rounded-md font-nunito font-bold gap-2
-            hover:bg-accent hover:text-accent-content hover:border-accent-content
-        "
+        className="btn btn-primary-content rounded-md font-nunito font-bold gap-2"
     >
         <span>Entrar</span>
         <LoginIcon width={16} height={16} />

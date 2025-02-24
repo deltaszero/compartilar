@@ -23,10 +23,12 @@ const CustomPickersDay = styled(PickersDay, {
     shouldForwardProp: (prop) => prop !== 'isWithOtherParent',
 })<PickersDayProps<Dayjs> & { isWithOtherParent?: boolean }>(({ theme, isWithOtherParent }) => ({
     ...(isWithOtherParent && {
-        backgroundColor: theme.palette.success.light,
+        // backgroundColor: theme.palette.success.light,
+        backgroundColor: "#4a00ff",
         color: theme.palette.success.contrastText,
         '&:hover': {
-            backgroundColor: theme.palette.success.main,
+            // backgroundColor: theme.palette.success.main,
+            backgroundColor: "#00d7c0"
         },
     }),
 }));

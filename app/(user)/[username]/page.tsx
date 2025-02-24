@@ -54,7 +54,9 @@ export interface SignupFormData {
 
 const UserNotFound = () => (
     <div className="flex flex-1 items-center justify-center">
-        <p className="text-xl text-error">User not found</p>
+        <p className="text-xl text-error uppercase">
+            User not found
+        </p>
     </div>
 );
 
@@ -163,7 +165,7 @@ export default function UserPage() {
             <motion.div
                 className="
                     h-48 flex items-center justify-center w-full
-                    pattern-wavy pattern-yellow-300 pattern-bg-white pattern-size-2 pattern-opacity-20
+                    pattern-isometric pattern-purple-400 pattern-bg-white pattern-size-3 pattern-opacity-20
                 "
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

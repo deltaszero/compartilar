@@ -36,7 +36,7 @@ export default function Home() {
 
                         <button
                             className="
-                                btn btn-outline btn-primary
+                                btn btn-primary-content
                                 group inline-flex items-center px-6 
                                 text-base sm:text-lg md:text-xl 
                                 font-nunito font-bold rounded-md

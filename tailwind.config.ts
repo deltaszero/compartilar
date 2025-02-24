@@ -60,7 +60,7 @@ const config: Config = {
     // plugins: [require("@tailwindcss/typography"), require("daisyui")],
     plugins: [daisyui, bgPatterns],
     daisyui: {
-        themes: ["bumblebee",],
+        themes: ["light",],
     },
 };
 export default config;

@@ -85,7 +85,7 @@ export default function RootLayout({
 }>) {
     return (
         <html
-            data-theme="bumblebee"
+            data-theme="light"
             suppressHydrationWarning
             className={`${raleway.variable} ${playfair.variable} ${nunito.variable} ${cinzel.variable} scroll-smooth antialiased`}
         >

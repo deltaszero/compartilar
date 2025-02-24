@@ -89,8 +89,6 @@ export default function FriendRequests() {
 
     return (
         <div className="w-full max-w-xl mx-auto p-4 space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Friend Requests</h2>
-            
             {requests.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                     No pending friend requests
