@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Sidebar from '@components/Sidebar';
+import Sidebar from '@/app/components/logged-area/ui/Sidebar';
 
 import { usePathname } from 'next/navigation';
 import NavLink from '@components/ui/NavLink';

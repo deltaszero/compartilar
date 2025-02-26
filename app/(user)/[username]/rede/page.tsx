@@ -1,7 +1,7 @@
 // app/rede/page.tsx
 'use client';
 import React from 'react';
-import UserProfileBar from "@components/UserProfileBar";
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
 export default function ChatPage() {
 

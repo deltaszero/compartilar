@@ -13,7 +13,7 @@ import CameraIcon from '@assets/icons/camera.svg';
 // import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
 // import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
 import { motion } from 'framer-motion';
-import UserProfileBar from "@components/UserProfileBar";
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 // importring components 
 
 export interface SignupFormData {

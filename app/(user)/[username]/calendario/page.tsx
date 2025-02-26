@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import CalendarPage from "@components/CoparentingCalendar";
+import CalendarPage from "@/app/components/logged-area/calendar/CoparentingCalendar";
 
 export default function SettingsPage() {
 

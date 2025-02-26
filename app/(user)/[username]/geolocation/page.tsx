@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import UserProfileBar from "@components/UserProfileBar";
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';

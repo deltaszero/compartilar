@@ -1,8 +1,8 @@
 // app/(user)/[username]/layout.tsx
 'use client';
-import Sidebar from "@components/Sidebar";
-import ContentArea from "@components/ContentArea";
-import BottomNav from "@components/BottomNav";
+import Sidebar from "@/app/components/logged-area/ui/Sidebar";
+import ContentArea from "@/app/components/logged-area/ui/ContentArea";
+import BottomNav from "@/app/components/logged-area/ui/BottomNav";
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
     return (

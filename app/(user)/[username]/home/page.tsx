@@ -14,14 +14,14 @@ import {
 import { db } from '@/app/lib/firebaseConfig';
 //
 import { useUser } from '@context/userContext';
-import UserProfileBar from "@components/UserProfileBar";
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 // import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
-import CalendarPage from "@components/CoparentingCalendar";
+import CalendarPage from "@/app/components/logged-area/calendar/CoparentingCalendar";
 // import NavLink from '@components/ui/NavLink';
-import FriendSearch from '@components/friendship/FriendSearch';
-import FriendRequests from '@components/friendship/FriendRequests';
-import FriendList from '@components/friendship/FriendList';
+import FriendSearch from '@/app/components/logged-area/friendship/FriendSearch';
+import FriendRequests from '@/app/components/logged-area/friendship/FriendRequests';
+import FriendList from '@/app/components/logged-area/friendship/FriendList';
 import LoadingPage from '@components/ui/LoadingPage';
 
 // import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
