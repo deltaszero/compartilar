@@ -63,14 +63,18 @@ export default function FriendRequests() {
                 await setDoc(doc(db, 'friends', userData.uid, 'friendsList', request.senderId), {
                     username: request.senderUsername,
                     photoURL: request.senderPhotoURL,
-                    addedAt: timestamp
+                    addedAt: timestamp,
+                    firstName: request.senderFirstName,
+                    lastName: request.senderLastName
                 });
     
                 // Add to sender's friends
                 await setDoc(doc(db, 'friends', request.senderId, 'friendsList', userData.uid), {
                     username: userData.username,
                     photoURL: userData.photoURL,
-                    addedAt: timestamp
+                    addedAt: timestamp,
+                    firstName: userData.firstName,
+                    lastName: userData.lastName
                 });
             }
     
@@ -88,20 +92,20 @@ export default function FriendRequests() {
     }
 
     return (
-        <div className="w-full max-w-xl mx-auto p-4 space-y-4">
+        <section className="container mx-auto">
             {requests.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
-                    No pending friend requests
+                    Sem pedidos de amizade pendentes
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div>
                     {requests.map((request) => (
-                        <div key={request.id} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                            <div className="flex items-center space-x-3">
+                        <div key={request.id} className="flex flex-row w-full items-center justify-between bg-base-300 rounded-lg p-2">
+                            <div className="flex items-center gap-4">
                                 {request.senderPhotoURL ? (
-                                    <img src={request.senderPhotoURL} alt={request.senderUsername} className="w-10 h-10 rounded-full" />
+                                    <img src={request.senderPhotoURL} alt={request.senderUsername} className="w-16 h-16 rounded-full" />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                                    <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                                         <span className="text-primary-content text-lg">
                                             {request.senderUsername[0].toUpperCase()}
                                         </span>
@@ -111,24 +115,24 @@ export default function FriendRequests() {
                                     <h3 className="font-medium">{request.senderUsername}</h3>
                                 </div>
                             </div>
-                            <div className="flex space-x-2">
+                            <div className="flex flex-col items-end gap-2">
                                 <button
                                     className="btn btn-primary btn-sm"
                                     onClick={() => handleRequest(request.id, 'accepted')}
                                 >
-                                    Accept
+                                    Aceitar
                                 </button>
                                 <button
                                     className="btn btn-ghost btn-sm"
                                     onClick={() => handleRequest(request.id, 'declined')}
                                 >
-                                    Decline
+                                    Rejeitar
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-        </div>
+        </section>
     );
 }

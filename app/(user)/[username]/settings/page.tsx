@@ -54,8 +54,6 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             // if no changes detected
-            console.log("if no changes detected")
-            console.log(userData?.username, username, photoFile);
             if (userData?.username === username && !photoFile) {
                 setMessage('Nenhuma alteração detectada.');
                 setSaving(false);
@@ -64,10 +62,8 @@ export default function SettingsPage() {
             let updatedPhotoURL = photoURL;
             const updatedData: { username?: string; photoURL?: string } = {};
             // begin a transaction
-            console.log("begin a transaction")
             await runTransaction(db, async (transaction) => {
                 // if username has changed
-                console.log("if username has changed")
                 if (userData?.username !== username) {
                     const newUsernameRef = doc(db, 'usernames', username);
                     const newUsernameDoc = await transaction.get(newUsernameRef);
@@ -84,7 +80,6 @@ export default function SettingsPage() {
                     updatedData.username = username;
                 }
                 // handle photo upload
-                console.log("handle photo upload")
                 if (photoFile) {
                     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
                     if (!photoFile.type.startsWith('image/')) {
@@ -94,14 +89,9 @@ export default function SettingsPage() {
                         throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
                     }
                     // upload photo to firebase storage
-                    console.log("upload photo to firebase storage")
-                    console.log(storage)
-                    console.log(user)
-                    console.log(user.uid)
                     const storageRef = ref(storage, `profile_photos/${user.uid}`);
                     const uploadTask = uploadBytesResumable(storageRef, photoFile);
                     // wait for the upload to complete
-                    console.log("wait for the upload to complete")
                     await new Promise<void>((resolve, reject) => {
                         uploadTask.on(
                             'state_changed',
@@ -122,14 +112,12 @@ export default function SettingsPage() {
                     });
                 }
                 // update account_info document
-                console.log("update account_info document")
                 if (Object.keys(updatedData).length > 0) {
                     const userDocRef = doc(db, 'account_info', user.uid);
                     transaction.update(userDocRef, updatedData);
                 }
             });
             // update Firebase auth profile
-            console.log("update Firebase Auth profile")
             const profileUpdates: { displayName?: string; photoURL?: string } = {};
             if (userData?.username !== username) {
                 profileUpdates.displayName = username;

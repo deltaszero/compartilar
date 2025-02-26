@@ -79,7 +79,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     unsubscribeAccount = onSnapshot(accountRef,
                         async (doc) => {
                             if (!doc.exists()) {
-                                console.log('Account document not found');
                                 setLoading(false);
                                 return;
                             }

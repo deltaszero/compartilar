@@ -19,7 +19,7 @@ const UserNavbar = ({ pathname }: { pathname: string }) => {
             <div className="navbar-start">
                 <button className="flex items-center justify-center mr-2 w-10 h-10 transition-colors duration-150 rounded-full focus:shadow-outline text-primary hover:bg-primary-content hover:text-primary">
                     <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd">
+                        <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z">
                         </path>
                     </svg>
                 </button>

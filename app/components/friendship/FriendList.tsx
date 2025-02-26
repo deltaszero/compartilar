@@ -106,7 +106,7 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                                 )}
                                 <div className="flex flex-col">
                                     <h3 className="font-medium">
-                                        {friend.username}
+                                        {friend.firstName}
                                     </h3>
                                     <span className="text-sm text-base-content/70">
                                         Adicionado em {friend.addedAt.toDate().toLocaleDateString()}

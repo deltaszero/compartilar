@@ -18,13 +18,16 @@ import UserProfileBar from "@components/UserProfileBar";
 import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
 import CalendarPage from "@components/CoparentingCalendar";
-import NavLink from '@components/ui/NavLink';
+// import NavLink from '@components/ui/NavLink';
 import FriendSearch from '@components/friendship/FriendSearch';
 import FriendRequests from '@components/friendship/FriendRequests';
 import FriendList from '@components/friendship/FriendList';
+import LoadingPage from '@components/ui/LoadingPage';
 
 import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
 import support_img from "@assets/images/support-icon.png";
+import calendar_img from "@assets/images/calendar-icon.png";
+import family_img from "@assets/images/family-icon.png";
 
 export interface SignupFormData {
     firstName: string;
@@ -47,13 +50,13 @@ interface KidInfo {
 
 
 
-const UserNotFound = () => (
-    <div className="flex flex-1 items-center justify-center">
-        <p className="text-xl text-error uppercase">
-            User not found
-        </p>
-    </div>
-);
+// const UserNotFound = () => (
+//     <div className="flex flex-1 items-center justify-center">
+//         <p className="text-xl text-error uppercase">
+//             User not found
+//         </p>
+//     </div>
+// );
 
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -142,7 +145,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
                         <div className="py-1" />
                         {/* CARD ACTIONS */}
                         <div className="card-actions">
-                            <button className="text-white font-semibold btn btn-sm btn-primary">
+                            <button className="text-white font-semibold btn btn-xs btn-primary">
                                 Detalhes
                             </button>
                         </div>
@@ -245,6 +248,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
 export default function HomePage() {
     const { userData } = useUser();
     const [isMobile, setIsMobile] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(true);
 
     useEffect(() => {
         const checkMobileScreen = () => {
@@ -256,7 +260,15 @@ export default function HomePage() {
         return () => window.removeEventListener('resize', checkMobileScreen);
     }, []);
 
-    if (!userData) return <UserNotFound />;
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setInitialLoading(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    console.log(initialLoading);
+    if (!userData) return <LoadingPage />;
 
     return (
         <div className='flex flex-col mb-[10em] sm:mb-0'>
@@ -272,11 +284,11 @@ export default function HomePage() {
                     priority
                     quality={75}
                 />
-                <div className="absolute inset-0 bg-gray-700 opacity-60 rounded-md"></div>
+                <div className="absolute inset-0 bg-gray-700 opacity-60"></div>
                 {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                     PROFILE BAR 
                 - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-                <section className="flex flex-col mb-[5em]">
+                <section className="flex flex-col mb-[10em]">
                     <div className="text-base-100 z-[10]">
                         <UserProfileBar pathname="Meu Lar" />
                     </div>
@@ -286,27 +298,80 @@ export default function HomePage() {
             {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 CONTENT BAR 
              - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-            <article className="flex flex-col bg-base-100 rounded-t-3xl">
+            <article className="flex flex-col bg-base-100 rounded-t-3xl -mt-[3em] z-[10]">
+                {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
+                <section className="container mx-auto p-4">
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
+                        <h2 className="text-xl font-bold z-10">
+                            Família
+                        </h2>
+                        <Image
+                            src={family_img}
+                            alt="Background"
+                            priority
+                            quality={75}
+                            className="object-contain"
+                            height={100}
+                        />
+                        <div className="absolute top-2 right-2">
+                            {/* <NavLink href="/calendario">
+                                <p className="text-base-100 text-sm font-semibold">
+                                    Ver mais
+                                </p>
+                            </NavLink> */}
+                        </div>
+                    </div>
+                    {isMobile ? (
+                        <div>
+                            <div className="bg-base-200 rounded-xl shadow-md">
+                                <KidsGrid parentId={userData.uid} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div />
+                    )}
+                </section>
+                <div className="divider mx-6" />
                 {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                 <section className="container mx-auto p-4">
-                    <div className="flex flex-row items-center justify-between px-2">
+                    {/* <div className="flex flex-row items-center justify-between px-2">
                         <h2 className="text-xl font-bold">
                             Calendário
                         </h2>
                         <NavLink href="calendario">
-                            <p className="text-gray-500 text-sm font-semibold text-primary">
+                            <p className="text-sm font-semibold text-primary">
                                 Ver mais
                             </p>
                         </NavLink>
+                    </div> */}
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-info relative mx-auto shadow-xl mb-4">
+                        <h2 className="text-xl font-bold z-10">
+                            Calendário
+                        </h2>
+                        <Image
+                            src={calendar_img}
+                            alt="Background"
+                            priority
+                            quality={75}
+                            className="object-contain"
+                            height={100}
+                        />
+                        <div className="absolute top-2 right-2">
+                            {/* <NavLink href="/calendario">
+                                <p className="text-base-100 text-sm font-semibold">
+                                    Ver mais
+                                </p>
+                            </NavLink> */}
+                        </div>
                     </div>
-                    <div className="bg-base-100 rounded-xl shadow-lg">
+                    <div className="bg-base-100 rounded-xl shadow-xl">
                         <CalendarPage />
                     </div>
                 </section>
-                <div className="divider mx-6"/>
+                <div className="divider mx-6" />
                 {/* - - - - - - - - - - - - SUPPORT NETWORK - - - - - - - - - - - - */}
                 <section className="container mx-auto p-4">
-                    <div className="flex items-center justify-between px-2 rounded-lg bg-base-200 shadow-lg bg-info relative mx-auto">
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-secondary relative mx-auto shadow-xl mb-4">
                         <h2 className="text-xl font-bold z-10">
                             Rede de Apoio
                         </h2>
@@ -318,34 +383,34 @@ export default function HomePage() {
                             className="object-contain"
                             height={100}
                         />
+                        {/* <div className="absolute top-2 right-2">
+                            <NavLink href="/calendario">
+                                <p className="text-base-100 text-sm font-semibold">
+                                    Ver mais
+                                </p>
+                            </NavLink>
+                        </div> */}
                     </div>
                     <FriendList userId={userData.uid} />
                     <FriendSearch />
                     <FriendRequests />
                 </section>
-                <div className="divider mx-6"/>
-                {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
-                <section className="container mx-auto p-4">
-                    {isMobile ? (
-                        <div>
-                        <div className="flex flex-row items-center justify-between px-2">
-                            <h2 className="text-xl font-semibold text-primary-content">
-                                Família
-                            </h2>
-                            <NavLink href="/calendario">
-                                <p className="text-gray-500 text-sm font-semibold">
-                                    Ver mais
-                                </p>
-                            </NavLink>
-                        </div>
-                        <div className="bg-base-200 rounded-xl shadow-md">
-                            <KidsGrid parentId={userData.uid} />
-                        </div>
+                <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
+                    <div role="alert" className="alert alert-warning">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 shrink-0 stroke-current"
+                            fill="none"
+                            viewBox="0 0 24 24">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>EM DESENVOLVIMENTO</span>
                     </div>
-                ) : (
-                    <div/>
-                )}
-                </section>
+                </section >
             </article>
         </div>
     );

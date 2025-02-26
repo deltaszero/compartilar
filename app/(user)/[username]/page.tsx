@@ -1,7 +1,7 @@
 // app/(user)/[username]/page.tsx
 'use client';
 // imoprting built-in modules
-import { useEffect, useState } from 'react';
+import { useEffect, } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 // importing components
@@ -52,13 +52,13 @@ export interface SignupFormData {
 //     </div>
 // );
 
-const UserNotFound = () => (
-    <div className="flex flex-1 items-center justify-center">
-        <p className="text-xl text-error uppercase">
-            User not found
-        </p>
-    </div>
-);
+// const UserNotFound = () => (
+//     <div className="flex flex-1 items-center justify-center">
+//         <p className="text-xl text-error uppercase">
+//             User not found
+//         </p>
+//     </div>
+// );
 
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -144,18 +144,18 @@ export default function UserPage() {
         }
     }, [user, userData, loading, username, router]);
     // if (loading) return <LoadingSkeleton />;
-    const [initialLoading, setInitialLoading] = useState(true);
+    // const [initialLoading, setInitialLoading] = useState(true);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setInitialLoading(false);
-        }, 3000);
-        return () => clearTimeout(timer);
-    }, []);
+    // useEffect(() => {
+    //     const timer = setTimeout(() => {
+    //         setInitialLoading(false);
+    //     }, 3000);
+    //     return () => clearTimeout(timer);
+    // }, []);
 
     // if (loading || initialLoading) return <LoadingPage />;
-    if (loading && initialLoading) return <LoadingPage />;
-    if (!userData) return <UserNotFound />;
+    // if (loading || initialLoading) return <LoadingPage />;
+    if (!userData) return <LoadingPage />
 
     return (
         <article className="flex flex-col items-start overflow-hidden">
@@ -175,8 +175,21 @@ export default function UserPage() {
             {/* USER PROFILE CARD */}
             <UserProfileCard userData={userData} />
             {/* CONTENT */}
-            <section className="flex flex-row flex-start gap-8 w-full">
-                
+            <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
+                <div role="alert" className="alert alert-warning">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 shrink-0 stroke-current"
+                        fill="none"
+                        viewBox="0 0 24 24">
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>EM DESENVOLVIMENTO</span>
+                </div>
             </section >
         </article>
     );

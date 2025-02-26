@@ -118,9 +118,15 @@ export default function FriendSearch() {
                 senderId: userData.uid,
                 senderUsername: userData.username,
                 senderPhotoURL: userData.photoURL,
+                senderFirstName: userData.firstName,
+                senderLastName: userData.lastName,
+                //
                 receiverId: receiver.uid,
                 receiverUsername: receiver.username,
                 receiverPhotoURL: receiver.photoURL,
+                receiverFirstName: receiver.firstName,
+                receiverLastName: receiver.lastName,
+                //
                 status: 'pending',
                 createdAt: timestamp,
                 updatedAt: timestamp
@@ -138,19 +144,19 @@ export default function FriendSearch() {
     };
 
     return (
-        <div className="w-full max-w-xl mx-auto p-4 space-y-4">
+        <section className="container mx-auto py-4">
             <div className="form-control">
-                <div className="input-group">
+                <div className="input-group flex flex-row items-center gap-2">
                     <input
                         type="text"
-                        placeholder="Search by email or username..."
-                        className="input input-bordered w-full"
+                        placeholder="Insira um username..."
+                        className="input input-bordered w-full shadow-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     />
                     <button 
-                        className={`btn btn-square ${isLoading ? 'loading' : ''}`}
+                        className={`btn btn-square btn-primary shadow-xl ${isLoading ? 'loading' : ''}`}
                         onClick={handleSearch}
                         disabled={isLoading || searchTerm.length < 3}
                     >
@@ -162,9 +168,9 @@ export default function FriendSearch() {
                     </button>
                 </div>
             </div>
-
+            <div className="my-4"></div>
             {searchResults.length > 0 && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-3">
                     {searchResults.map((result) => (
                         <div key={result.uid} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                             <div className="flex items-center space-x-3">
@@ -191,7 +197,7 @@ export default function FriendSearch() {
                                 onClick={() => sendFriendRequest(result)}
                                 disabled={isSending[result.uid]}
                             >
-                                {isSending[result.uid] ? 'Sending...' : 'Add Friend'}
+                                {isSending[result.uid] ? 'Enviando...' : 'Adicionar'}
                             </button>
                         </div>
                     ))}
@@ -200,9 +206,9 @@ export default function FriendSearch() {
 
             {searchTerm && !isLoading && searchResults.length === 0 && (
                 <div className="text-center py-4 text-gray-500">
-                    No users found
+                    Nenhum nome de usuário similar a &quot;{searchTerm}&quot; encontrado 😕
                 </div>
             )}
-        </div>
+        </section>
     );
 }

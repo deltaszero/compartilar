@@ -6,9 +6,13 @@ export interface FriendshipRequest {
     senderId: string;
     senderUsername: string;
     senderPhotoURL?: string;
+    senderFirstName?: string;
+    senderLastName?: string;
     receiverId: string;
     receiverUsername: string;
     receiverPhotoURL?: string;
+    receiverFirstName?: string;
+    receiverLastName?: string;
     status: 'pending' | 'accepted' | 'declined';
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -27,6 +31,8 @@ export interface FriendListItem {
     username: string;
     photoURL?: string;
     addedAt: Timestamp;  // Changed from Date to Timestamp
+    firstName?: string;
+    lastName?: string;
 }
 
 export type FriendshipStatus = 'pending' | 'accepted' | 'declined';
