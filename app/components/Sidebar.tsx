@@ -72,11 +72,11 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
             />
             {/* Title Section */}
             <div className="collapse-title flex flex-row min-h-0 gap-4">
-                <div className={`${isActive ? 'text-primary' : ''}`}>
+                <div className={`${isActive ? 'text-accent' : ''}`}>
                     {icon}
                 </div>
                 <NavLink href={href}>
-                    <p className={`text-md hover:text-primary ${isActive ? 'text-primary font-bold text-lg' : ''}`}>
+                    <p className={`text-md hover:text-accent ${isActive ? 'text-accent font-bold text-lg' : ''}`}>
                         {children}
                     </p>
                 </NavLink>
@@ -87,7 +87,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
                 <div className="collapse-content">
                     {subpages.map(subpage => (
                         <NavLink key={subpage.path} href={subpage.path}>
-                            <p className={`pl-10 pb-1 text-sm hover:text-primary ${currentPath === subpage.path ? 'text-primary text-lg' : ''}`}>
+                            <p className={`pl-10 pb-1 text-sm hover:text-accent ${currentPath === subpage.path ? 'text-accent text-lg' : ''}`}>
                                 {subpage.label}
                             </p>
                         </NavLink>
@@ -158,7 +158,7 @@ export default function Sidebar() {
                 xl:h-screen overflow-y-none 
             ">
             <div className="pt-4">
-                <div className="hidden text-primary-content xl:flex flex-row justify-center items-center space-x-2">
+                <div className="hidden xl:flex flex-row justify-center items-center space-x-2">
                     <LoginHeader />
                 </div>
                 {/* menu */}

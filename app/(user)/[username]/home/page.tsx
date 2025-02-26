@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import React from 'react';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import {
     collection,
     query,
@@ -15,7 +15,7 @@ import { db } from '@/app/lib/firebaseConfig';
 //
 import { useUser } from '@context/userContext';
 import UserProfileBar from "@components/UserProfileBar";
-import CameraIcon from '@assets/icons/camera.svg';
+// import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
 import CalendarPage from "@components/CoparentingCalendar";
 // import NavLink from '@components/ui/NavLink';
@@ -24,7 +24,7 @@ import FriendRequests from '@components/friendship/FriendRequests';
 import FriendList from '@components/friendship/FriendList';
 import LoadingPage from '@components/ui/LoadingPage';
 
-import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
+// import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
 import support_img from "@assets/images/support-icon.png";
 import calendar_img from "@assets/images/calendar-icon.png";
 import family_img from "@assets/images/family-icon.png";
@@ -48,8 +48,6 @@ interface KidInfo {
     relationship: 'biological' | 'adopted' | 'guardian' | null;
 }
 
-
-
 // const UserNotFound = () => (
 //     <div className="flex flex-1 items-center justify-center">
 //         <p className="text-xl text-error uppercase">
@@ -62,34 +60,34 @@ const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
-const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
-    <motion.div
-        className="mask mask-squircle bg-gray-100 flex items-center justify-center"
-        whileHover={{ scale: 1.1 }}
-    >
-        {photoURL ? (
-            <Image
-                src={photoURL}
-                width={72}
-                height={72}
-                alt="User avatar"
-                className="object-cover"
-                priority
-            />
-        ) : (
-            <CameraIcon className="w-12 h-12 text-gray-400" />
-        )}
-    </motion.div>
-);
+// const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
+//     <motion.div
+//         className="mask mask-squircle bg-gray-100 flex items-center justify-center"
+//         whileHover={{ scale: 1.1 }}
+//     >
+//         {photoURL ? (
+//             <Image
+//                 src={photoURL}
+//                 width={72}
+//                 height={72}
+//                 alt="User avatar"
+//                 className="object-cover"
+//                 priority
+//             />
+//         ) : (
+//             <CameraIcon className="w-12 h-12 text-gray-400" />
+//         )}
+//     </motion.div>
+// );
 
 const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) => (
-    <div className="flex flex-col items-center w-full py-4 gap-8 z-[10]">
-        <AvatarSection photoURL={userData?.photoURL} />
-        <div className="flex flex-col items-center gap-0">
-            <div className="text-4xl font-semibold text-base-100">
-                Olá, {capitalizeFirstLetter(userData.firstName || '')}!
+    <div className="flex flex-col items-start w-full py-4 gap-8 z-[10] p-4">
+        {/* <AvatarSection photoURL={userData?.photoURL} /> */}
+        <div className="flex flex-col items-start gap-0">
+            <div className="text-4xl font-semibold">
+                Olá,<br/> {capitalizeFirstLetter(userData.firstName || '')}!
             </div>
-            <div className="text-sm text-gray-200">
+            <div className="text-sm ">
                 @{userData.username}
             </div>
         </div>
@@ -117,9 +115,9 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 
 
 const ChildCard = ({ kid }: { kid: KidInfo }) => (
-    <div className="flex items-center w-full">
+    <div className="flex items-center ">
         {/* CARD */}
-        <article className="card bg-base-100 hover:shadow-xl transition-shadow w-full max-w-md rounded-none">
+        <article className="card bg-base-100 shadow-xl w-full rounded-none">
             {/* BODY */}
             <div className="card-body px-4">
                 <div className="flex flex-row items-start gap-6">
@@ -158,7 +156,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => (
 
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -175,14 +173,6 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
         loadChildren();
     }, [parentId]);
 
-    const handlePrev = () => {
-        setCurrentIndex(prev => (prev === 0 ? kidsArray.length - 1 : prev - 1));
-    };
-
-    const handleNext = () => {
-        setCurrentIndex(prev => (prev === kidsArray.length - 1 ? 0 : prev + 1));
-    };
-
     if (loading) return <div className="w-full h-48 flex items-center justify-center">
         <span className="loading loading-spinner loading-lg"></span>
     </div>;
@@ -190,57 +180,14 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     if (!kidsArray.length) return null;
 
     return (
-        <>
-            <div className="carousel w-full relative">
-                {/* Slides Container */}
-                <div
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{
-                        transform: `translateX(-${currentIndex * 100}%)`,
-                        width: `${kidsArray.length * 100}%`
-                    }}
-                >
-                    {/* Slides */}
-                    {kidsArray.map((kid) => (
-                        <div
-                            key={kid.id}
-                            className="carousel-item relative w-full flex justify-center"
-                        >
-                            <ChildCard kid={kid} />
-                        </div>
-                    ))}
+        <div className="flex flex-col gap-4">
+            {/* Slides */}
+            {kidsArray.map((kid) => (
+                <div key={kid.id}>
+                    <ChildCard kid={kid} />
                 </div>
-                {/* Navigation Controls */}
-                <div className="absolute flex justify-between transform -translate-y-1/2 left-2 right-2 top-1/2">
-                    <button
-                        onClick={handlePrev}
-                    // className="btn btn-circle btn-outline shadow-lg"
-                    >
-                        {/* ❮ */}
-                    </button>
-                    <button
-                        onClick={handleNext}
-                        className="btn btn-circle btn-outline shadow-lg"
-                    >
-                        ❯
-                    </button>
-                </div>
-
-                {/* Progress Indicators */}
-                <div className="flex justify-center gap-2 mt-4">
-                    {kidsArray.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`w-3 h-3 rounded-full ${currentIndex === index
-                                ? 'bg-primary scale-125'
-                                : 'bg-gray-300'
-                                } transition-all duration-300`}
-                        />
-                    ))}
-                </div>
-            </div>
-        </>
+            ))}
+        </div>
     );
 };
 
@@ -259,6 +206,7 @@ export default function HomePage() {
         window.addEventListener('resize', checkMobileScreen);
         return () => window.removeEventListener('resize', checkMobileScreen);
     }, []);
+    console.log(isMobile);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -271,25 +219,16 @@ export default function HomePage() {
     if (!userData) return <LoadingPage />;
 
     return (
-        <div className='flex flex-col mb-[10em] sm:mb-0'>
+        <div className='flex flex-col mb-[10em] sm:mb-0 sm:p-6 sm:gap-6 bg-base-300'>
             {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 BACKGROUND IMAGE 
              - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-            <div className="flex flex-col relative ">
-                <Image
-                    src={background_img}
-                    alt="Background"
-                    fill
-                    className="object-cover -z-10"
-                    priority
-                    quality={75}
-                />
-                <div className="absolute inset-0 bg-gray-700 opacity-60"></div>
+            <div className="flex flex-col relative bg-base-100 sm:rounded-3xl shadow-xl">
                 {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                     PROFILE BAR 
                 - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-                <section className="flex flex-col mb-[10em]">
-                    <div className="text-base-100 z-[10]">
+                <section className="flex flex-col mb-8">
+                    <div className=" z-[10]">
                         <UserProfileBar pathname="Meu Lar" />
                     </div>
                     <UserProfileCard userData={userData} />
@@ -298,77 +237,53 @@ export default function HomePage() {
             {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 CONTENT BAR 
              - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-            <article className="flex flex-col bg-base-100 rounded-t-3xl -mt-[3em] z-[10]">
-                {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
-                <section className="container mx-auto p-4">
-                    <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
-                        <h2 className="text-xl font-bold z-10">
-                            Família
-                        </h2>
-                        <Image
-                            src={family_img}
-                            alt="Background"
-                            priority
-                            quality={75}
-                            className="object-contain"
-                            height={100}
-                        />
-                        <div className="absolute top-2 right-2">
-                            {/* <NavLink href="/calendario">
-                                <p className="text-base-100 text-sm font-semibold">
-                                    Ver mais
-                                </p>
-                            </NavLink> */}
-                        </div>
-                    </div>
-                    {isMobile ? (
-                        <div>
-                            <div className="bg-base-200 rounded-xl shadow-md">
-                                <KidsGrid parentId={userData.uid} />
+            <article className="flex flex-col bg-base-100 rounded-3xl z-[10] -mt-10 sm:-mt-0">
+                <div className="flex flex-col gap-4 sm:flex-row ">
+                    {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
+                    <section className="container mx-auto p-4">
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
+                            <h2 className="text-xl font-bold z-10">
+                                Família
+                            </h2>
+                            <Image
+                                src={family_img}
+                                alt="Background"
+                                priority
+                                quality={75}
+                                className="object-contain"
+                                height={100}
+                            />
+                            <div className="absolute top-2 right-2">
                             </div>
                         </div>
-                    ) : (
-                        <div />
-                    )}
-                </section>
-                <div className="divider mx-6" />
-                {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
-                <section className="container mx-auto p-4">
-                    {/* <div className="flex flex-row items-center justify-between px-2">
-                        <h2 className="text-xl font-bold">
-                            Calendário
-                        </h2>
-                        <NavLink href="calendario">
-                            <p className="text-sm font-semibold text-primary">
-                                Ver mais
-                            </p>
-                        </NavLink>
-                    </div> */}
-                    <div className="flex items-center justify-between px-2 rounded-lg bg-info relative mx-auto shadow-xl mb-4">
-                        <h2 className="text-xl font-bold z-10">
-                            Calendário
-                        </h2>
-                        <Image
-                            src={calendar_img}
-                            alt="Background"
-                            priority
-                            quality={75}
-                            className="object-contain"
-                            height={100}
-                        />
-                        <div className="absolute top-2 right-2">
-                            {/* <NavLink href="/calendario">
-                                <p className="text-base-100 text-sm font-semibold">
-                                    Ver mais
-                                </p>
-                            </NavLink> */}
+                            <div>
+                                <div>
+                                    <KidsGrid parentId={userData.uid} />
+                                </div>
+                            </div>
+                    </section>
+                    {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
+                    <section className="container mx-auto p-4">
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-info relative mx-auto shadow-xl mb-4">
+                            <h2 className="text-xl font-bold z-10">
+                                Calendário
+                            </h2>
+                            <Image
+                                src={calendar_img}
+                                alt="Background"
+                                priority
+                                quality={75}
+                                className="object-contain"
+                                height={100}
+                            />
+                            <div className="absolute top-2 right-2">
+                            </div>
                         </div>
-                    </div>
-                    <div className="bg-base-100 rounded-xl shadow-xl">
-                        <CalendarPage />
-                    </div>
-                </section>
-                <div className="divider mx-6" />
+                        <div className="bg-base-100 rounded-xl shadow-xl">
+                            <CalendarPage />
+                        </div>
+                    </section>
+                </div>
                 {/* - - - - - - - - - - - - SUPPORT NETWORK - - - - - - - - - - - - */}
                 <section className="container mx-auto p-4">
                     <div className="flex items-center justify-between px-2 rounded-lg bg-secondary relative mx-auto shadow-xl mb-4">
@@ -383,13 +298,6 @@ export default function HomePage() {
                             className="object-contain"
                             height={100}
                         />
-                        {/* <div className="absolute top-2 right-2">
-                            <NavLink href="/calendario">
-                                <p className="text-base-100 text-sm font-semibold">
-                                    Ver mais
-                                </p>
-                            </NavLink>
-                        </div> */}
                     </div>
                     <FriendList userId={userData.uid} />
                     <FriendSearch />

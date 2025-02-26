@@ -61,7 +61,7 @@ const UserMenu = ({ userData, onSignOut }: {
 }) => (
     <div className="flex items-center gap-2 z-50">
         {/* username */}
-        <NavLink href={`/${userData.username}`}>
+        <NavLink href={`/${userData.username}/home`}>
             <span className="hidden sm:block text-lg">{userData.username}</span>
         </NavLink>
         <div className="dropdown dropdown-end">
@@ -85,7 +85,7 @@ const UserMenu = ({ userData, onSignOut }: {
             </label>
             {/* menul */}
             <ul className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52 bg-base-100 text-neutral">
-                <li><NavLink href={`/${userData.username}/`}>Perfil</NavLink></li>
+                <li><NavLink href={`/${userData.username}/home`}>Perfil</NavLink></li>
                 <li><NavLink href={`/${userData.username}/settings`}>Configurações</NavLink></li>
                 <li><button onClick={onSignOut}>Sair</button></li>
             </ul>

@@ -23,14 +23,14 @@ const UserNavbar = ({ pathname }: { pathname: string }) => {
                         </path>
                     </svg>
                 </button>
-                <p className="text-xl font-semibold">
+                <p className="text-2xl font-semibold">
                     {pathname}
                 </p>
             </div>
             <div className="navbar-end">                
-                <button className="relative flex items-center justify-center mr-4 w-10 h-10 transition-colors duration-150 rounded-full bg-primary text-primary-content focus:shadow-outline hover:bg-primary-content hover:text-primary">
-                    <IconBell width={24} height={24} />
-                    <div className="badge badge-xs badge-accent absolute text-accent-content -top-1 -left-5">+99</div>
+                <button className="relative flex items-center justify-center mr-4 w-10 h-10 transition-colors duration-150 rounded-full text-primary focus:shadow-outline hover:bg-primary-content hover:text-primary">
+                    <IconBell width={32} height={32} />
+                    <div className="badge badge-xs badge-accent absolute text-accent-content -top-0 -left-3 sm:badge-sm">+99</div>
                 </button>
             </div>
         </header>
