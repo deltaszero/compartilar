@@ -1,4 +1,4 @@
-// app/settings/page.tsx
+// app/(user)/[username]/home/page.tsx
 'use client';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -8,10 +8,17 @@ import {
     collection,
     query,
     where,
-    getDocs
+    getDocs,
+    doc,
+    runTransaction
 } from 'firebase/firestore';
+import {
+    ref,
+    uploadBytesResumable,
+    getDownloadURL
+} from 'firebase/storage';
 //
-import { db } from '@/app/lib/firebaseConfig';
+import { db, storage } from '@/app/lib/firebaseConfig';
 //
 import { useUser } from '@context/userContext';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
@@ -23,6 +30,7 @@ import FriendSearch from '@/app/components/logged-area/friendship/FriendSearch';
 import FriendRequests from '@/app/components/logged-area/friendship/FriendRequests';
 import FriendList from '@/app/components/logged-area/friendship/FriendList';
 import LoadingPage from '@/app/components/LoadingPage';
+import toast from 'react-hot-toast';
 
 // import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
 import support_img from "@assets/images/support-icon.png";
@@ -46,6 +54,7 @@ interface KidInfo {
     birthDate: string;
     gender: 'male' | 'female' | 'other' | null;
     relationship: 'biological' | 'adopted' | 'guardian' | null;
+    photoURL?: string | null;
 }
 
 // const UserNotFound = () => (
@@ -108,51 +117,192 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
             lastName: data.lastName,
             birthDate: data.birthDate,
             gender: data.gender,
-            relationship: data.relationship
+            relationship: data.relationship,
+            photoURL: data.photoURL || null
         };
     });
 };
 
 
-const ChildCard = ({ kid }: { kid: KidInfo }) => (
-    <div className="flex items-center ">
-        {/* CARD */}
-        <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl">
-            {/* AVATAR */}
-            <figure className="bg-neutral">
-                <div className="relative w-24 flex items-center justify-center">
-                    <span className="text-2xl text-neutral-content">
-                        {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
-                    </span>
-                    <div className="absolute bottom-1 left-1 p-[5px] bg-accent text-accent-content rounded-full">
-                        <EditIcon width={12} height={12} />
+const ChildCard = ({ kid }: { kid: KidInfo }) => {
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoURL, setPhotoURL] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const { user } = useUser();
+
+    useEffect(() => {
+        // Fetch the child's photo URL if exists
+        const fetchChildPhotoURL = async () => {
+            try {
+                if (kid.photoURL) {
+                    setPhotoURL(kid.photoURL);
+                }
+            } catch (error) {
+                console.error('Error fetching child photo:', error);
+            }
+        };
+        fetchChildPhotoURL();
+    }, [kid]);
+
+    const handlePhotoClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        if (file) {
+            setPhotoFile(file);
+            uploadChildPhoto(file);
+        }
+    };
+
+    const uploadChildPhoto = async (file: File) => {
+        if (!user || !kid.id) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        try {
+            const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+            if (!file.type.startsWith('image/')) {
+                toast.error('Por favor, selecione um arquivo de imagem válido.');
+                throw new Error('Por favor, selecione um arquivo de imagem válido.');
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+                throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+            }
+            
+            console.log('Kid ID for upload:', kid.id);
+
+            // Upload photo to firebase storage
+            const storageRef = ref(storage, `children_photos/${kid.id}/profile.jpg`);
+            console.log('Uploading to path:', `children_photos/${kid.id}/profile.jpg`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            // Handle upload state
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(progress);
+                },
+                (error) => {
+                    console.error('Upload error:', error);
+                    setIsUploading(false);
+                    setUploadProgress(null);
+                },
+                async () => {
+                    try {
+                        // Get download URL
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        setPhotoURL(downloadURL);
+
+                        // Update child document with new photo URL
+                        await runTransaction(db, async (transaction) => {
+                            const childRef = doc(db, 'children', kid.id);
+                            transaction.update(childRef, { 
+                                photoURL: downloadURL,
+                                updatedAt: new Date()
+                            });
+                        });
+                        
+                        toast.success('Foto de perfil atualizada com sucesso!');
+
+                    } catch (err) {
+                        console.error('Error updating child photo:', err);
+                        toast.error('Erro ao atualizar a foto de perfil. Tente novamente.');
+                    } finally {
+                        setIsUploading(false);
+                        setUploadProgress(null);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error uploading child photo:', error);
+            setIsUploading(false);
+            setUploadProgress(null);
+        }
+    };
+
+    return (
+        <div className="flex items-center">
+            {/* CARD */}
+            <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl">
+                {/* AVATAR */}
+                <figure className="bg-neutral">
+                    <div 
+                        className="relative w-24 h-24 flex items-center justify-center cursor-pointer"
+                        onClick={handlePhotoClick}
+                    >
+                        {photoURL ? (
+                            <Image 
+                                src={photoURL}
+                                alt={`${kid.firstName}'s photo`}
+                                width={96}
+                                height={96}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-2xl text-neutral-content">
+                                {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
+                            </span>
+                        )}
+                        
+                        <input 
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handlePhotoChange}
+                        />
+                        
+                        <div className="absolute bottom-1 left-1 p-[5px] bg-accent text-accent-content rounded-full">
+                            <EditIcon width={12} height={12} />
+                        </div>
+                        
+                        {isUploading && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <div className="loading loading-spinner loading-sm text-primary"></div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {uploadProgress !== null && (
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+                            <div 
+                                className="h-full bg-primary"
+                                style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                        </div>
+                    )}
+                </figure>
+                {/* BODY */}
+                <div className="card-body px-4">
+                    {/* CARD TITLE */}
+                    <h2 className="card-title">
+                        {kid.firstName} {kid.lastName}
+                    </h2>
+                    <div className='flex flex-row gap-1 text-wrap py-1'>
+                        <div className="badge badge-sm badge-neutral">neutral</div>
+                        <div className="badge badge-sm badge-primary">primary</div>
+                    </div>
+
+                    {/* CARD ACTIONS */}
+                    <div className="card-actions justify-end">
+                        <button className="btn btn-xs btn-outline btn-primary">
+                            Detalhes
+                        </button>
                     </div>
                 </div>
-            </figure>
-            {/* BODY */}
-            <div className="card-body px-4">
-                {/* CARD TITLE */}
-                <h2 className="card-title">
-                    {kid.firstName} {kid.lastName}
-                </h2>
-                {/* <p>
-                            {kid.birthDate}
-                        </p> */}
-                <div className='flex flex-row gap-1 text-wrap py-1'>
-                            <div className="badge badge-sm badge-neutral">neutral</div>
-                            <div className="badge badge-sm badge-primary">primary</div>
-                        </div>
-
-                {/* CARD ACTIONS */}
-                <div className="card-actions justify-end">
-                    <button className="btn btn-xs btn-outline btn-primary">
-                        Detalhes
-                    </button>
-                </div>
-            </div>
-        </article>
-    </div>
-);
+            </article>
+        </div>
+    );
+};
 
 const KidsGrid = ({ parentId }: { parentId: string }) => {
     const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
