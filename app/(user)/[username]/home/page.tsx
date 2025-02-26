@@ -22,7 +22,7 @@ import CalendarPage from "@/app/components/logged-area/calendar/CoparentingCalen
 import FriendSearch from '@/app/components/logged-area/friendship/FriendSearch';
 import FriendRequests from '@/app/components/logged-area/friendship/FriendRequests';
 import FriendList from '@/app/components/logged-area/friendship/FriendList';
-import LoadingPage from '@components/ui/LoadingPage';
+import LoadingPage from '@/app/components/LoadingPage';
 
 // import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
 import support_img from "@assets/images/support-icon.png";
@@ -85,7 +85,7 @@ const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) =>
         {/* <AvatarSection photoURL={userData?.photoURL} /> */}
         <div className="flex flex-col items-start gap-0">
             <div className="text-4xl font-semibold">
-                Olá,<br/> {capitalizeFirstLetter(userData.firstName || '')}!
+                Olá,<br /> {capitalizeFirstLetter(userData.firstName || '')}!
             </div>
             <div className="text-sm ">
                 @{userData.username}
@@ -117,37 +117,37 @@ const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 const ChildCard = ({ kid }: { kid: KidInfo }) => (
     <div className="flex items-center ">
         {/* CARD */}
-        <article className="card bg-base-100 shadow-xl w-full rounded-none">
+        <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl">
+            {/* AVATAR */}
+            <figure className="bg-neutral">
+                <div className="relative w-24 flex items-center justify-center">
+                    <span className="text-2xl text-neutral-content">
+                        {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
+                    </span>
+                    <div className="absolute bottom-1 left-1 p-[5px] bg-accent text-accent-content rounded-full">
+                        <EditIcon width={12} height={12} />
+                    </div>
+                </div>
+            </figure>
             {/* BODY */}
             <div className="card-body px-4">
-                <div className="flex flex-row items-start gap-6">
-                    {/* AVATAR */}
-                    <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-20 h-20 flex items-center justify-center">
-                            <span className="text-2xl">
-                                {kid.firstName[0].toUpperCase()}
-                            </span>
-                        </div>
-                        <div className="absolute bottom-0 right-0 p-[5px] bg-accent text-accent-content rounded-full">
-                            <EditIcon width={16} height={16} />
-                        </div>
-                    </div>
-                    <div className="flex flex-col">
-                        {/* CARD TITLE */}
-                        <h2 className="card-title">
-                            {kid.firstName} {kid.lastName}
-                        </h2>
-                        <p className="font-medium">
+                {/* CARD TITLE */}
+                <h2 className="card-title">
+                    {kid.firstName} {kid.lastName}
+                </h2>
+                {/* <p>
                             {kid.birthDate}
-                        </p>
-                        <div className="py-1" />
-                        {/* CARD ACTIONS */}
-                        <div className="card-actions">
-                            <button className="text-white font-semibold btn btn-xs btn-primary">
-                                Detalhes
-                            </button>
+                        </p> */}
+                <div className='flex flex-row gap-1 text-wrap py-1'>
+                            <div className="badge badge-sm badge-neutral">neutral</div>
+                            <div className="badge badge-sm badge-primary">primary</div>
                         </div>
-                    </div>
+
+                {/* CARD ACTIONS */}
+                <div className="card-actions justify-end">
+                    <button className="btn btn-xs btn-outline btn-primary">
+                        Detalhes
+                    </button>
                 </div>
             </div>
         </article>
@@ -239,29 +239,6 @@ export default function HomePage() {
              - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
             <article className="flex flex-col bg-base-100 rounded-3xl z-[10] -mt-10 sm:-mt-0">
                 <div className="flex flex-col gap-4 sm:flex-row ">
-                    {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
-                    <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
-                            <h2 className="text-xl font-bold z-10">
-                                Família
-                            </h2>
-                            <Image
-                                src={family_img}
-                                alt="Background"
-                                priority
-                                quality={75}
-                                className="object-contain"
-                                height={100}
-                            />
-                            <div className="absolute top-2 right-2">
-                            </div>
-                        </div>
-                            <div>
-                                <div>
-                                    <KidsGrid parentId={userData.uid} />
-                                </div>
-                            </div>
-                    </section>
                     {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
                         <div className="flex items-center justify-between px-2 rounded-lg bg-info relative mx-auto shadow-xl mb-4">
@@ -274,13 +251,36 @@ export default function HomePage() {
                                 priority
                                 quality={75}
                                 className="object-contain"
-                                height={100}
+                                height={75}
                             />
                             <div className="absolute top-2 right-2">
                             </div>
                         </div>
                         <div className="bg-base-100 rounded-xl shadow-xl">
                             <CalendarPage />
+                        </div>
+                    </section>
+                    {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
+                    <section className="container mx-auto p-4">
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
+                            <h2 className="text-xl font-bold z-10">
+                                Família
+                            </h2>
+                            <Image
+                                src={family_img}
+                                alt="Background"
+                                priority
+                                quality={75}
+                                className="object-contain"
+                                height={75}
+                            />
+                            <div className="absolute top-2 right-2">
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                <KidsGrid parentId={userData.uid} />
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -296,7 +296,7 @@ export default function HomePage() {
                             priority
                             quality={75}
                             className="object-contain"
-                            height={100}
+                            height={75}
                         />
                     </div>
                     <FriendList userId={userData.uid} />

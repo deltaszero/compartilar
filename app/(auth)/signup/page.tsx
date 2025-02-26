@@ -14,7 +14,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useEffect, useState } from 'react';
 import { FirebaseError } from 'firebase/app';
-import LoginHeader from "@components/layout/LoginHeader";
+import LoginHeader from "@/app/components/LoginHeader";
 
 interface SignupStore {
     formData: SignupFormData;

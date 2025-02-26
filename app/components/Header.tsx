@@ -1,32 +1,47 @@
 'use client';
-
+// react
 import React from 'react';
+// next
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+// firebase
 import { signOut } from 'firebase/auth';
-import NavLink from '@components/ui/NavLink';
+// custom
+import NavLink from '@/app/components/utils/NavLink';
 import { auth } from '@lib/firebaseConfig';
 import { useUser } from '@context/userContext';
+// assets
 import HomeIcon from '@assets/icons/hive-home.svg';
 import CameraIcon from '@assets/icons/camera.svg';
 import LoginIcon from '@assets/icons/login.svg';
 
+/**
+ * navItems is an array of objects containing the label and href of each navigation item.
+ */
 const navItems = [
-    { label: 'Organize', href: '#organize' },
-    { label: 'Descomplique', href: '#descomplique' },
-    { label: 'Proteja', href: '#proteja' },
+    { label: 'Organize',       href: '#organize' },
+    { label: 'Descomplique',   href: '#descomplique' },
+    { label: 'Proteja',        href: '#proteja' },
     { label: 'Despreocupe-se', href: '#despreocupe-se' }
 ];
 
+/**
+ * Logo is a component that renders the CompartiLar logo.
+ */
 const Logo = () => (
     <div className="flex items-center gap-2">
         <HomeIcon width={32} height={32} />
         <a href="/" className="text-xl rounded-md p-0">
-            <h1 className="text-3xl font-nunito font-black uppercase">CompartiLar</h1>
+            <h1 className="text-3xl font-nunito font-bold uppercase">
+                CompartiLar
+            </h1>
         </a>
     </div>
 );
 
+/**
+ * MobileNav is a component that renders the mobile navigation menu.
+ */
 const MobileNav = () => (
     <div className="dropdown lg:hidden">
         <div tabIndex={0} role="button" className="btn btn-ghost">
@@ -45,6 +60,9 @@ const MobileNav = () => (
     </div>
 );
 
+/**
+ * DesktopNav is a component that renders the desktop navigation menu.
+ */
 const DesktopNav = () => (
     <ul className="menu menu-horizontal px-1 [&_li>*]:rounded-md">
         {navItems.map((item) => (
@@ -55,6 +73,9 @@ const DesktopNav = () => (
     </ul>
 );
 
+/**
+ * UserMenu is a component that renders the user menu.
+ */
 const UserMenu = ({ userData, onSignOut }: {
     userData: { username: string; photoURL?: string },
     onSignOut: () => void
@@ -93,6 +114,9 @@ const UserMenu = ({ userData, onSignOut }: {
     </div>
 );
 
+/**
+ * LoginButton is a component that renders the login button.
+ */
 const LoginButton = () => (
     <a
         href="/login"
@@ -103,6 +127,9 @@ const LoginButton = () => (
     </a>
 );
 
+/**
+ * Header is a component that renders the website header.
+ */
 const Header = () => {
     const { user, userData, loading } = useUser();
     const router = useRouter();

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '@/app/components/logged-area/ui/Sidebar';
 
 import { usePathname } from 'next/navigation';
-import NavLink from '@components/ui/NavLink';
+import NavLink from '@/app/components/utils/NavLink';
 import { useUser } from '@context/userContext';
 // importing assets
 import IconUser from '@assets/icons/bottom_bar_user.svg';
@@ -41,27 +41,27 @@ const BottomNav = () => {
         {
             path: `/${userData.username}/home`,
             label: 'Meu Lar',
-            icon: <IconHouse width={32} height={32} />
+            icon: <IconHouse width={24} height={24} />
         },
         {
             path: `/${userData.username}`,
             label: 'Perfil',
-            icon: <IconUser width={32} height={32} />
+            icon: <IconUser width={24} height={24} />
         },
         {
             path: `/${userData.username}/geolocation`,
             label: 'Localização',
-            icon: <IconMaplocation width={32} height={32} />
+            icon: <IconMaplocation width={24} height={24} />
         },
         {
             path: `/${userData.username}/chat`,
             label: 'Chat',
-            icon: <IconChat width={32} height={32} />
+            icon: <IconChat width={24} height={24} />
         },
         {
             path: 'mais',
             label: 'Mais',
-            icon: <IconMore width={32} height={32} onClick={() => setIsModalOpen(true)} />
+            icon: <IconMore width={24} height={24} onClick={() => setIsModalOpen(true)} />
         },
     ];
 
@@ -78,14 +78,24 @@ const BottomNav = () => {
                         >
                             {item.label === 'Mais' ? (
                                 // Render without NavLink for "Mais"
-                                <div className="flex flex-col items-center justify-center">
-                                    {item.icon}
+                                <div className="flex flex-col items-center justify-center py-1">
+                                    <div className="flex flex-col items-center justify-center">
+                                        {item.icon}
+                                    </div>
+                                    <p className="text-xs">
+                                        {item.label}
+                                    </p>
                                 </div>
                             ) : (
                                 // Render with NavLink for other items
                                 <NavLink href={item.path}>
-                                    <div className="flex flex-col items-center justify-center">
-                                        {item.icon}
+                                    <div className='flex flex-col items-center justify-center py-1'>
+                                        <div className="flex flex-col items-center justify-center">
+                                            {item.icon}
+                                        </div>
+                                        <p className="text-xs font-nunito">
+                                            {item.label}
+                                        </p>
                                     </div>
                                 </NavLink>
                             )}

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 // importing components
 import { useUser } from '@context/userContext';
-import LoadingPage from '@components/ui/LoadingPage';
+import LoadingPage from '@/app/components/LoadingPage';
 // import { SignupFormData } from '@/types/signup.types';
 // importing assets
 import CameraIcon from '@assets/icons/camera.svg';

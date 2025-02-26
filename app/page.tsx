@@ -1,7 +1,7 @@
 // app/page.tsx
 import Image from 'next/image';
-import Header from "@components/layout/Header";
-import Footer from "@components/layout/Footer";
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
 import hero_img from "@assets/images/cellphone_01.gif";
 
 export default function Home() {

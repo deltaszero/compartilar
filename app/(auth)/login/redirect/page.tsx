@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 // importing components
 import { useUser } from '@context/userContext';
-import LoadingPage from '@components/ui/LoadingPage';
+import LoadingPage from '@/app/components/LoadingPage';
 // importing assets
 // importring components 
 

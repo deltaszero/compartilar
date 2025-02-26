@@ -6,9 +6,9 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { auth } from '@lib/firebaseConfig';
-import NavLink from '@components/ui/NavLink';
-import LoginHeader from "@components/layout/LoginHeader";
-import { CustomTypingEffect } from '@/app/components/layout/CustomTypingEffect';
+import NavLink from '@/app/components/utils/NavLink';
+import LoginHeader from "@/app/components/LoginHeader";
+import { CustomTypingEffect } from '@/app/components/misc/CustomTypingEffect';
 
 import background_img from "@assets/images/e7f07729-4789-4da8-bfc4-241153ee5040_0.png";
 

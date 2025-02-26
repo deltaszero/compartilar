@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 // import Image from 'next/image';
 // importing components
-import NavLink from '@components/ui/NavLink';
+import NavLink from '@/app/components/utils/NavLink';
 // import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
 // importing assets
 // import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
-import LoginHeader from "@components/layout/LoginHeader";
+import LoginHeader from "@/app/components/LoginHeader";
 import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
 // import IconInfo from '@assets/icons/icon_meu_lar_info.svg';
 import IconPlan from '@assets/icons/icon_meu_lar_plan.svg';
