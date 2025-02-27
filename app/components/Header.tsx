@@ -11,7 +11,7 @@ import NavLink from '@/app/components/utils/NavLink';
 import { auth } from '@lib/firebaseConfig';
 import { useUser } from '@context/userContext';
 // assets
-import HomeIcon from '@assets/icons/hive-home.svg';
+// import HomeIcon from '@assets/icons/compartilar-typologo.min.svg';
 import CameraIcon from '@assets/icons/camera.svg';
 import LoginIcon from '@assets/icons/login.svg';
 
@@ -28,16 +28,16 @@ const navItems = [
 /**
  * Logo is a component that renders the CompartiLar logo.
  */
-const Logo = () => (
-    <div className="flex items-center gap-2">
-        <HomeIcon width={32} height={32} />
-        <a href="/" className="text-xl rounded-md p-0">
-            <h1 className="text-3xl font-nunito font-bold uppercase">
-                CompartiLar
-            </h1>
-        </a>
-    </div>
-);
+// const Logo = () => (
+//     <div className="flex items-center gap-2">
+//         <HomeIcon width={300} />
+//         <a href="/" className="text-xl rounded-md p-0">
+//             {/* <h1 className="text-3xl font-nunito font-bold uppercase">
+//                 CompartiLar
+//             </h1> */}
+//         </a>
+//     </div>
+// );
 
 /**
  * MobileNav is a component that renders the mobile navigation menu.
@@ -80,7 +80,7 @@ const UserMenu = ({ userData, onSignOut }: {
     userData: { username: string; photoURL?: string },
     onSignOut: () => void
 }) => (
-    <div className="flex items-center gap-2 z-50">
+    <div className="flex items-center gap-2 z-50 text-neutral">
         {/* username */}
         <NavLink href={`/${userData.username}/home`}>
             <span className="hidden sm:block text-lg">{userData.username}</span>
@@ -120,7 +120,7 @@ const UserMenu = ({ userData, onSignOut }: {
 const LoginButton = () => (
     <a
         href="/login"
-        className="btn btn-neutral rounded-md font-nunito font-bold gap-2"
+        className="btn bg-neutral text-neutral-content rounded-md font-nunito font-bold gap-2 hover:text-neutral"
     >
         <span>Entrar</span>
         <LoginIcon width={16} height={16} />
@@ -144,16 +144,20 @@ const Header = () => {
     };
 
     return (
-        <header className="navbar bg-base-200 text-purpleShade03 lg:fixed lg:inset-x-0 lg:top-0 sm:px-6 z-[9999]">
+        <header className="navbar bg-base-200 text-purpleShade01 lg:fixed lg:inset-x-0 lg:top-0 sm:px-6 z-[9999]">
             <div className="navbar-start">
                 <MobileNav />
                 <div className="hidden lg:block">
-                    <Logo />
+                    {/* <Logo /> */}
+                    <h1 className="text-2xl font-nunito font-bold uppercase">CompartiLar</h1>
                 </div>
             </div>
 
             <div className="navbar-end">
-                <DesktopNav />
+                <div className="hidden lg:block">
+                    <DesktopNav />
+                </div>
+                <div className="mx-2"></div>
                 {loading ? (
                     <div className="skeleton h-8 w-32 rounded-md" />
                 ) : user && userData ? (

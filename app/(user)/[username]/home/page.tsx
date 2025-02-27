@@ -132,6 +132,8 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const { user } = useUser();
 
+    console.log(photoFile);
+
     useEffect(() => {
         // Fetch the child's photo URL if exists
         const fetchChildPhotoURL = async () => {
@@ -232,7 +234,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
     return (
         <div className="flex items-center">
             {/* CARD */}
-            <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl">
+            <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl p-0">
                 {/* AVATAR */}
                 <figure className="bg-neutral">
                     <div className="flex items-center justify-center cursor-pointer" onClick={handlePhotoClick}>
@@ -279,7 +281,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                     )}
                 </figure>
                 {/* BODY */}
-                <div className="card-body px-4">
+                <div className="card-body p-0 mx-2 mt-2">
                     {/* CARD TITLE */}
                     <h2 className="card-title">
                         {kid.firstName} {kid.lastName}

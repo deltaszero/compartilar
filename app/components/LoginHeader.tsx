@@ -10,8 +10,8 @@ const LoginHeader = () => {
         <header className="flex justify-center items-center p-0">
             <a href="/">
                 <div className="flex items-center justify-center space-x-4">
-                    <HomeIcon width={48} height={48} />
-                    {/* <h1 className="text-3xl font-nunito font-black uppercase">CompartiLar</h1> */}
+                    <HomeIcon width={28} height={28} />
+                    <h1 className="text-3xl font-nunito font-bold uppercase">CompartiLar</h1>
                 </div>
             </a>
         </header>

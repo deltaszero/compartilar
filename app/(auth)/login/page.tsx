@@ -36,7 +36,7 @@ export default function LoginPage() {
     return (
         <div className="h-screen grid grid-cols-1 lg:grid-cols-2">
             {/* Left Sidebar */}
-            <div className="hidden lg:flex relative w-full h-full text-4xl font-nunito bg-neutral text-base-100">
+            <div className="hidden lg:flex relative w-full h-full text-4xl bg-neutral text-base-100">
                 {/* Absolute Image */}
                 <Image
                     src={background_img}
@@ -49,7 +49,7 @@ export default function LoginPage() {
                 {/* Dark Overlay */}
                 <div className="absolute inset-0 bg-gray-900 opacity-90" />
                 {/* Typing Effect on Top */}
-                <div className="relative z-10 flex flex-col justify-center items-center w-full h-full">
+                <div className="font-playfair relative z-10 flex flex-col justify-center items-center w-full h-full">
                 <CustomTypingEffect />
                 </div>
                 </div>
@@ -59,7 +59,17 @@ export default function LoginPage() {
                     <LoginHeader />
                 </div>
                 <section className="flex-1 flex flex-col justify-center items-center">
+                    <div className='flex flex-col gap-4  mb-[6em] max-w-xs sm:max-w-md'>
+                        <div className='font-playfair font-semibold text-4xl sm:text-6xl'>
+                            <p>Coparentalidade</p>
+                            <p>sintonizada</p>
+                        </div>
+                        <div className='font-raleway'>
+                            <p>Plataforma de gerencimento familiar que facilita a convivência em lares alternados.</p>
+                        </div>
+                    </div>
                     <div className="flex flex-col gap-4">
+                        <p className='font-raleway'>Que bom te ver de novo!</p>
                         <div className="flex-col">
                             <form onSubmit={handleLogin} className="form-control gap-4" suppressHydrationWarning>
                             {hasHydrated ? (
@@ -133,7 +143,7 @@ export default function LoginPage() {
                         
                         </div>
                         <div className="divider"></div>
-                        <div className="flex-col">
+                        <div className="flex-col font-raleway">
                             <p>
                                 Não tem uma conta? <span className="text-purpleShade03 hover:decoration-none hover:font-bold"><NavLink href="/signup">Cadastre-se</NavLink></span>
                             </p>
