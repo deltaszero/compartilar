@@ -2,7 +2,9 @@
 import Image from 'next/image';
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+// assets
 import hero_img from "@assets/images/compartilar-anthropic-hero.png";
+import feature_img from "@assets/images/compartilar-anthropic-img-01.png";
 
 export default function Home() {
     return (
@@ -48,25 +50,67 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            {/* ORGANIZE */}
-            <section className="flex items-center" id="organize">
-                <h2>Organize</h2>
-            </section>
-            <div className="divider" />
-            {/* DESCOMPLIQUE */}
-            <section className="flex items-center" id="descomplique">
-                <h2>Descomplique</h2>
-            </section>
-            <div className="divider" />
-            {/* PROTEJA */}
-            <section className="flex items-center" id="proteja">
-                <h2>Proteja</h2>
-            </section>
-            <div className="divider" />
-            {/* DESPREOCUPE-SE */}
-            <section className="flex items-center" id="despreocupe-se">
-                <h2>Despreocupe-se</h2>
-            </section>
+            <div className="flex bg-base-200 justify-center font-raleway font-bold text-4xl">
+                Principais funcionalidades
+            </div>
+            <div className='flex flex-row justify-center gap-6 py-12 bg-base-200'>
+                {/* DESCOMPLIQUE */}
+                <section className="flex flex-col items-center w-1/5" id="descomplique">
+                    <Image
+                        src={feature_img}
+                        alt="Hero image"
+                        width={256}
+                    />
+                    <h2 className="font-raleway font-bold text-2xl">
+                        Plano Parental
+                    </h2>
+                    <p className="font-serif font-light text-xl text-center">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies.
+                    </p>
+                </section>
+                {/* ORGANIZE */}
+                <section className="flex flex-col items-center w-1/5" id="organize">
+                    <Image
+                        src={feature_img}
+                        alt="Hero image"
+                        width={256}
+                    />
+                    <h2 className="font-raleway font-bold text-2xl">
+                        Organize
+                    </h2>
+                    <p className="font-serif font-light text-xl text-center">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies.
+                    </p>
+                </section>
+                {/* PROTEJA */}
+                <section className="flex flex-col items-center w-1/5" id="proteja">
+                    <Image
+                        src={feature_img}
+                        alt="Hero image"
+                        width={256}
+                    />
+                    <h2 className="font-raleway font-bold text-2xl">
+                        Proteja
+                    </h2>
+                    <p className="font-serif font-light text-xl text-center">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies.
+                    </p>
+                </section>
+                {/* DESPREOCUPE-SE */}
+                <section className="flex flex-col items-center w-1/5" id="despreocupe-se">
+                    <Image
+                        src={feature_img}
+                        alt="Hero image"
+                        width={256}
+                    />
+                    <h2 className="font-raleway font-bold text-2xl">
+                        Despreocupe-se
+                    </h2>
+                    <p className="font-serif font-light text-xl text-center">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies.
+                    </p>
+                </section>
+            </div>
             {/* FOOTER */}
             <footer>
                 <Footer />

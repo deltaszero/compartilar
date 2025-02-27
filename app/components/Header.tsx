@@ -19,8 +19,8 @@ import LoginIcon from '@assets/icons/login.svg';
  * navItems is an array of objects containing the label and href of each navigation item.
  */
 const navItems = [
-    { label: 'Organize',       href: '#organize' },
     { label: 'Descomplique',   href: '#descomplique' },
+    { label: 'Organize',       href: '#organize' },
     { label: 'Proteja',        href: '#proteja' },
     { label: 'Despreocupe-se', href: '#despreocupe-se' }
 ];
