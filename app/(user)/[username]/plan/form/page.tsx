@@ -1,13 +1,33 @@
-// /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plan/page.tsx
+// /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plan/form/page.tsx
 // https://docs.google.com/document/d/1B0S61UmF6-GrUWRGw2MwkR_fa-GwX63V/edit
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+    collection, 
+    doc, 
+    setDoc, 
+    query, 
+    where, 
+    getDocs,
+    Timestamp 
+} from 'firebase/firestore';
+import { db } from '@/app/lib/firebaseConfig';
+import { useUser } from '@context/userContext';
+import { KidInfo } from '@/types/signup.types';
+import { ParentalPlan } from '@/types/shared.types';
+import toast from 'react-hot-toast';
 import IconIdea from '@assets/icons/icon_meu_lar_idea.svg';
 
 // General Form Component
 const GeneralForm: React.FC = () => {
+    const { userData, user, loading } = useUser();
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+    const [availableChildren, setAvailableChildren] = useState<KidInfo[]>([]);
     const [referenceHome, setReferenceHome] = useState('');
     const [guardType, setGuardType] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Employed states
     const [employedAlimonyInMoney, setEmployedAlimonyInMoney] = useState(false);
@@ -23,9 +43,130 @@ const GeneralForm: React.FC = () => {
     const [unemployedPaymentChecked, setUnemployedPaymentChecked] = useState(false);
     const [unemployedReimbursementChecked, setUnemployedReimbursementChecked] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Fetch available children when component loads
+    useEffect(() => {
+        const fetchChildren = async () => {
+            if (!user) return;
+            
+            try {
+                const childrenQuery = query(
+                    collection(db, 'children'),
+                    where('parentId', '==', user.uid)
+                );
+                const snapshot = await getDocs(childrenQuery);
+                const children = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                } as KidInfo));
+                
+                setAvailableChildren(children);
+            } catch (error) {
+                console.error('Error fetching children:', error);
+                toast.error('Erro ao buscar as crianças');
+            }
+        };
+        
+        fetchChildren();
+    }, [user]);
+
+    const handleChildSelection = (childId: string) => {
+        setSelectedChildren(prev => {
+            if (prev.includes(childId)) {
+                return prev.filter(id => id !== childId);
+            } else {
+                return [...prev, childId];
+            }
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle form submission logic here
+        
+        if (!user) {
+            toast.error('Você precisa estar autenticado para criar um plano de parentalidade');
+            return;
+        }
+        
+        if (!title) {
+            toast.error('Por favor, forneça um título para o plano');
+            return;
+        }
+        
+        if (selectedChildren.length === 0) {
+            toast.error('Por favor, selecione pelo menos um filho para o plano');
+            return;
+        }
+        
+        if (!referenceHome) {
+            toast.error('Por favor, selecione o lar de referência');
+            return;
+        }
+        
+        if (!guardType) {
+            toast.error('Por favor, selecione o tipo de guarda');
+            return;
+        }
+        
+        setIsSubmitting(true);
+        
+        try {
+            // Create a new parental plan document
+            const planRef = doc(collection(db, 'parental_plans'));
+            
+            const planData: ParentalPlan = {
+                id: planRef.id,
+                userId: user.uid,
+                title,
+                description,
+                children: selectedChildren,
+                referenceHome: referenceHome as 'Mãe' | 'Pai' | 'Outro' | 'Alternado',
+                guardType: guardType as 'Unilateral' | 'Compartilhada',
+                employedAlimony: {
+                    inMoney: employedAlimonyInMoney,
+                    moneyMethod: employedMoneyMethod as 'Deposito' | 'Desconto' | undefined,
+                    obligations: employedObligationsChecked,
+                    paymentServices: employedPaymentChecked,
+                    reimbursement: employedReimbursementChecked
+                },
+                unemployedAlimony: {
+                    inMoney: unemployedAlimonyInMoney,
+                    moneyMethod: unemployedMoneyMethod as 'Deposito' | 'Desconto' | undefined,
+                    obligations: unemployedObligationsChecked,
+                    paymentServices: unemployedPaymentChecked,
+                    reimbursement: unemployedReimbursementChecked
+                },
+                status: 'draft',
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now()
+            };
+            
+            await setDoc(planRef, planData);
+            
+            toast.success('Plano de parentalidade criado com sucesso!');
+            
+            // Reset form
+            setTitle('');
+            setDescription('');
+            setSelectedChildren([]);
+            setReferenceHome('');
+            setGuardType('');
+            setEmployedAlimonyInMoney(false);
+            setEmployedMoneyMethod('');
+            setEmployedObligationsChecked(false);
+            setEmployedPaymentChecked(false);
+            setEmployedReimbursementChecked(false);
+            setUnemployedAlimonyInMoney(false);
+            setUnemployedMoneyMethod('');
+            setUnemployedObligationsChecked(false);
+            setUnemployedPaymentChecked(false);
+            setUnemployedReimbursementChecked(false);
+            
+        } catch (error) {
+            console.error('Error creating parental plan:', error);
+            toast.error('Erro ao criar o plano de parentalidade');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const EmployedSection = () => (
@@ -186,24 +327,66 @@ const GeneralForm: React.FC = () => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <p>
-                A base de residência do menor (guarda física do menor);
-                O tipo de guarda (jurídica);
-                Como será o regime de convivência o mais detalhado possível; 
-                Como serão pagos os alimentos ou como serão custeadas as necessidades do menor, desde as necessidades básicas até mesmo aquelas extraordinárias;
-                Prazo para ser revisado e readaptado o plano;
-                Em que situações o plano poderá ser revisado antes do prazo; 
-                Quais profissionais irão acompanhar a elaboração do plano de parentalidade (ex. psicólogos, assistentes sociais, mediadores profissionais, advogados); para posterior homologação judicial;
-                Qual a forma de comunicação entre os genitores (e-mail, aplicativo WhatsApp);
-                <br/><br/>
-                A idade dos petizes;
-                As atividades laborais dos pais e disponibilidades de horários;
-                A distância das residências dos genitores; 
-                Possibilidades financeiras de cada genitor; para definir a questão dos alimentos?
-                Atividades do menor que serão desempenhadas naquela fase;
-                Início/manutenção de acompanhamento psicológico e respectivo custeio;
-                Necessidade especial do menor – caso tenha;
+            {/* Plan Title and Description */}
+            <div>
+                <h2 className="text-lg font-semibold mb-2">Informações Básicas do Plano</h2>
+                <div className="form-control">
+                    <label className="label">
+                        <span className="label-text">Título do Plano</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        className="input input-bordered w-full" 
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Ex: Plano de Parentalidade - João e Maria"
+                        required
+                    />
+                </div>
+                <div className="form-control mt-2">
+                    <label className="label">
+                        <span className="label-text">Descrição (opcional)</span>
+                    </label>
+                    <textarea 
+                        className="textarea textarea-bordered h-20"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Descreva o propósito deste plano..."
+                    ></textarea>
+                </div>
+            </div>
+
+            {/* Children Selection */}
+            <div>
+                <h2 className="text-lg font-semibold mb-2">Crianças Incluídas no Plano</h2>
+                {availableChildren.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {availableChildren.map(child => (
+                            <label key={child.id} className="flex items-center p-2 border rounded-lg hover:bg-base-200">
+                                <input
+                                    type="checkbox"
+                                    className="checkbox checkbox-primary mr-2"
+                                    checked={selectedChildren.includes(child.id)}
+                                    onChange={() => handleChildSelection(child.id)}
+                                />
+                                <span>{child.firstName} {child.lastName}</span>
+                            </label>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="alert alert-warning">
+                        <span>Nenhuma criança encontrada. Cadastre crianças primeiro.</span>
+                    </div>
+                )}
+            </div>
+
+            <p className="text-sm opacity-70 italic">
+                O plano de parentalidade deve incluir: base de residência do menor; tipo de guarda; regime de convivência; 
+                pagamento de alimentos; prazos para revisão do plano; situações de revisão antecipada; profissionais que acompanham;
+                forma de comunicação entre os genitores; idade dos filhos; atividades laborais dos pais; distância das residências;
+                possibilidades financeiras; atividades dos filhos; acompanhamento psicológico; necessidades especiais.
             </p>
+            
             {/* Lar Referência */}
             <div className="flex flex-row items-center gap-2">
                 <h2 className="text-lg font-semibold">Lar Referência</h2>
@@ -263,9 +446,32 @@ const GeneralForm: React.FC = () => {
                 </div>
             </article>
             <br />
-            <button type="submit" className="btn btn-outline btn-primary">
-                Salvar
+            <button 
+                type="submit" 
+                className={`btn ${isSubmitting ? 'btn-disabled' : 'btn-primary'}`}
+                disabled={isSubmitting || !user || availableChildren.length === 0}
+            >
+                {isSubmitting ? (
+                    <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Salvando...
+                    </>
+                ) : (
+                    'Salvar Plano'
+                )}
             </button>
+            
+            {!user && (
+                <div className="alert alert-error mt-4">
+                    <span>Você precisa estar autenticado para criar um plano de parentalidade.</span>
+                </div>
+            )}
+            
+            {availableChildren.length === 0 && user && (
+                <div className="alert alert-warning mt-4">
+                    <span>Você precisa cadastrar pelo menos um filho para criar um plano de parentalidade.</span>
+                </div>
+            )}
         </form>
     );
 };
