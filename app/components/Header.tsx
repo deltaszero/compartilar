@@ -120,7 +120,7 @@ const UserMenu = ({ userData, onSignOut }: {
 const LoginButton = () => (
     <a
         href="/login"
-        className="btn btn-primary-content rounded-md font-nunito font-bold gap-2"
+        className="btn btn-neutral rounded-md font-nunito font-bold gap-2"
     >
         <span>Entrar</span>
         <LoginIcon width={16} height={16} />
@@ -144,7 +144,7 @@ const Header = () => {
     };
 
     return (
-        <header className="navbar bg-primary text-primary-content lg:fixed lg:inset-x-0 lg:top-0 sm:px-6 z-[9999]">
+        <header className="navbar bg-base-200 text-purpleShade03 lg:fixed lg:inset-x-0 lg:top-0 sm:px-6 z-[9999]">
             <div className="navbar-start">
                 <MobileNav />
                 <div className="hidden lg:block">
@@ -152,11 +152,8 @@ const Header = () => {
                 </div>
             </div>
 
-            <nav className="navbar-center hidden lg:flex font-raleway font-semibold">
-                <DesktopNav />
-            </nav>
-
             <div className="navbar-end">
+                <DesktopNav />
                 {loading ? (
                     <div className="skeleton h-8 w-32 rounded-md" />
                 ) : user && userData ? (

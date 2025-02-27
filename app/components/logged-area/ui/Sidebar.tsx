@@ -60,45 +60,39 @@ interface NavItemProps {
 }
 
 const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) => {
-    const isActive = currentPath === href //&& subpages?.some(subpage => currentPath.startsWith(subpage.path));
+    const isActive = currentPath === href;
     const hasSubpages = subpages && subpages.length > 0;
 
     return (
-        <motion.div variants={itemVariants} whileHover={{ x: isActive ? 0 : 10 }} className={`${hasSubpages ? 'collapse collapse-arrow' : ''}`}>
-            <input 
-                type="radio" 
-                name="navigation-accordion"
-                className={`${hasSubpages ? '' : 'hidden'}`}
-            />
-            {/* Title Section */}
-            <div className="collapse-title flex flex-row min-h-0 gap-4">
-                <div className={`${isActive ? 'text-accent' : ''}`}>
+        <div className="mt-6 mx-2">
+            {/* Main Menu Item */}
+            <div className="flex flex-row items-center gap-4">
+                <div className={`${isActive ? 'text-purpleShade03' : ''}`}>
                     {icon}
                 </div>
                 <NavLink href={href}>
-                    <p className={`text-md hover:text-accent ${isActive ? 'text-accent font-bold text-lg' : ''}`}>
+                    <p className={`text-md hover:text-purpleShade03 ${isActive ? 'text-purpleShade03 font-bold text-lg' : ''}`}>
                         {children}
                     </p>
                 </NavLink>
             </div>
 
-            {/* Conditional Subpages Section */}
-            {hasSubpages ? (
-                <div className="collapse-content">
+            {/* Subpages (always visible if they exist) */}
+            {hasSubpages && (
+                <div className="ml-10 mt-1">
                     {subpages.map(subpage => (
                         <NavLink key={subpage.path} href={subpage.path}>
-                            <p className={`pl-10 pb-1 text-sm hover:text-accent ${currentPath === subpage.path ? 'text-accent text-lg' : ''}`}>
+                            <p className={`pb-1 text-sm font-raleway hover:text-purpleShade03 ${currentPath === subpage.path ? 'text-purpleShade03 text-lg' : ''}`}>
                                 {subpage.label}
                             </p>
                         </NavLink>
                     ))}
                 </div>
-            ) : (
-                null
             )}
-        </motion.div>
+        </div>
     );
 };
+
 
 // const PremiumCard = () => (
 //     <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
@@ -129,18 +123,19 @@ export default function Sidebar() {
 
     const navItems = userData ? [
         {
-            path: `/${userData.username}`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
+            path: `/${userData.username}/home`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
             subpages: [
-                { path: `/${userData.username}/home`, label: 'Início' },
-                { path: `/${userData.username}/info`, label: 'Informações' },
+                // { path: `/${userData.username}/home`, label: 'Meu Lar' },
+                { path: `/${userData.username}`, label: 'Perfil' },
+                { path: `/${userData.username}/familia`, label: 'Família' },
                 { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
             ]
         },
         {
             path: `/${userData.username}/plan/resumo`, label: 'Plano Parental', icon: <IconPlan width={24} height={24} />,
             subpages: [
-                { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
-                { path: `/${userData.username}/plan/form`, label: 'Formulário'},
+                // { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
+                { path: `/${userData.username}/plan/form`, label: 'Formulário' },
             ]
         },
         { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={24} height={24} /> },

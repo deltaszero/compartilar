@@ -30,7 +30,7 @@ const UserNavbar = ({ pathname }: { pathname: string }) => {
             <div className="navbar-end">                
                 <button className="relative flex items-center justify-center mr-4 w-10 h-10 transition-colors duration-150 rounded-full text-primary focus:shadow-outline hover:bg-primary-content hover:text-primary">
                     <IconBell width={24} height={24} />
-                    <div className="badge badge-xs badge-accent absolute text-accent-content -top-0 -left-1 sm:badge-sm">9+</div>
+                    <div className="badge badge-xs bg-purpleShade05 absolute -top-0 -left-1 sm:badge-sm">9+</div>
                 </button>
             </div>
         </header>

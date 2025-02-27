@@ -235,20 +235,17 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
             <article className="card card-side bg-base-100 shadow-xl w-full rounded-xl">
                 {/* AVATAR */}
                 <figure className="bg-neutral">
-                    <div 
-                        className="relative w-24 h-24 flex items-center justify-center cursor-pointer"
-                        onClick={handlePhotoClick}
-                    >
+                    <div className="flex items-center justify-center cursor-pointer" onClick={handlePhotoClick}>
                         {photoURL ? (
                             <Image 
                                 src={photoURL}
                                 alt={`${kid.firstName}'s photo`}
-                                width={96}
-                                height={96}
+                                width={128}
+                                height={128}
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-2xl text-neutral-content">
+                            <span className="text-2xl text-neutral-content w-[128px] h-[128px] flex items-center justify-center">
                                 {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
                             </span>
                         )}
@@ -391,7 +388,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-4 sm:flex-row ">
                     {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-info relative mx-auto shadow-xl mb-4">
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade03 relative mx-auto shadow-xl mb-4">
                             <h2 className="text-xl font-bold z-10">
                                 Calendário
                             </h2>
@@ -401,7 +398,7 @@ export default function HomePage() {
                                 priority
                                 quality={75}
                                 className="object-contain"
-                                height={75}
+                                height={128}
                             />
                             <div className="absolute top-2 right-2">
                             </div>
@@ -412,7 +409,7 @@ export default function HomePage() {
                     </section>
                     {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl mb-4">
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade05 relative mx-auto shadow-xl mb-4">
                             <h2 className="text-xl font-bold z-10">
                                 Família
                             </h2>
@@ -422,7 +419,7 @@ export default function HomePage() {
                                 priority
                                 quality={75}
                                 className="object-contain"
-                                height={75}
+                                height={128}
                             />
                             <div className="absolute top-2 right-2">
                             </div>
@@ -436,8 +433,8 @@ export default function HomePage() {
                 </div>
                 {/* - - - - - - - - - - - - SUPPORT NETWORK - - - - - - - - - - - - */}
                 <section className="container mx-auto p-4">
-                    <div className="flex items-center justify-between px-2 rounded-lg bg-secondary relative mx-auto shadow-xl mb-4">
-                        <h2 className="text-xl font-bold z-10">
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade01 relative mx-auto shadow-xl mb-4">
+                        <h2 className="text-xl font-bold z-10 text-white">
                             Rede de Apoio
                         </h2>
                         <Image
@@ -446,7 +443,7 @@ export default function HomePage() {
                             priority
                             quality={75}
                             className="object-contain"
-                            height={75}
+                            height={128}
                         />
                     </div>
                     <FriendList userId={userData.uid} />

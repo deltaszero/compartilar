@@ -271,10 +271,10 @@ export default function SignupPage() {
             <div className="w-full max-w-4xl bg-base-100 rounded-lg shadow-lg px-6 py-3 space-y-4">
                 <div className="text-primary">
                     <LoginHeader />
-                    <h1 className="flex flex-row justify-start text-2xl font-nunito font-bold uppercase">
-                        Cadastro
-                    </h1> 
                 </div>
+                <h1 className="flex flex-row justify-start text-2xl font-nunito font-bold uppercase">
+                    Cadastro
+                </h1> 
                 <div className="flex flex-col md:flex-row md:space-x-12">
                     <div className="hidden md:flex md:flex-col w-1/4">
                         <ul className="steps steps-vertical">
@@ -403,7 +403,7 @@ export default function SignupPage() {
                             )}
                             {/* ACCOUNT INFO STEP */}
                             {currentStep === SignupStep.ACCOUNT_INFO && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div className="flex flex-col">
                                         <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
                                             Primeiro nome
@@ -463,9 +463,9 @@ export default function SignupPage() {
                                             Essa etapa é opcional, então se preferir você pode deixar pra depois 😊
                                         </p>
                                     {Object.values(formData.kids).map((kid) => (
-                                        <div key={kid.id} className="card p-4 shadow">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="flex flex-col">
+                                        <div key={kid.id} className="w-full p-4 shadow">
+                                            <div className="grid grid-cols-1 gap-2">
+                                                <div className="flex flex-col"> 
                                                     <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
                                                         Primeiro nome
                                                     </p>
@@ -500,31 +500,15 @@ export default function SignupPage() {
                                                         className="input input-bordered input-sm md:input-md"
                                                     />
                                                 </div>
-                                                {/* <div className="flex flex-col">
-                                                    <p className="pl-1 text-sm font-light text-gray-500 font-nunito">
-                                                        Gênero
-                                                    </p>
-                                                    <select
-                                                        value={kid.gender || ''}
-                                                        onChange={(e) => addKid({ 
-                                                            ...kid, 
-                                                            gender: e.target.value as KidInfo['gender'] 
-                                                        })}
-                                                        className="select select-bordered"
+                                                <div className="flex flex-col items-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeKid(kid.id)}
+                                                        className="btn btn-ghost max-w-xs text-red-500 font-bold btn-sm md:btn-md"
                                                     >
-                                                        <option value="">Select Gender</option>
-                                                        <option value="male">Masculino</option>
-                                                        <option value="female">Feminino</option>
-                                                        <option value="other">Outro</option>
-                                                    </select>
-                                                </div> */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeKid(kid.id)}
-                                                    className="btn btn-ghost max-w-xs text-red-500 font-bold btn-sm md:btn-md"
-                                                >
-                                                    Remover
-                                                </button>
+                                                        Remover
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

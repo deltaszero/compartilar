@@ -34,24 +34,22 @@ export default function Home() {
                             Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                         </p>
 
-                        <button
-                            className="
-                                btn btn-primary-content
-                                group inline-flex items-center px-6 
-                                text-base sm:text-lg md:text-xl 
-                                font-nunito font-bold rounded-md
-                            "
-                        >
-                            <span>Comece agora</span>
-                            <svg
-                                className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                            >
-                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                    d="M12.75 22.5 23.25 12 12.75 1.5"
-                                />
-                            </svg>
-                        </button>
+                        <div className='flex flex-row gap-4'>
+                            <button className="btn group inline-flex items-center px-6  text-base sm:text-lg md:text-xl  font-nunito font-bold rounded-md">
+                                <span>Saiba mais</span>
+                            </button>
+                            <button className="btn bg-purpleShade03 border-none group inline-flex items-center px-6  text-base sm:text-lg md:text-xl  font-nunito font-bold rounded-md">
+                                <span>Comece agora</span>
+                                <svg
+                                    className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                >
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                        d="M12.75 22.5 23.25 12 12.75 1.5"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>

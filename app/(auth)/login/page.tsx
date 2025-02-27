@@ -55,7 +55,7 @@ export default function LoginPage() {
                 </div>
             {/* Right Content */}
             <div className="flex flex-col bg-base-100 py-4">
-                <div className='text-primary'>
+                <div className='text-purpleShade03'>
                     <LoginHeader />
                 </div>
                 <section className="flex-1 flex flex-col justify-center items-center">
@@ -119,7 +119,7 @@ export default function LoginPage() {
                                 {/* submit */}
                                 <button
                                     type="submit"
-                                    className="btn btn-outline btn-primary w-full max-w-xs rounded-lg border-primary font-nunito font-bold"
+                                    className="btn btn-outline border-purpleShade03 w-full max-w-xs rounded-lg font-nunito font-bold text-purpleShade03"
                                 >
                                     Entrar
                                 </button>
@@ -135,10 +135,10 @@ export default function LoginPage() {
                         <div className="divider"></div>
                         <div className="flex-col">
                             <p>
-                                Não tem uma conta? <span className="text-primary hover:decoration-none hover:font-bold"><NavLink href="/signup">Cadastre-se</NavLink></span>
+                                Não tem uma conta? <span className="text-purpleShade03 hover:decoration-none hover:font-bold"><NavLink href="/signup">Cadastre-se</NavLink></span>
                             </p>
                             <p>
-                                Esqueceu a senha? <span className="text-primary hover:decoration-none hover:font-bold"><NavLink href="/reset-password">Recuperar Senha</NavLink></span>
+                                Esqueceu a senha? <span className="text-purpleShade03 hover:decoration-none hover:font-bold"><NavLink href="/reset-password">Recuperar Senha</NavLink></span>
                             </p>
                         </div>
                     </div>

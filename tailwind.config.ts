@@ -14,10 +14,17 @@ const config: Config = {
             colors: {
                 // background: "var(--background)",
                 // foreground: "var(--foreground)",
-                primaryPurple: '#501357',
-                primaryGreen: '#135745',
-                secondaryGreen: '#9ad6c7',
-                secondaryPurple: '#a45fac',
+                primaryPurple   : '#501357',
+                primaryGreen    : '#135745',
+                secondaryGreen  : '#9ad6c7',
+                secondaryPurple : '#a45fac',
+                // shades -> https://mycolor.space/?hex=%23501357&sub=1
+                purpleShade01 : "#501357",
+                purpleShade02 : "#793b7f",
+                purpleShade03 : "#a563aa",
+                purpleShade04 : "#d28dd6",
+                purpleShade05 : "#ffb9ff",
+
             },
             fontFamily: {
                 raleway: ['var(--font-raleway)'],
