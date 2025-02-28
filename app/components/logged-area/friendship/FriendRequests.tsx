@@ -7,6 +7,7 @@ import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@/context/userContext';
 import { FriendshipRequest } from '@/types/friendship.types';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 export default function FriendRequests() {
     const [requests, setRequests] = useState<FriendshipRequest[]>([]);
@@ -103,7 +104,7 @@ export default function FriendRequests() {
                         <div key={request.id} className="flex flex-row w-full items-center justify-between bg-base-300 rounded-lg p-2">
                             <div className="flex items-center gap-4">
                                 {request.senderPhotoURL ? (
-                                    <img src={request.senderPhotoURL} alt={request.senderUsername} className="w-16 h-16 rounded-full" />
+                                    <Image src={request.senderPhotoURL} alt={request.senderUsername} width={64} height={64} className="rounded-full" />
                                 ) : (
                                     <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                                         <span className="text-primary-content text-lg">

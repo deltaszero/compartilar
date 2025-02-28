@@ -11,7 +11,8 @@
         "start": "next start",
         "lint": "next lint",
         "deploy": "firebase deploy",
-        "serve": "firebase serve"
+        "serve": "firebase serve",
+        "local": "next dev -H 0.0.0.0"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",

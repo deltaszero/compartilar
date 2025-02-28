@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { collection, query, where, getDocs, addDoc, Timestamp, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@/context/userContext';
@@ -175,7 +176,8 @@ export default function FriendSearch() {
                         <div key={result.uid} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                             <div className="flex items-center space-x-3">
                                 {result.photoURL ? (
-                                    <img src={result.photoURL} alt={result.username} className="w-10 h-10 rounded-full" />
+                                    // <img src={result.photoURL} alt={result.username} className="w-10 h-10 rounded-full" />
+                                    <Image src={result.photoURL} alt={result.username} width={40} height={40} className="rounded-full" />
                                 ) : (
                                     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                                         <span className="text-primary-content text-lg">

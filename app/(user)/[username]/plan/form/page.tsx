@@ -20,7 +20,7 @@ import IconIdea from '@assets/icons/icon_meu_lar_idea.svg';
 
 // General Form Component
 const GeneralForm: React.FC = () => {
-    const { userData, user, loading } = useUser();
+    const { user } = useUser();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedChildren, setSelectedChildren] = useState<string[]>([]);

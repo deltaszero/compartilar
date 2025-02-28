@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     doc,
     runTransaction,
@@ -146,9 +147,9 @@ export default function SettingsPage() {
             // set success message
             setMessage('Perfil atualizado com sucesso!');
             toast.success('Perfil atualizado com sucesso!');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating profile:', error);
-            toast.error(error?.message || 'Ocorreu um erro ao atualizar o perfil.');
+            toast.error(error instanceof Error ? error.message : 'Ocorreu um erro ao atualizar o perfil.');
         } finally {
             setSaving(false);
             setUploadProgress(null);
@@ -198,9 +199,9 @@ export default function SettingsPage() {
                             onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
                             className="file-input w-full"
                         />
-                        {photoURL && (
-                            <img src={photoURL} alt="Foto de Perfil" className="mt-2 h-20 w-20 rounded-full object-cover" />
-                        )}
+                            <Image src={photoURL} alt="Foto de Perfil" width={80} height={80} className="mt-2 rounded-full object-cover" />
+                            {/* <img src={photoURL} alt="Foto de Perfil" className="mt-2 h-20 w-20 rounded-full object-cover" />
+                        )} */}
                         {uploadProgress !== null && (
                             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                                 <div 
