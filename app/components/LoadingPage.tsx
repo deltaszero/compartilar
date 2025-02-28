@@ -22,7 +22,7 @@ const LoadingPage: React.FC = () => {
         <div
             className="
                 fixed inset-0 z-[9999] flex items-center justify-center 
-                bg-white/80 backdrop-blur-sm transition-all duration-300
+                bg-white backdrop-blur-sm transition-all duration-300
             "
             aria-label="Initial Platform Loading"
             role="status"

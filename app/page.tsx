@@ -44,7 +44,7 @@ export default function Home() {
                                 Facilite a coparentalidade organizando tudo em um só lugar
                             </h1>
 
-                            <p className="font-raleway font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 ">
+                            <p className="font-raleway font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 leading-[1em]">
                                 Uma plataforma feita para você manter todas as informações importantes sobre seus filhos de forma segura e acessível, facilitando o planejamento e a comunicação, trazendo clareza e harmonia para a sua família.
                             </p>
 
@@ -94,7 +94,7 @@ export default function Home() {
                         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nunc nec ultricies.'
                     }
                 ].map(feature => (
-                    <section key={feature.id} className="flex flex-col items-center w-full sm:w-1/5" id={feature.id}>
+                    <section key={feature.id} className="flex flex-col items-center w-full sm:w-1/5 px-2" id={feature.id}>
                         <Image
                             src={feature_img}
                             alt="Feature image"

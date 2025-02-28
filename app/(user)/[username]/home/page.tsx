@@ -21,7 +21,7 @@ import {
 import { db, storage } from '@/app/lib/firebaseConfig';
 //
 import { useUser } from '@context/userContext';
-import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
+// import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 // import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
 import CalendarPage from "@/app/components/logged-area/calendar/CoparentingCalendar";
@@ -36,6 +36,8 @@ import toast from 'react-hot-toast';
 import support_img from "@assets/images/support-icon.png";
 import calendar_img from "@assets/images/calendar-icon.png";
 import family_img from "@assets/images/family-icon.png";
+
+import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
 
 export interface SignupFormData {
     firstName: string;
@@ -90,15 +92,28 @@ const capitalizeFirstLetter = (string: string) => {
 // );
 
 const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) => (
-    <div className="flex flex-col items-start w-full py-4 gap-8 z-[10] p-4">
-        {/* <AvatarSection photoURL={userData?.photoURL} /> */}
-        <div className="flex flex-col items-start gap-0">
-            <div className="text-4xl font-semibold">
-                Olá,<br /> {capitalizeFirstLetter(userData.firstName || '')}!
+    <div className="navbar p-4 items-start">
+        <div className="navbar-start">
+            <div className="flex flex-col items-start gap-0">
+                <div className="text-6xl font-semibold font-playfair">
+                    Olá,<br /> {capitalizeFirstLetter(userData.firstName || '')}!
+                </div>
+                <div className="text-sm ">
+                    @{userData.username}
+                </div>
             </div>
-            <div className="text-sm ">
-                @{userData.username}
+        </div>
+        <div className="navbar-end h-full">
+            <div className="flex flex-col">
+                <button className="relative flex items-center justify-center w-10 h-10 transition-colors duration-150 rounded-full text-neutral focus:shadow-outline hover:bg-primary-content hover:text-primary">
+                    <IconBell width={32} height={32} />
+                    <div className="badge badge-sm bg-purpleShade05 absolute -top-0 -left-1 sm:badge-sm">9+</div>
+                </button>
+                <div>
+                    &nbsp;
+                </div>
             </div>
+
         </div>
     </div>
 );
@@ -178,7 +193,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                 toast.error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
                 throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
             }
-            
+
             console.log('Kid ID for upload:', kid.id);
 
             // Upload photo to firebase storage
@@ -207,12 +222,12 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                         // Update child document with new photo URL
                         await runTransaction(db, async (transaction) => {
                             const childRef = doc(db, 'children', kid.id);
-                            transaction.update(childRef, { 
+                            transaction.update(childRef, {
                                 photoURL: downloadURL,
                                 updatedAt: new Date()
                             });
                         });
-                        
+
                         toast.success('Foto de perfil atualizada com sucesso!');
 
                     } catch (err) {
@@ -239,7 +254,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                 <figure className="bg-neutral">
                     <div className="flex items-center justify-center cursor-pointer" onClick={handlePhotoClick}>
                         {photoURL ? (
-                            <Image 
+                            <Image
                                 src={photoURL}
                                 alt={`${kid.firstName}'s photo`}
                                 width={128}
@@ -251,29 +266,29 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                                 {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
                             </span>
                         )}
-                        
-                        <input 
+
+                        <input
                             type="file"
                             ref={fileInputRef}
                             className="hidden"
                             accept="image/*"
                             onChange={handlePhotoChange}
                         />
-                        
+
                         <div className="absolute bottom-1 left-1 p-[5px] bg-accent text-accent-content rounded-full">
                             <EditIcon width={12} height={12} />
                         </div>
-                        
+
                         {isUploading && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                 <div className="loading loading-spinner loading-sm text-primary"></div>
                             </div>
                         )}
                     </div>
-                    
+
                     {uploadProgress !== null && (
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-                            <div 
+                            <div
                                 className="h-full bg-primary"
                                 style={{ width: `${uploadProgress}%` }}
                             ></div>
@@ -340,6 +355,201 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     );
 };
 
+const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoURL, setPhotoURL] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const { user } = useUser();
+
+    console.log(photoFile);
+
+    useEffect(() => {
+        // Fetch the child's photo URL if exists
+        const fetchChildPhotoURL = async () => {
+            try {
+                if (kid.photoURL) {
+                    setPhotoURL(kid.photoURL);
+                }
+            } catch (error) {
+                console.error('Error fetching child photo:', error);
+            }
+        };
+        fetchChildPhotoURL();
+    }, [kid]);
+
+    const handlePhotoClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        if (file) {
+            setPhotoFile(file);
+            uploadChildPhoto(file);
+        }
+    };
+
+    const uploadChildPhoto = async (file: File) => {
+        if (!user || !kid.id) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        try {
+            const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+            if (!file.type.startsWith('image/')) {
+                toast.error('Por favor, selecione um arquivo de imagem válido.');
+                throw new Error('Por favor, selecione um arquivo de imagem válido.');
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+                throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+            }
+
+            console.log('Kid ID for upload:', kid.id);
+
+            // Upload photo to firebase storage
+            const storageRef = ref(storage, `children_photos/${kid.id}/profile.jpg`);
+            console.log('Uploading to path:', `children_photos/${kid.id}/profile.jpg`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            // Handle upload state
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(progress);
+                },
+                (error) => {
+                    console.error('Upload error:', error);
+                    setIsUploading(false);
+                    setUploadProgress(null);
+                },
+                async () => {
+                    try {
+                        // Get download URL
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        setPhotoURL(downloadURL);
+
+                        // Update child document with new photo URL
+                        await runTransaction(db, async (transaction) => {
+                            const childRef = doc(db, 'children', kid.id);
+                            transaction.update(childRef, {
+                                photoURL: downloadURL,
+                                updatedAt: new Date()
+                            });
+                        });
+
+                        toast.success('Foto de perfil atualizada com sucesso!');
+
+                    } catch (err) {
+                        console.error('Error updating child photo:', err);
+                        toast.error('Erro ao atualizar a foto de perfil. Tente novamente.');
+                    } finally {
+                        setIsUploading(false);
+                        setUploadProgress(null);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error uploading child photo:', error);
+            setIsUploading(false);
+            setUploadProgress(null);
+        }
+    };
+
+    return (
+        <figure>
+            <div className="flex items-center justify-center cursor-pointer" onClick={handlePhotoClick}>
+                {photoURL ? (
+                    <div className="w-full relative">
+                    <Image
+                        src={photoURL}
+                        alt={`${kid.firstName}'s photo`}
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover rounded-xl shadow-xl"
+                    />
+                    <p className="absolute inset-0 text-white text-center flex items-end justify-start p-2 font-playfair font-semibold text-xl">
+                        {kid.firstName}
+                    </p>
+                    </div>
+                ) : (
+                    <span className="text-4xl text-neutral-content w-[128px] h-[128px] flex items-center justify-center font-playfair font-semibold">
+                        {kid.firstName[0].toUpperCase()}{kid.lastName[0].toUpperCase()}
+                    </span>
+                )}
+
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                />
+
+                <div className="absolute bottom-1 left-1 p-[5px] bg-accent text-accent-content rounded-full">
+                    <EditIcon width={12} height={12} />
+                </div>
+
+                {isUploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="loading loading-spinner loading-sm text-primary"></div>
+                    </div>
+                )}
+            </div>
+
+            {uploadProgress !== null && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+                    <div
+                        className="h-full bg-primary"
+                        style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                </div>
+            )}
+        </figure>
+    );
+};
+
+const KidsGridMobile = ({ parentId }: { parentId: string }) => {
+    const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
+    // const [currentIndex, setCurrentIndex] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadChildren = async () => {
+            try {
+                const data = await fetchChildren(parentId);
+                setKidsArray(data);
+            } catch (error) {
+                console.error('Error fetching children:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadChildren();
+    }, [parentId]);
+
+    if (loading) return <div className="w-full h-48 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+    </div>;
+
+    if (!kidsArray.length) return null;
+
+    return (
+        <div className="grid grid-cols-2 gap-4">
+            {kidsArray.map((kid) => (
+                <div key={kid.id} className="bg-neutral flex flex-col justify-center rounded-xl shadow-xl">
+                    <ChildCardMobile kid={kid} />
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export default function HomePage() {
     const { userData } = useUser();
@@ -376,98 +586,110 @@ export default function HomePage() {
                 {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                     PROFILE BAR 
                 - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-                <section className="flex flex-col mb-8">
-                    <div className=" z-[10]">
+                <section className="flex flex-col sm:mb-[2em]">
+                    {/* <div className=" z-[10]">
                         <UserProfileBar pathname="Meu Lar" />
-                    </div>
+                    </div> */}
                     <UserProfileCard userData={userData} />
                 </section>
             </div>
             {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 CONTENT BAR 
              - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
-            <article className="flex flex-col bg-base-100 rounded-3xl z-[10] -mt-10 sm:-mt-0">
-                <div className="flex flex-col gap-4 sm:flex-row ">
+            <article className="flex flex-col bg-base-100 sm:rounded-3xl z-[10]">
+                <div className="flex flex-col gap-0 sm:gap-4 sm:flex-row ">
                     {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade03 relative mx-auto shadow-xl mb-4">
-                            <h2 className="text-xl font-bold z-10">
-                                Calendário
-                            </h2>
+                        <div className="flex items-center justify-between px-2 rounded-lg bg-secondaryGreen relative mx-auto shadow-xl h-[8em]">
+                            <div className='flex flex-col gap-2'>
+                                <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
+                                    Calendário
+                                </h2>
+                                <p className="text-xs text-gray-700 font-raleway">
+                                    Consulte dias de convivência e agende eventos de forma compartilhada.
+                                </p>
+                            </div>
                             <Image
                                 src={calendar_img}
                                 alt="Background"
                                 priority
                                 quality={75}
                                 className="object-contain"
-                                height={128}
+                                width={128}
                             />
                             <div className="absolute top-2 right-2">
                             </div>
                         </div>
-                        <div className="bg-base-100 rounded-xl shadow-xl">
+                        <div className="hidden sm:block bg-base-100 rounded-xl shadow-xl">
                             <CalendarPage />
                         </div>
                     </section>
                     {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade05 relative mx-auto shadow-xl mb-4">
-                            <h2 className="text-xl font-bold z-10">
-                                Família
-                            </h2>
-                            <Image
-                                src={family_img}
-                                alt="Background"
-                                priority
-                                quality={75}
-                                className="object-contain"
-                                height={128}
-                            />
-                            <div className="absolute top-2 right-2">
-                            </div>
-                        </div>
-                        <div>
+                        {isMobile ? (
                             <div>
-                                <KidsGrid parentId={userData.uid} />
+                                <div className='flex flex-col gap-2 pb-2'>
+                                    <h2 className="text-4xl font-bold z-10 font-playfair max-w-[66%]">
+                                        Petiz
+                                    </h2>
+                                </div>
+                                <KidsGridMobile parentId={userData.uid} />
                             </div>
-                        </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl h-[8em]">
+                                    <div className='flex flex-col gap-2'>
+                                        <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
+                                            Petiz
+                                        </h2>
+                                        <p className="text-xs text-gray-700 font-raleway">
+                                            Educação, Saúde, Hobbies e outras informações essenciais sobre seus filhos.
+                                        </p>
+                                    </div>
+                                    <Image
+                                        src={family_img}
+                                        alt="Background"
+                                        priority
+                                        quality={75}
+                                        className="object-contain"
+                                        width={128} />
+                                    <div className="absolute top-2 right-2">
+                                    </div>
+                                </div><div className="bg-base-100 rounded-xl shadow-xl">
+                                    <div>
+                                        <KidsGrid parentId={userData.uid} />
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </section>
                 </div>
                 {/* - - - - - - - - - - - - SUPPORT NETWORK - - - - - - - - - - - - */}
                 <section className="container mx-auto p-4">
-                    <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade01 relative mx-auto shadow-xl mb-4">
-                        <h2 className="text-xl font-bold z-10 text-white">
-                            Rede de Apoio
-                        </h2>
+                    <div className="flex items-center justify-between px-2 rounded-lg bg-purpleShade01 relative mx-auto shadow-xl h-[8em]">
+                        <div className='flex flex-col gap-2'>
+                            <h2 className="text-2xl font-bold z-10 font-playfair max-w-[75%] text-white">
+                                Rede de Apoio
+                            </h2>
+                            <p className="text-xs text-gray-700 font-raleway z-10 max-w-[66%] text-white">
+                                Pessoas queridas que provam que juntos somos mais fortes!
+                            </p>
+                        </div>
                         <Image
                             src={support_img}
                             alt="Background"
                             priority
                             quality={75}
-                            className="object-contain"
-                            height={128}
+                            className="object-contain absolute right-0 bottom-0"
+                            height={isMobile ? 96 : 128}
                         />
                     </div>
-                    <FriendList userId={userData.uid} />
-                    <FriendSearch />
-                    <FriendRequests />
-                </section>
-                <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
-                    <div role="alert" className="alert alert-warning">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6 shrink-0 stroke-current"
-                            fill="none"
-                            viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <span>EM DESENVOLVIMENTO</span>
+                    <div className="hidden sm:block bg-base-100 rounded-xl shadow-xl">
+                        <FriendList userId={userData.uid} />
+                        <FriendSearch />
+                        <FriendRequests />
                     </div>
-                </section >
+                </section>
             </article>
         </div>
     );

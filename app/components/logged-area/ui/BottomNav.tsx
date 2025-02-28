@@ -67,33 +67,33 @@ const BottomNav = () => {
 
     return (
         <>
-            <footer className="btm-nav btm-nav-sm text-primary bg-base-100 z-[9998]">
+            <footer className="btm-nav btm-nav-sm bg-base-100 z-[9998]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
                         <button
                             key={item.path}
-                            className={`block ${isActive ? 'active' : ''}`}
+                            className={`block ${isActive ? 'active text-purpleShade04' : ''}`}
                             onClick={item.label === 'Mais' ? () => setIsModalOpen(true) : undefined}
                         >
                             {item.label === 'Mais' ? (
                                 // Render without NavLink for "Mais"
-                                <div className="flex flex-col items-center justify-center py-1">
+                                <div className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}>
                                     <div className="flex flex-col items-center justify-center">
                                         {item.icon}
                                     </div>
-                                    <p className="text-xs">
+                                    <p className="text-xs font-nunito font-bold">
                                         {item.label}
                                     </p>
                                 </div>
                             ) : (
                                 // Render with NavLink for other items
                                 <NavLink href={item.path}>
-                                    <div className='flex flex-col items-center justify-center py-1'>
+                                    <div className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}>
                                         <div className="flex flex-col items-center justify-center">
                                             {item.icon}
                                         </div>
-                                        <p className="text-xs font-nunito">
+                                        <p className="text-xs font-nunito font-bold">
                                             {item.label}
                                         </p>
                                     </div>
