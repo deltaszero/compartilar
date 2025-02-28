@@ -30,7 +30,7 @@ const config: Config = {
                 raleway: ['var(--font-raleway)'],
                 playfair: ['var(--font-playfair)'],
                 nunito: ['var(--font-nunito)'],
-                cinzel: ["Cinzel Decorative", "serif"],
+                cinzel: ['var(--font-cinzel)'],
             },
             fontWeight: {
                 extralight: '200',

@@ -66,14 +66,14 @@ const capitalizeFirstLetter = (string: string) => {
 
 const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
     <motion.div
-        className="mask mask-squircle bg-gray-100 flex items-center justify-center"
+        className="mask mask-squircle bg-gray-100 flex items-center justify-center w-48 h-48"
         whileHover={{ scale: 1.1 }}
     >
         {photoURL ? (
             <Image
                 src={photoURL}
-                width={128}
-                height={128}
+                width={256}
+                height={256}
                 alt="User avatar"
                 className="object-cover"
                 priority
@@ -85,50 +85,17 @@ const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
 );
 
 const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) => (
-    <div className="flex flex-col items-start w-full -mt-16 relative z-[10] px-4 gap-1">
+    <div className="flex flex-col items-center justify-center bg-base-100 rounded-3xl shadow-xl mx-auto py-4">
         <AvatarSection photoURL={userData?.photoURL} />
-        <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-0 items-center justify-center font-playfair">
             <div className="text-2xl font-semibold">
                 {capitalizeFirstLetter(userData.firstName || '')} {capitalizeFirstLetter(userData.lastName || '')}
             </div>
-            <div className="text-gray-500">
-                {userData.username}
+            <div className="text-gray-500 font-raleway">
+                @{userData.username}
             </div>
         </div>
     </div>
-    // <div className="navbar bg-base-100">
-    //     <div className="flex-1">
-    //         <IconMeuLar width={32} height={32} />
-    //     </div>
-    //     <div className="flex-none gap-4">
-    //         <IconBell width={32} height={32} />
-    //         <div className="dropdown dropdown-end">
-    //             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-    //                 <AvatarSection photoURL={userData?.photoURL} />
-    //             </div>
-    //             <ul
-    //                 tabIndex={0}
-    //                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-    //                 <li>
-    //                     <a className="justify-between">
-    //                         Profile
-    //                         <span className="badge">New</span>
-    //                     </a>
-    //                 </li>
-    //                 <li><a>Settings</a></li>
-    //                 <li><a>Logout</a></li>
-    //             </ul>
-    //         </div>
-    //         <motion.div className="flex flex-col justify-center">
-    //             <div className="text-secondary-content">
-    //                 {capitalizeFirstLetter(userData.firstName || '')} {capitalizeFirstLetter(userData.lastName || '')}
-    //             </div>
-    //             <div className="text-gray-500">
-    //                 {userData.username}
-    //             </div>
-    //         </motion.div>
-    //     </div>
-    // </div>
 );
 
 
@@ -143,54 +110,19 @@ export default function UserPage() {
             else if (userData?.username !== username) router.push('/');
         }
     }, [user, userData, loading, username, router]);
-    // if (loading) return <LoadingSkeleton />;
-    // const [initialLoading, setInitialLoading] = useState(true);
 
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         setInitialLoading(false);
-    //     }, 3000);
-    //     return () => clearTimeout(timer);
-    // }, []);
-
-    // if (loading || initialLoading) return <LoadingPage />;
-    // if (loading || initialLoading) return <LoadingPage />;
     if (!userData) return <LoadingPage />
 
     return (
-        <article className="flex flex-col items-start overflow-hidden">
+        <div className="flex flex-col items-start overflow-hidden h-screen">
             {/* NAVBAR */}
             <UserProfileBar pathname="Perfil" />
-            {/* BACKGROUND GRADIENT */}
-            <motion.div
-                className="
-                    h-48 flex items-center justify-center w-full
-                    pattern-isometric pattern-purple-400 pattern-bg-white pattern-size-3 pattern-opacity-20
-                "
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-            >
-            </motion.div>
-            {/* USER PROFILE CARD */}
+            {/* - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                    PROFILE BAR 
+                - - - - - - - - - - - - - - - - - - - - - - - - - - - */}
+            <div className='w-full p-2'>
             <UserProfileCard userData={userData} />
-            {/* CONTENT */}
-            <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
-                <div role="alert" className="alert alert-warning">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 shrink-0 stroke-current"
-                        fill="none"
-                        viewBox="0 0 24 24">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>EM DESENVOLVIMENTO</span>
-                </div>
-            </section >
-        </article>
+            </div>
+        </div>
     );
 }

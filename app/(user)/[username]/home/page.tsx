@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import React from 'react';
 // import { motion } from 'framer-motion';
+import dayjs, { Dayjs } from 'dayjs';
 import {
     collection,
     query,
@@ -24,7 +25,8 @@ import { useUser } from '@context/userContext';
 // import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 // import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from '@assets/icons/edit.svg';
-import CalendarPage from "@/app/components/logged-area/calendar/CoparentingCalendar";
+import CurrentWeekPage from "@/app/components/logged-area/calendar/CurrentWeek";
+import CalendarPage from "@/app/components/logged-area/calendar/Calendar";
 // import NavLink from '@components/ui/NavLink';
 import FriendSearch from '@/app/components/logged-area/friendship/FriendSearch';
 import FriendRequests from '@/app/components/logged-area/friendship/FriendRequests';
@@ -38,6 +40,11 @@ import calendar_img from "@assets/images/calendar-icon.png";
 import family_img from "@assets/images/family-icon.png";
 
 import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
+
+import 'dayjs/locale/pt-br';
+
+dayjs.locale('pt-br')
+
 
 export interface SignupFormData {
     firstName: string;
@@ -107,7 +114,7 @@ const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) =>
             <div className="flex flex-col">
                 <button className="relative flex items-center justify-center w-10 h-10 transition-colors duration-150 rounded-full text-neutral focus:shadow-outline hover:bg-primary-content hover:text-primary">
                     <IconBell width={32} height={32} />
-                    <div className="badge badge-sm bg-purpleShade05 absolute -top-0 -left-1 sm:badge-sm">9+</div>
+                    <div className="badge badge-sm bg-purpleShade04 text-white absolute -top-0 -left-1 sm:badge-sm">9+</div>
                 </button>
                 <div>
                     &nbsp;
@@ -356,14 +363,12 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
 };
 
 const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
-    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    // const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoURL, setPhotoURL] = useState<string | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    // const [isUploading, setIsUploading] = useState(false);
+    // const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const { user } = useUser();
-
-    console.log(photoFile);
+    // const { user } = useUser();
 
     useEffect(() => {
         // Fetch the child's photo URL if exists
@@ -385,98 +390,98 @@ const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
         }
     };
 
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] || null;
-        if (file) {
-            setPhotoFile(file);
-            uploadChildPhoto(file);
-        }
-    };
+    // const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const file = e.target.files?.[0] || null;
+    //     if (file) {
+    //         setPhotoFile(file);
+    //         uploadChildPhoto(file);
+    //     }
+    // };
 
-    const uploadChildPhoto = async (file: File) => {
-        if (!user || !kid.id) return;
+    // const uploadChildPhoto = async (file: File) => {
+    //     if (!user || !kid.id) return;
 
-        setIsUploading(true);
-        setUploadProgress(0);
+    //     setIsUploading(true);
+    //     setUploadProgress(0);
 
-        try {
-            const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
-            if (!file.type.startsWith('image/')) {
-                toast.error('Por favor, selecione um arquivo de imagem válido.');
-                throw new Error('Por favor, selecione um arquivo de imagem válido.');
-            }
-            if (file.size > MAX_FILE_SIZE) {
-                toast.error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
-                throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
-            }
+    //     try {
+    //         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+    //         if (!file.type.startsWith('image/')) {
+    //             toast.error('Por favor, selecione um arquivo de imagem válido.');
+    //             throw new Error('Por favor, selecione um arquivo de imagem válido.');
+    //         }
+    //         if (file.size > MAX_FILE_SIZE) {
+    //             toast.error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+    //             throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
+    //         }
 
-            console.log('Kid ID for upload:', kid.id);
+    //         console.log('Kid ID for upload:', kid.id);
 
-            // Upload photo to firebase storage
-            const storageRef = ref(storage, `children_photos/${kid.id}/profile.jpg`);
-            console.log('Uploading to path:', `children_photos/${kid.id}/profile.jpg`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+    //         // Upload photo to firebase storage
+    //         const storageRef = ref(storage, `children_photos/${kid.id}/profile.jpg`);
+    //         console.log('Uploading to path:', `children_photos/${kid.id}/profile.jpg`);
+    //         const uploadTask = uploadBytesResumable(storageRef, file);
 
-            // Handle upload state
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setUploadProgress(progress);
-                },
-                (error) => {
-                    console.error('Upload error:', error);
-                    setIsUploading(false);
-                    setUploadProgress(null);
-                },
-                async () => {
-                    try {
-                        // Get download URL
-                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        setPhotoURL(downloadURL);
+    //         // Handle upload state
+    //         uploadTask.on(
+    //             'state_changed',
+    //             (snapshot) => {
+    //                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    //                 setUploadProgress(progress);
+    //             },
+    //             (error) => {
+    //                 console.error('Upload error:', error);
+    //                 setIsUploading(false);
+    //                 setUploadProgress(null);
+    //             },
+    //             async () => {
+    //                 try {
+    //                     // Get download URL
+    //                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    //                     setPhotoURL(downloadURL);
 
-                        // Update child document with new photo URL
-                        await runTransaction(db, async (transaction) => {
-                            const childRef = doc(db, 'children', kid.id);
-                            transaction.update(childRef, {
-                                photoURL: downloadURL,
-                                updatedAt: new Date()
-                            });
-                        });
+    //                     // Update child document with new photo URL
+    //                     await runTransaction(db, async (transaction) => {
+    //                         const childRef = doc(db, 'children', kid.id);
+    //                         transaction.update(childRef, {
+    //                             photoURL: downloadURL,
+    //                             updatedAt: new Date()
+    //                         });
+    //                     });
 
-                        toast.success('Foto de perfil atualizada com sucesso!');
+    //                     toast.success('Foto de perfil atualizada com sucesso!');
 
-                    } catch (err) {
-                        console.error('Error updating child photo:', err);
-                        toast.error('Erro ao atualizar a foto de perfil. Tente novamente.');
-                    } finally {
-                        setIsUploading(false);
-                        setUploadProgress(null);
-                    }
-                }
-            );
-        } catch (error) {
-            console.error('Error uploading child photo:', error);
-            setIsUploading(false);
-            setUploadProgress(null);
-        }
-    };
+    //                 } catch (err) {
+    //                     console.error('Error updating child photo:', err);
+    //                     toast.error('Erro ao atualizar a foto de perfil. Tente novamente.');
+    //                 } finally {
+    //                     setIsUploading(false);
+    //                     setUploadProgress(null);
+    //                 }
+    //             }
+    //         );
+    //     } catch (error) {
+    //         console.error('Error uploading child photo:', error);
+    //         setIsUploading(false);
+    //         setUploadProgress(null);
+    //     }
+    // };
 
     return (
         <figure>
             <div className="flex items-center justify-center cursor-pointer" onClick={handlePhotoClick}>
                 {photoURL ? (
                     <div className="w-full relative">
-                    <Image
-                        src={photoURL}
-                        alt={`${kid.firstName}'s photo`}
-                        width={128}
-                        height={128}
-                        className="w-full h-full object-cover rounded-xl shadow-xl"
-                    />
-                    <p className="absolute inset-0 text-white text-center flex items-end justify-start p-2 font-playfair font-semibold text-xl">
-                        {kid.firstName}
-                    </p>
+                        <Image
+                            src={photoURL}
+                            alt={`${kid.firstName}'s photo`}
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-cover rounded-xl shadow-xl"
+                        />
+                        <p className="absolute inset-0 text-white text-center flex items-end justify-start p-2 font-playfair font-semibold text-xl">
+                            {kid.firstName}
+                        </p>
                     </div>
                 ) : (
                     <span className="text-4xl text-neutral-content w-[128px] h-[128px] flex items-center justify-center font-playfair font-semibold">
@@ -484,7 +489,7 @@ const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
                     </span>
                 )}
 
-                <input
+                {/* <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
@@ -500,17 +505,17 @@ const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <div className="loading loading-spinner loading-sm text-primary"></div>
                     </div>
-                )}
+                )} */}
             </div>
 
-            {uploadProgress !== null && (
+            {/* {uploadProgress !== null && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                     <div
                         className="h-full bg-primary"
                         style={{ width: `${uploadProgress}%` }}
                     ></div>
                 </div>
-            )}
+            )} */}
         </figure>
     );
 };
@@ -555,6 +560,56 @@ export default function HomePage() {
     const { userData } = useUser();
     const [isMobile, setIsMobile] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+
+    // Sample events
+    const events = [
+      {
+        id: '1',
+        date: dayjs().format('YYYY-MM-DD'),
+        color: '#6366F1' // indigo
+      },
+      {
+        id: '2',
+        date: dayjs().format('YYYY-MM-DD'),
+        color: '#EC4899' // pink
+      },
+      {
+        id: '3',
+        date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+        color: '#8B5CF6' // purple
+      },
+      {
+        id: '4',
+        date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+        color: '#10B981' // emerald
+      },
+      {
+        id: '5',
+        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+        color: '#F59E0B' // amber
+      },
+      {
+        id: '6',
+        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+        color: '#F59E0B' // amber
+      },
+      {
+        id: '7',
+        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+        color: '#F59E0B' // amber
+      },
+      {
+        id: '8',
+        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+        color: '#F59E0B' // amber
+      }
+    ];
+  
+    const handleDateSelect = (date: Dayjs) => {
+      setSelectedDate(date);
+      console.log('Selected date:', date.format('YYYY-MM-DD'));
+    };
 
     useEffect(() => {
         const checkMobileScreen = () => {
@@ -576,6 +631,8 @@ export default function HomePage() {
 
     console.log(initialLoading);
     if (!userData) return <LoadingPage />;
+
+
 
     return (
         <div className='flex flex-col mb-[10em] sm:mb-0 sm:p-6 sm:gap-6 bg-base-300'>
@@ -600,44 +657,60 @@ export default function HomePage() {
                 <div className="flex flex-col gap-0 sm:gap-4 sm:flex-row ">
                     {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
-                        <div className="flex items-center justify-between px-2 rounded-lg bg-secondaryGreen relative mx-auto shadow-xl h-[8em]">
+                        {isMobile ? (
                             <div className='flex flex-col gap-2'>
-                                <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
-                                    Calendário
-                                </h2>
-                                <p className="text-xs text-gray-700 font-raleway">
-                                    Consulte dias de convivência e agende eventos de forma compartilhada.
+                                <p className='text-4xl text-gray-700 font-raleway'>
+                                    Planeje-se para a semana
                                 </p>
+                                <CurrentWeekPage 
+                                    events={events}
+                                    selectedDate={selectedDate}
+                                    onDateSelect={handleDateSelect}
+                                />
                             </div>
-                            <Image
-                                src={calendar_img}
-                                alt="Background"
-                                priority
-                                quality={75}
-                                className="object-contain"
-                                width={128}
-                            />
-                            <div className="absolute top-2 right-2">
+                        ):(
+                        <div>
+                            <div className="flex items-center justify-between px-2 rounded-lg bg-secondaryGreen relative mx-auto shadow-xl h-[8em]">
+                                <div className='flex flex-col gap-2 '>
+                                    <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
+                                        Calendário
+                                    </h2>
+                                    <p className="text-xs text-gray-700 font-raleway">
+                                        Consulte dias de convivência e agende eventos de forma compartilhada.
+                                    </p>
+                                </div>
+                                <Image
+                                    src={calendar_img}
+                                    alt="Background"
+                                    priority
+                                    quality={75}
+                                    className="object-contain"
+                                    width={128}
+                                />
+                            </div>
+                            <div className="hidden sm:block bg-base-100 rounded-xl py-4">
+                                <CalendarPage />
                             </div>
                         </div>
-                        <div className="hidden sm:block bg-base-100 rounded-xl shadow-xl">
-                            <CalendarPage />
-                        </div>
+                    )}
                     </section>
                     {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
                         {isMobile ? (
                             <div>
                                 <div className='flex flex-col gap-2 pb-2'>
-                                    <h2 className="text-4xl font-bold z-10 font-playfair max-w-[66%]">
+                                    {/* <h2 className="text-4xl font-bold z-10 font-playfair max-w-[66%]">
                                         Petiz
-                                    </h2>
+                                    </h2> */}
+                                    <p className='text-4xl text-gray-700 font-raleway'>
+                                        Cuide dos seus amores
+                                    </p>
                                 </div>
                                 <KidsGridMobile parentId={userData.uid} />
                             </div>
                         ) : (
                             <>
-                                <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto shadow-xl h-[8em]">
+                                <div className="flex items-center justify-between px-2 rounded-lg bg-warning relative mx-auto h-[8em]">
                                     <div className='flex flex-col gap-2'>
                                         <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
                                             Petiz
@@ -653,10 +726,9 @@ export default function HomePage() {
                                         quality={75}
                                         className="object-contain"
                                         width={128} />
-                                    <div className="absolute top-2 right-2">
-                                    </div>
-                                </div><div className="bg-base-100 rounded-xl shadow-xl">
-                                    <div>
+                                </div>
+                                <div className="bg-base-100 rounded-xl">
+                                    <div className='py-4'>
                                         <KidsGrid parentId={userData.uid} />
                                     </div>
                                 </div>
