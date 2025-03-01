@@ -1,29 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import dynamic from 'next/dynamic';
 
-// Enhanced Marker Icon Configuration
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
+// Dynamically import Leaflet components to prevent SSR issues
+const MapComponents = dynamic(
+  () => import('./MapComponents'),
+  { ssr: false, loading: () => <div className="w-full h-[250px] bg-gray-200 animate-pulse rounded-lg"></div> }
+);
 
-// Custom Hook for Map Recentering
-function MapRecenter({ lat, lng }: { lat: number, lng: number }) {
-    const map = useMap();
-    React.useEffect(() => {
-        map.setView([lat, lng], 13);
-    }, [lat, lng, map]);
-    return null;
-}
+// Moved to MapComponents.tsx
 
+// Main component
 export default function GeolocationPage() {
-    // Enhanced State Management
     const [location, setLocation] = useState<{
         latitude: number,
         longitude: number,
@@ -32,8 +22,14 @@ export default function GeolocationPage() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
-    // Improved Location Retrieval with Enhanced Options
+    // Handle client-side mounting
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Location retrieval handler - EXACT copy from working OLD.tsx
     const handleGetLocation = useCallback(() => {
         setIsLoading(true);
         setError(null);
@@ -60,107 +56,175 @@ export default function GeolocationPage() {
                 }
             );
         } else {
-            setError('Geolocation is not supported by this browser.');
+            setError('Geolocalização não é suportada por este navegador.');
             setIsLoading(false);
         }
     }, []);
 
-    // Detailed Error Messaging
+    // Error message handler
     function getGeolocationErrorMessage(error: GeolocationPositionError): string {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         switch (error.code) {
             case error.PERMISSION_DENIED:
-                return "Location access denied. Please enable location permissions.";
+                return "Acesso à localização negado. Por favor, habilite as permissões de localização.";
             case error.POSITION_UNAVAILABLE:
-                return "Location information is unavailable.";
+                return "Informações de localização não disponíveis.";
             case error.TIMEOUT:
-                return "Location request timed out. Please try again.";
+                return "O pedido de localização expirou. Por favor, tente novamente.";
             default:
-                return "An unknown error occurred while retrieving location.";
+                return "Ocorreu um erro ao obter a localização. Por favor, tente novamente.";
         }
     }
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="flex flex-col w-full min-h-screen pb-16 md:pb-0">
             <UserProfileBar pathname="Localização" />
-            <div className="card max-w-xs bg-base-100 shadow-xl">
-                <div className="card-body">
-                    <h2 className="card-title text-center">Location Tracker</h2>
+            
+            {/* Main content area */}
+            <div className="flex-1 p-2 md:p-4 overflow-y-auto">
+                <div className="card w-full mx-auto bg-base-100 shadow-xl mb-4 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl">
+                    <div className="card-body p-3 sm:p-6">
+                        <h2 className="card-title text-center w-full justify-center font-playfair text-lg sm:text-xl mb-1 sm:mb-2">
+                            Compartilhar Localização
+                        </h2>
+                        
+                        <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
+                            Compartilhe sua posição para facilitar encontros
+                        </p>
 
-                    {/* Enhanced Location Button with Loading State */}
-                    <button
-                        className={`btn btn-primary mt-4 ${isLoading ? 'btn-disabled loading' : ''}`}
-                        onClick={handleGetLocation}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Locating...' : 'Get My Location'}
-                    </button>
+                        {/* Location Button */}
+                        <button
+                            className={`btn btn-primary w-full text-xs sm:text-sm ${isLoading ? 'loading' : ''}`}
+                            onClick={handleGetLocation}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Localizando...' : 'Localizar'}
+                        </button>
+                        
+                        {/* Additional guidance for mobile */}
+                        {/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !location && !error && (
+                            <div className="mt-2 text-xs text-center text-gray-500">
+                                Permita o acesso à sua localização quando solicitado
+                            </div>
+                        )}
 
-                    {/* Comprehensive Error Handling */}
-                    {error && (
-                        <div className="alert alert-error mt-4 flex items-center">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="stroke-current shrink-0 h-6 w-6 mr-2"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    {/* Enhanced Location Display and Map */}
-                    {location && (
-                        <div className="mt-4">
-                            <div className="text-center bg-base-200 p-4 rounded-lg mb-4">
-                                <h3 className="font-bold mb-2">Current Location Details</h3>
-                                <p><strong>Latitude:</strong> {location.latitude.toFixed(4)}</p>
-                                <p><strong>Longitude:</strong> {location.longitude.toFixed(4)}</p>
-                                {location.accuracy && (
-                                    <p><strong>Accuracy:</strong> {location.accuracy.toFixed(2)} meters</p>
+                        {/* Error Display */}
+                        {error && (
+                            <div className="alert alert-error mt-4 text-xs sm:text-sm">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="stroke-current shrink-0 h-4 w-4 sm:h-6 sm:w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                <span>{error}</span>
+                            </div>
+                        )}
+                        
+                        {error && (error.includes("permissões") || error.includes("localização")) && (
+                            <div className="mt-2 text-xs sm:text-sm text-center text-gray-600">
+                                <p>Para compartilhar sua localização, você precisa permitir o acesso nas configurações do seu dispositivo.</p>
+                                {/Android/i.test(navigator.userAgent) ? (
+                                    <div className="text-left mt-2 bg-base-200 p-2 rounded-lg">
+                                        <p className="font-bold">Como permitir no Android:</p>
+                                        <ol className="list-decimal pl-5 text-xs">
+                                            <li>Acesse Configurações do seu telefone</li>
+                                            <li>Toque em Aplicativos &gt; Chrome</li>
+                                            <li>Toque em Permissões &gt; Localização</li>
+                                            <li>Selecione "Permitir"</li>
+                                            <li>Volte e tente novamente</li>
+                                        </ol>
+                                    </div>
+                                ) : /iPhone|iPad|iPod/i.test(navigator.userAgent) ? (
+                                    <div className="text-left mt-2 bg-base-200 p-2 rounded-lg">
+                                        <p className="font-bold">Como permitir no iOS:</p>
+                                        <ol className="list-decimal pl-5 text-xs">
+                                            <li>Acesse Ajustes do seu iPhone</li>
+                                            <li>Role até Safari ou Chrome</li>
+                                            <li>Toque em Localização</li>
+                                            <li>Selecione "Ao Usar o App"</li>
+                                            <li>Volte e tente novamente</li>
+                                        </ol>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        className="btn btn-xs btn-link mt-1"
+                                        onClick={() => {
+                                            window.open('https://support.google.com/chrome/answer/142065', '_blank');
+                                        }}
+                                    >
+                                        Como ativar permissões?
+                                    </button>
                                 )}
                             </div>
+                        )}
 
-                            <div className="w-full h-[400px] z-[50]">
-                                <MapContainer
-                                    center={[location.latitude, location.longitude]}
-                                    zoom={13}
-                                    scrollWheelZoom={true}
-                                    className="h-full w-full rounded-lg"
-                                >
-                                    <MapRecenter
-                                        lat={location.latitude}
-                                        lng={location.longitude}
-                                    />
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-                                    <Marker position={[location.latitude, location.longitude]}>
-                                        <Popup>
-                                            You are here! <br />
-                                            Lat: {location.latitude.toFixed(4)} <br />
-                                            Lon: {location.longitude.toFixed(4)} <br />
-                                            Accuracy: {location.accuracy?.toFixed(2)} meters
-                                        </Popup>
-                                    </Marker>
-                                </MapContainer>
+                        {/* Location Results */}
+                        {location && (
+                            <div className="mt-4 w-full">
+                                <div className="bg-base-200 p-3 rounded-lg mb-4">
+                                    <h3 className="font-bold text-center mb-2">Detalhes da Localização</h3>
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <p><strong>Latitude:</strong> {location.latitude.toFixed(4)}</p>
+                                        <p><strong>Longitude:</strong> {location.longitude.toFixed(4)}</p>
+                                        {location.accuracy && (
+                                            <p className="col-span-2"><strong>Precisão:</strong> {location.accuracy.toFixed(2)} metros</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Map Component - Only render on client side */}
+                                {isMounted && (
+                                    <>
+                                        <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] relative rounded-lg overflow-hidden">
+                                            <MapComponents 
+                                                latitude={location.latitude}
+                                                longitude={location.longitude}
+                                                accuracy={location.accuracy}
+                                            />
+                                        </div>
+
+                                        <div className="flex flex-wrap justify-center mt-4 gap-2">
+                                            <button 
+                                                className="btn btn-xs sm:btn-sm btn-primary text-xs"
+                                                onClick={() => {
+                                                    // Copy location to clipboard
+                                                    const text = `Minha localização: https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+                                                    navigator.clipboard.writeText(text);
+                                                    alert('Link copiado para a área de transferência!');
+                                                }}
+                                            >
+                                                Copiar Link
+                                            </button>
+                                            <a 
+                                                href={`https://maps.google.com/?q=${location.latitude},${location.longitude}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer" 
+                                                className="btn btn-xs sm:btn-sm btn-outline text-xs"
+                                            >
+                                                Google Maps
+                                            </a>
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-            <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
-                <div role="alert" className="alert alert-warning">
+                
+                {/* Development Banner */}
+                <div className="alert alert-warning w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto text-xs sm:text-sm">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 shrink-0 stroke-current"
+                        className="h-4 w-4 sm:h-6 sm:w-6 shrink-0 stroke-current"
                         fill="none"
                         viewBox="0 0 24 24">
                         <path
@@ -171,7 +235,7 @@ export default function GeolocationPage() {
                     </svg>
                     <span>EM DESENVOLVIMENTO</span>
                 </div>
-            </section >
+            </div>
         </div>
     );
 }
