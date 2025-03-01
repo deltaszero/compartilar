@@ -9,10 +9,14 @@ import {
     query, 
     where, 
     getDocs,
+    getDoc,
+    updateDoc,
+    arrayUnion,
     Timestamp 
 } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@context/userContext';
+import { useSearchParams } from 'next/navigation';
 import { KidInfo } from '@/types/signup.types';
 import { ParentalPlan } from '@/types/shared.types';
 import toast from 'react-hot-toast';
@@ -20,14 +24,20 @@ import IconIdea from '@assets/icons/icon_meu_lar_idea.svg';
 
 // General Form Component
 const GeneralForm: React.FC = () => {
-    const { user } = useUser();
+    const { user, userData } = useUser();
+    const searchParams = useSearchParams();
+    const planId = searchParams.get('planId');
+    
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
     const [availableChildren, setAvailableChildren] = useState<KidInfo[]>([]);
+    const [existingPlans, setExistingPlans] = useState<ParentalPlan[]>([]);
     const [referenceHome, setReferenceHome] = useState('');
     const [guardType, setGuardType] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
 
     // Employed states
     const [employedAlimonyInMoney, setEmployedAlimonyInMoney] = useState(false);
@@ -69,6 +79,70 @@ const GeneralForm: React.FC = () => {
         fetchChildren();
     }, [user]);
 
+    // Fetch existing plans
+    useEffect(() => {
+        const fetchExistingPlans = async () => {
+            if (!user) return;
+            
+            try {
+                const plansQuery = query(
+                    collection(db, 'parental_plans'),
+                    where('userId', '==', user.uid)
+                );
+                const snapshot = await getDocs(plansQuery);
+                const plans = snapshot.docs.map(doc => ({
+                    ...doc.data()
+                } as ParentalPlan));
+                
+                setExistingPlans(plans);
+                
+                // If there's a planId in the URL and we have plans, load that plan
+                if (planId && plans.length > 0) {
+                    const plan = plans.find(p => p.id === planId);
+                    if (plan) {
+                        loadPlan(plan);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching parental plans:', error);
+                toast.error('Erro ao buscar planos de parentalidade');
+            }
+        };
+        
+        fetchExistingPlans();
+    }, [user, planId]);
+
+    const loadPlan = (plan: ParentalPlan) => {
+        setCurrentPlanId(plan.id);
+        setIsEditing(true);
+        setTitle(plan.title);
+        setDescription(plan.description || '');
+        setSelectedChildren(plan.children || []);
+        setReferenceHome(plan.referenceHome);
+        setGuardType(plan.guardType);
+        
+        // Set employed alimony data
+        setEmployedAlimonyInMoney(plan.employedAlimony.inMoney);
+        setEmployedMoneyMethod(plan.employedAlimony.moneyMethod || '');
+        setEmployedObligationsChecked(plan.employedAlimony.obligations);
+        setEmployedPaymentChecked(plan.employedAlimony.paymentServices);
+        setEmployedReimbursementChecked(plan.employedAlimony.reimbursement);
+        
+        // Set unemployed alimony data
+        setUnemployedAlimonyInMoney(plan.unemployedAlimony.inMoney);
+        setUnemployedMoneyMethod(plan.unemployedAlimony.moneyMethod || '');
+        setUnemployedObligationsChecked(plan.unemployedAlimony.obligations);
+        setUnemployedPaymentChecked(plan.unemployedAlimony.paymentServices);
+        setUnemployedReimbursementChecked(plan.unemployedAlimony.reimbursement);
+    };
+
+    const handlePlanSelection = (planId: string) => {
+        const plan = existingPlans.find(p => p.id === planId);
+        if (plan) {
+            loadPlan(plan);
+        }
+    };
+
     const handleChildSelection = (childId: string) => {
         setSelectedChildren(prev => {
             if (prev.includes(childId)) {
@@ -77,6 +151,26 @@ const GeneralForm: React.FC = () => {
                 return [...prev, childId];
             }
         });
+    };
+
+    const resetForm = () => {
+        setTitle('');
+        setDescription('');
+        setSelectedChildren([]);
+        setReferenceHome('');
+        setGuardType('');
+        setEmployedAlimonyInMoney(false);
+        setEmployedMoneyMethod('');
+        setEmployedObligationsChecked(false);
+        setEmployedPaymentChecked(false);
+        setEmployedReimbursementChecked(false);
+        setUnemployedAlimonyInMoney(false);
+        setUnemployedMoneyMethod('');
+        setUnemployedObligationsChecked(false);
+        setUnemployedPaymentChecked(false);
+        setUnemployedReimbursementChecked(false);
+        setIsEditing(false);
+        setCurrentPlanId(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -110,11 +204,10 @@ const GeneralForm: React.FC = () => {
         setIsSubmitting(true);
         
         try {
-            // Create a new parental plan document
-            const planRef = doc(collection(db, 'parental_plans'));
+            let planRef;
+            const now = Timestamp.now();
             
-            const planData: ParentalPlan = {
-                id: planRef.id,
+            const planData: Partial<ParentalPlan> = {
                 userId: user.uid,
                 title,
                 description,
@@ -135,35 +228,45 @@ const GeneralForm: React.FC = () => {
                     paymentServices: unemployedPaymentChecked,
                     reimbursement: unemployedReimbursementChecked
                 },
-                status: 'draft',
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now()
+                updatedAt: now
             };
             
-            await setDoc(planRef, planData);
+            // Update existing plan or create a new one
+            if (isEditing && currentPlanId) {
+                planRef = doc(db, 'parental_plans', currentPlanId);
+                await updateDoc(planRef, planData);
+                toast.success('Plano de parentalidade atualizado com sucesso!');
+            } else {
+                planRef = doc(collection(db, 'parental_plans'));
+                await setDoc(planRef, {
+                    ...planData,
+                    id: planRef.id,
+                    status: 'draft',
+                    createdAt: now
+                } as ParentalPlan);
+                
+                // Add the plan ID to the user's data if it doesn't exist
+                const userRef = doc(db, 'account_info', user.uid);
+                await updateDoc(userRef, {
+                    parentalPlans: arrayUnion(planRef.id)
+                });
+                
+                toast.success('Plano de parentalidade criado com sucesso!');
+            }
             
-            toast.success('Plano de parentalidade criado com sucesso!');
+            // Update child records to include the plan
+            for (const childId of selectedChildren) {
+                const childRef = doc(db, 'children', childId);
+                await updateDoc(childRef, {
+                    parentalPlans: arrayUnion(planRef.id)
+                });
+            }
             
-            // Reset form
-            setTitle('');
-            setDescription('');
-            setSelectedChildren([]);
-            setReferenceHome('');
-            setGuardType('');
-            setEmployedAlimonyInMoney(false);
-            setEmployedMoneyMethod('');
-            setEmployedObligationsChecked(false);
-            setEmployedPaymentChecked(false);
-            setEmployedReimbursementChecked(false);
-            setUnemployedAlimonyInMoney(false);
-            setUnemployedMoneyMethod('');
-            setUnemployedObligationsChecked(false);
-            setUnemployedPaymentChecked(false);
-            setUnemployedReimbursementChecked(false);
-            
+            // Reset form after successful submission
+            resetForm();
         } catch (error) {
-            console.error('Error creating parental plan:', error);
-            toast.error('Erro ao criar o plano de parentalidade');
+            console.error('Error saving parental plan:', error);
+            toast.error('Erro ao salvar o plano de parentalidade');
         } finally {
             setIsSubmitting(false);
         }
@@ -327,6 +430,39 @@ const GeneralForm: React.FC = () => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Existing Plans Selector */}
+            {existingPlans.length > 0 && (
+                <div className="form-control">
+                    <label className="label">
+                        <span className="label-text font-semibold">Selecionar Plano Existente</span>
+                    </label>
+                    <div className="flex gap-4">
+                        <select 
+                            className="select select-bordered flex-1"
+                            onChange={(e) => e.target.value ? handlePlanSelection(e.target.value) : resetForm()}
+                            value={currentPlanId || ''}
+                        >
+                            <option value="">Criar Novo Plano</option>
+                            {existingPlans.map(plan => (
+                                <option key={plan.id} value={plan.id}>
+                                    {plan.title}
+                                </option>
+                            ))}
+                        </select>
+                        
+                        {isEditing && (
+                            <button 
+                                type="button" 
+                                className="btn btn-outline" 
+                                onClick={resetForm}
+                            >
+                                Novo Plano
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+            
             {/* Plan Title and Description */}
             <div>
                 <h2 className="text-lg font-semibold mb-2">Informações Básicas do Plano</h2>
@@ -456,8 +592,10 @@ const GeneralForm: React.FC = () => {
                         <span className="loading loading-spinner loading-sm"></span>
                         Salvando...
                     </>
+                ) : isEditing ? (
+                    'Atualizar Plano'
                 ) : (
-                    'Salvar Plano'
+                    'Criar Plano'
                 )}
             </button>
             

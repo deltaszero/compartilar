@@ -132,9 +132,9 @@ export default function Sidebar() {
             ]
         },
         {
-            path: `/${userData.username}/plan/resumo`, label: 'Plano Parental', icon: <IconPlan width={24} height={24} />,
+            path: `/${userData.username}/plan`, label: 'Plano Parental', icon: <IconPlan width={24} height={24} />,
             subpages: [
-                // { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
+                { path: `/${userData.username}/plan/resumo`, label: 'Resumo'},
                 { path: `/${userData.username}/plan/form`, label: 'Formulário' },
             ]
         },

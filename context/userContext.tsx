@@ -16,6 +16,7 @@ interface UserData {
     phoneNumber?: string;
     birthDate?: string;
     kids?: Record<string, { id: string }>;
+    parentalPlans?: string[]; // Array of parental plan IDs
     createdAt?: typeof serverTimestamp;
     uid: string;
 }

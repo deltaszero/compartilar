@@ -42,6 +42,8 @@ export interface KidInfo {
         }[];
     };
     interests?: string[];
+    parentalPlans?: string[]; // Array of parental plan IDs
+    parentId: string; // ID of the parent
     createdAt?: Timestamp;
     updatedAt?: Timestamp;
 }

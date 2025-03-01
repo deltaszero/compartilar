@@ -39,6 +39,8 @@ import support_img from "@assets/images/support-icon.png";
 import calendar_img from "@assets/images/calendar-icon.png";
 import family_img from "@assets/images/family-icon.png";
 
+import feature_img from "@assets/images/compartilar-anthropic-img-01.png";
+
 import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
 
 import 'dayjs/locale/pt-br';
@@ -103,9 +105,9 @@ const UserProfileCard = ({ userData }: { userData: Partial<SignupFormData> }) =>
         <div className="navbar-start">
             <div className="flex flex-col items-start gap-0">
                 <div className="text-6xl font-semibold font-playfair">
-                    Olá,<br /> {capitalizeFirstLetter(userData.firstName || '')}!
+                    Olá,<br />{capitalizeFirstLetter(userData.firstName || '')}!
                 </div>
-                <div className="text-sm ">
+                <div className="text-sm font-semibold">
                     @{userData.username}
                 </div>
             </div>
@@ -564,51 +566,51 @@ export default function HomePage() {
 
     // Sample events
     const events = [
-      {
-        id: '1',
-        date: dayjs().format('YYYY-MM-DD'),
-        color: '#6366F1' // indigo
-      },
-      {
-        id: '2',
-        date: dayjs().format('YYYY-MM-DD'),
-        color: '#EC4899' // pink
-      },
-      {
-        id: '3',
-        date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
-        color: '#8B5CF6' // purple
-      },
-      {
-        id: '4',
-        date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
-        color: '#10B981' // emerald
-      },
-      {
-        id: '5',
-        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-        color: '#F59E0B' // amber
-      },
-      {
-        id: '6',
-        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-        color: '#F59E0B' // amber
-      },
-      {
-        id: '7',
-        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-        color: '#F59E0B' // amber
-      },
-      {
-        id: '8',
-        date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-        color: '#F59E0B' // amber
-      }
+        {
+            id: '1',
+            date: dayjs().format('YYYY-MM-DD'),
+            color: '#6366F1' // indigo
+        },
+        {
+            id: '2',
+            date: dayjs().format('YYYY-MM-DD'),
+            color: '#EC4899' // pink
+        },
+        {
+            id: '3',
+            date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+            color: '#8B5CF6' // purple
+        },
+        {
+            id: '4',
+            date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+            color: '#10B981' // emerald
+        },
+        {
+            id: '5',
+            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+            color: '#F59E0B' // amber
+        },
+        {
+            id: '6',
+            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+            color: '#F59E0B' // amber
+        },
+        {
+            id: '7',
+            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+            color: '#F59E0B' // amber
+        },
+        {
+            id: '8',
+            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+            color: '#F59E0B' // amber
+        }
     ];
-  
+
     const handleDateSelect = (date: Dayjs) => {
-      setSelectedDate(date);
-      console.log('Selected date:', date.format('YYYY-MM-DD'));
+        setSelectedDate(date);
+        console.log('Selected date:', date.format('YYYY-MM-DD'));
     };
 
     useEffect(() => {
@@ -658,41 +660,60 @@ export default function HomePage() {
                     {/* - - - - - - - - - - - - CALENDAR - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
                         {isMobile ? (
-                            <div className='flex flex-col gap-2'>
-                                <p className='text-4xl text-gray-700 font-raleway'>
+                            <div className='flex flex-col'>
+                                {/* <p className='text-4xl text-gray-700 font-raleway'>
                                     Planeje-se para a semana
-                                </p>
-                                <CurrentWeekPage 
+                                </p> */}
+                                <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto h-[8em]">
+                                    <div className='flex flex-col gap-2'>
+                                        <h2 className='text-4xl font-raleway text-secondaryGreen font-semibold'>
+                                            Planeje-se para a semana
+                                        </h2>
+                                        <p className="text-xs text-gray-700 font-raleway">
+                                            Consulte dias de convivência e agende eventos de forma compartilhada.
+                                        </p>
+                                    </div>
+                                    {/* <Image
+                                        src={feature_img}
+                                        alt="Background"
+                                        priority
+                                        quality={75}
+                                        className="object-contain"
+                                        width={96}
+                                    /> */}
+                                </div>
+
+                                <CurrentWeekPage
                                     events={events}
                                     selectedDate={selectedDate}
                                     onDateSelect={handleDateSelect}
                                 />
                             </div>
-                        ):(
-                        <div>
-                            <div className="flex items-center justify-between px-2 rounded-lg bg-secondaryGreen relative mx-auto shadow-xl h-[8em]">
-                                <div className='flex flex-col gap-2 '>
-                                    <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
-                                        Calendário
-                                    </h2>
-                                    <p className="text-xs text-gray-700 font-raleway">
-                                        Consulte dias de convivência e agende eventos de forma compartilhada.
-                                    </p>
+                        ) : (
+                            <div>
+                                <div className="flex items-center justify-between px-2 rounded-lg bg-secondaryGreen relative mx-auto shadow-xl h-[8em]">
+                                    <div className='flex flex-col gap-2 '>
+                                        <h2 className="text-3xl font-bold z-10 font-playfair max-w-[66%]">
+                                            Calendário
+                                        </h2>
+                                        <p className="text-xs text-gray-700 font-raleway">
+                                            Consulte dias de convivência e agende eventos de forma compartilhada.
+                                        </p>
+                                    </div>
+                                    <Image
+                                        src={calendar_img}
+                                        alt="Background"
+                                        priority
+                                        quality={75}
+                                        className="object-contain"
+                                        width={128}
+                                    />
                                 </div>
-                                <Image
-                                    src={calendar_img}
-                                    alt="Background"
-                                    priority
-                                    quality={75}
-                                    className="object-contain"
-                                    width={128}
-                                />
+                                <div className="hidden sm:block bg-base-100 rounded-xl py-4">
+                                    <CalendarPage />
+                                </div>
                             </div>
-                            <div className="hidden sm:block bg-base-100 rounded-xl py-4">
-                                <CalendarPage />
-                            </div>
-                        </div>
-                    )}
+                        )}
                     </section>
                     {/* - - - - - - - - - - - - KIDS - - - - - - - - - - - - */}
                     <section className="container mx-auto p-4">
@@ -702,9 +723,27 @@ export default function HomePage() {
                                     {/* <h2 className="text-4xl font-bold z-10 font-playfair max-w-[66%]">
                                         Petiz
                                     </h2> */}
-                                    <p className='text-4xl text-gray-700 font-raleway'>
+                                    {/* <p className='text-4xl text-gray-700 font-raleway'>
                                         Cuide dos seus amores
-                                    </p>
+                                    </p> */}
+                                    <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto h-[8em]">
+                                    <div className='flex flex-col gap-2'>
+                                        <h2 className='text-4xl font-raleway text-warning font-semibold'>
+                                            Cuide dos seus pequenos
+                                        </h2>
+                                        <p className="text-xs text-gray-700 font-raleway">
+                                            Adicione, edite e acompanhe as principais informações sobre seus filhos.
+                                        </p>
+                                    </div>
+                                    {/* <Image
+                                        src={feature_img}
+                                        alt="Background"
+                                        priority
+                                        quality={75}
+                                        className="object-contain"
+                                        width={128}
+                                    /> */}
+                                </div>
                                 </div>
                                 <KidsGridMobile parentId={userData.uid} />
                             </div>
