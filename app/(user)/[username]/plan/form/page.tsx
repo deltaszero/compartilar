@@ -277,8 +277,8 @@ const GeneralForm: React.FC = () => {
             <label className="block text-sm font-medium mb-2">
                 Quando Empregada ou Autônoma
             </label>
-            <div className="flex flex-row items-start justify-between gap-12">
-                <div className="flex flex-col items-start gap-2">
+            <div className="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-12">
+                <div className="flex flex-col items-start gap-2 w-full md:w-auto">
                     <label className="flex flex-row items-center">
                         <input
                             type="checkbox"
@@ -289,8 +289,8 @@ const GeneralForm: React.FC = () => {
                         <span className="ml-2">Dinheiro</span>
                     </label>
                     {employedAlimonyInMoney && (
-                        <div className="flex flex-col my-4 gap-2">
-                            <label className="flex items-center">
+                        <div className="flex flex-col my-2 md:my-4 gap-2 pl-6">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="radio"
                                     value="Deposito"
@@ -300,7 +300,7 @@ const GeneralForm: React.FC = () => {
                                 />
                                 <span className="ml-2">Depósito em conta corrente</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="radio"
                                     value="Desconto"
@@ -313,7 +313,7 @@ const GeneralForm: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex flex-col items-start gap-2 w-full md:w-auto mt-2 md:mt-0">
                     <label className="flex flex-row items-center">
                         <input
                             type="checkbox"
@@ -324,8 +324,8 @@ const GeneralForm: React.FC = () => {
                         <span className="ml-2">Obrigações</span>
                     </label>
                     {employedObligationsChecked && (
-                        <div className="flex flex-col my-4 gap-2">
-                            <label className="flex items-center">
+                        <div className="flex flex-col my-2 md:my-4 gap-2 pl-6">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary checkbox-sm"
@@ -334,7 +334,7 @@ const GeneralForm: React.FC = () => {
                                 />
                                 <span className="ml-2">Pagamento de serviços e objetos</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary checkbox-sm"
@@ -355,8 +355,8 @@ const GeneralForm: React.FC = () => {
             <label className="block text-sm font-medium mb-2">
                 Quando Desempregada
             </label>
-            <div className="flex flex-row items-start justify-between gap-12">
-                <div className="flex flex-col items-start gap-2">
+            <div className="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-12">
+                <div className="flex flex-col items-start gap-2 w-full md:w-auto">
                     <label className="flex flex-row items-center">
                         <input
                             type="checkbox"
@@ -367,8 +367,8 @@ const GeneralForm: React.FC = () => {
                         <span className="ml-2">Dinheiro</span>
                     </label>
                     {unemployedAlimonyInMoney && (
-                        <div className="flex flex-col my-4 gap-2">
-                            <label className="flex items-center">
+                        <div className="flex flex-col my-2 md:my-4 gap-2 pl-6">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="radio"
                                     value="Deposito"
@@ -378,7 +378,7 @@ const GeneralForm: React.FC = () => {
                                 />
                                 <span className="ml-2">Depósito em conta corrente</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="radio"
                                     value="Desconto"
@@ -391,7 +391,7 @@ const GeneralForm: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="flex flex-col items-start gap-2">
+                <div className="flex flex-col items-start gap-2 w-full md:w-auto mt-2 md:mt-0">
                     <label className="flex flex-row items-center">
                         <input
                             type="checkbox"
@@ -402,8 +402,8 @@ const GeneralForm: React.FC = () => {
                         <span className="ml-2">Obrigações</span>
                     </label>
                     {unemployedObligationsChecked && (
-                        <div className="flex flex-col my-4 gap-2">
-                            <label className="flex items-center">
+                        <div className="flex flex-col my-2 md:my-4 gap-2 pl-6">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary checkbox-sm"
@@ -412,7 +412,7 @@ const GeneralForm: React.FC = () => {
                                 />
                                 <span className="ml-2">Pagamento de serviços e objetos</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center flex-wrap">
                                 <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary checkbox-sm"
@@ -436,7 +436,7 @@ const GeneralForm: React.FC = () => {
                     <label className="label">
                         <span className="label-text font-semibold">Selecionar Plano Existente</span>
                     </label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <select 
                             className="select select-bordered flex-1"
                             onChange={(e) => e.target.value ? handlePlanSelection(e.target.value) : resetForm()}
@@ -453,7 +453,7 @@ const GeneralForm: React.FC = () => {
                         {isEditing && (
                             <button 
                                 type="button" 
-                                className="btn btn-outline" 
+                                className="btn btn-outline w-full sm:w-auto" 
                                 onClick={resetForm}
                             >
                                 Novo Plano
@@ -496,16 +496,16 @@ const GeneralForm: React.FC = () => {
             <div>
                 <h2 className="text-lg font-semibold mb-2">Crianças Incluídas no Plano</h2>
                 {availableChildren.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {availableChildren.map(child => (
-                            <label key={child.id} className="flex items-center p-2 border rounded-lg hover:bg-base-200">
+                            <label key={child.id} className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    className="checkbox checkbox-primary mr-2"
+                                    className="checkbox checkbox-primary mr-3"
                                     checked={selectedChildren.includes(child.id)}
                                     onChange={() => handleChildSelection(child.id)}
                                 />
-                                <span>{child.firstName} {child.lastName}</span>
+                                <span className="text-sm md:text-base">{child.firstName} {child.lastName}</span>
                             </label>
                         ))}
                     </div>
@@ -516,75 +516,76 @@ const GeneralForm: React.FC = () => {
                 )}
             </div>
 
-            <p className="text-sm opacity-70 italic">
-                O plano de parentalidade deve incluir: base de residência do menor; tipo de guarda; regime de convivência; 
-                pagamento de alimentos; prazos para revisão do plano; situações de revisão antecipada; profissionais que acompanham;
-                forma de comunicação entre os genitores; idade dos filhos; atividades laborais dos pais; distância das residências;
-                possibilidades financeiras; atividades dos filhos; acompanhamento psicológico; necessidades especiais.
-            </p>
+            <div className="p-4 bg-base-200 rounded-lg">
+                <p className="text-xs md:text-sm opacity-70 italic">
+                    O plano de parentalidade deve incluir: base de residência do menor; tipo de guarda; regime de convivência; 
+                    pagamento de alimentos; prazos para revisão do plano; situações de revisão antecipada; profissionais que acompanham;
+                    forma de comunicação entre os genitores; idade dos filhos; atividades laborais dos pais; distância das residências;
+                    possibilidades financeiras; atividades dos filhos; acompanhamento psicológico; necessidades especiais.
+                </p>
+            </div>
             
             {/* Lar Referência */}
             <div className="flex flex-row items-center gap-2">
                 <h2 className="text-lg font-semibold">Lar Referência</h2>
-                <div className="tooltip tooltip-right" data-tip="O que é lar referência?">
-                    <span className="text-primary"><IconIdea width={24} height={24} /></span>
+                <div className="tooltip tooltip-right md:tooltip-right" data-tip="O que é lar referência?">
+                    <span className="text-primary"><IconIdea width={20} height={20} /></span>
                 </div>
             </div>
-            <div className="flex flex-col gap-2">
-                <label className="flex items-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Mãe" className="radio radio-primary" checked={referenceHome === 'Mãe'} onChange={() => setReferenceHome('Mãe')} />
                     <span className="ml-2">Mãe</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Pai" className="radio radio-primary" checked={referenceHome === 'Pai'} onChange={() => setReferenceHome('Pai')} />
                     <span className="ml-2">Pai</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Outro" className="radio radio-primary" checked={referenceHome === 'Outro'} onChange={() => setReferenceHome('Outro')} />
                     <span className="ml-2">Outro</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Alternado" className="radio radio-primary" checked={referenceHome === 'Alternado'} onChange={() => setReferenceHome('Alternado')} />
                     <span className="ml-2">Alternado</span>
-                    <div className="tooltip tooltip-right" data-tip="O que é lar referência alternado?">
-                        <span className="text-primary"><IconIdea width={24} height={24} /></span>
+                    <div className="tooltip tooltip-top md:tooltip-right ml-1" data-tip="O que é lar referência alternado?">
+                        <span className="text-primary"><IconIdea width={18} height={18} /></span>
                     </div>
                 </label>
             </div>
-            <br />
             {/* Tipo de Guarda */}
-            <div className="flex flex-row items-center gap-2">
+            <div className="flex flex-row items-center gap-2 mt-6">
                 <h2 className="text-lg font-semibold">Tipo de Guarda</h2>
-                <div className="tooltip tooltip-right" data-tip="O que é tipo de guarda?">
-                    <span className="text-primary"><IconIdea width={24} height={24} /></span>
+                <div className="tooltip tooltip-right md:tooltip-right" data-tip="O que é tipo de guarda?">
+                    <span className="text-primary"><IconIdea width={20} height={20} /></span>
                 </div>
             </div>
-            <div className="flex flex-col gap-2">
-                <label className="flex items-center">
+            <div className="grid grid-cols-2 gap-2 mt-2">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Unilateral" className="radio radio-primary" checked={guardType === 'Unilateral'} onChange={() => setGuardType('Unilateral')} />
                     <span className="ml-2">Unilateral</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
                     <input type="radio" value="Compartilhada" className="radio radio-primary" checked={guardType === 'Compartilhada'} onChange={() => setGuardType('Compartilhada')} />
                     <span className="ml-2">Compartilhada</span>
                 </label>
             </div>
-            <br />
             {/* Pensão Alimentícia */}
             <article className="w-full flex flex-col gap-4">
                 <div className="flex items-center">
                     <h2 className="text-lg font-semibold">Pensão Alimentícia</h2>
                 </div>
-                <div className="flex flex-row items-stretch gap-8">
+                <div className="flex flex-col md:flex-row items-stretch gap-6">
                     <EmployedSection />
-                    <div className="divider divider-horizontal" />
+                    <div className="hidden md:flex divider divider-horizontal"></div>
+                    <div className="block md:hidden divider divider-vertical my-2"></div>
                     <UnemployedSection />
                 </div>
             </article>
             <br />
             <button 
                 type="submit" 
-                className={`btn ${isSubmitting ? 'btn-disabled' : 'btn-primary'}`}
+                className={`btn btn-lg w-full sm:w-auto ${isSubmitting ? 'btn-disabled' : 'btn-primary'}`}
                 disabled={isSubmitting || !user || availableChildren.length === 0}
             >
                 {isSubmitting ? (
@@ -715,9 +716,32 @@ const PlanoDeParentalidade: React.FC = () => {
                 <IconHeader />
                 Plano de Parentalidade
             </h1>
-            <div className="flex flex-row mt-12">
+            
+            {/* Mobile and Desktop Views */}
+            <div className="flex flex-col md:flex-row mt-6 md:mt-12">
+                {/* Menu for mobile - Dropdown */}
+                <div className="block md:hidden w-full mb-6">
+                    <select 
+                        className="select select-bordered w-full" 
+                        value={activeSection}
+                        onChange={(e) => setActiveSection(e.target.value)}
+                    >
+                        <option value="general">Geral</option>
+                        <option value="health">Regime de Convivência</option>
+                        <option value="education">Educação</option>
+                        <option value="education">Atividades Extracurriculares</option>
+                        <option value="education">Despesas Extras</option>
+                        <option value="education">Segurança</option>
+                        <option value="education">Festividades & Religiosidade</option>
+                        <option value="health">Saúde</option>
+                        <option value="health">Pessoas Terceiras</option>
+                        <option value="education">Descumprimento</option>
+                    </select>
+                </div>
+                
+                {/* Sidebar for desktop */}
                 <div className="join w-full">
-                    <div className="w-1/4">
+                    <div className="hidden md:block md:w-1/4">
                         <div className="join join-vertical w-full">
                             {/* GENERAL */}
                             <div className="collapse join-item">
@@ -852,7 +876,7 @@ const PlanoDeParentalidade: React.FC = () => {
                             <div className="divider" />
                         </div>
                     </div>
-                    <div className="w-3/4 px-12">
+                    <div className="w-full md:w-3/4 md:px-12">
                         {renderContent()}
                     </div>
                 </div>

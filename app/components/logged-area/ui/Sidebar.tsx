@@ -139,7 +139,7 @@ export default function Sidebar() {
             ]
         },
         { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={24} height={24} /> },
-        { path: `/${userData.username}/finances`, label: 'Finanças', icon: <IconFinance width={24} height={24} /> },
+        { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={24} height={24} /> },
         { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={24} height={24} /> },
         { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={24} height={24} /> },
         { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={24} height={24} /> },
