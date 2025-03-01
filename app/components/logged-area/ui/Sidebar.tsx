@@ -121,12 +121,13 @@ export default function Sidebar() {
     const { userData, loading } = useUser();
     const pathname = usePathname();
 
-    const navItems = userData ? [
+    // If userData is not available yet, don't try to construct nav items with undefined values
+    const navItems = (userData && userData.username) ? [
         {
             path: `/${userData.username}/home`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
             subpages: [
                 // { path: `/${userData.username}/home`, label: 'Meu Lar' },
-                { path: `/${userData.username}`, label: 'Perfil' },
+                { path: `/${userData.username}/perfil`, label: 'Perfil' },
                 { path: `/${userData.username}/familia`, label: 'Família' },
                 { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
             ]

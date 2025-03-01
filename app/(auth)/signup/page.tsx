@@ -85,6 +85,11 @@ const useSignupStore = create<SignupStore>()(
             
                     // Handle profile photo upload directly to permanent location
                     if (photoURL.startsWith('data:image')) {
+                        // Check if we have access to storage (client-side only)
+                        if (typeof window === 'undefined' || !storage) {
+                            throw new Error('Upload de fotos só é possível no navegador.');
+                        }
+                        
                         const storageRef = ref(storage, `profile_photos/${user.uid}/profile.jpg`);
                         const blob = await fetch(photoURL).then(r => r.blob());
                         await uploadBytes(storageRef, blob);
@@ -154,7 +159,7 @@ const useSignupStore = create<SignupStore>()(
                         console.error('Cleanup error:', cleanupError);
                     }
                     try {
-                        if (user) {
+                        if (user && typeof window !== 'undefined' && storage) {
                             const photoRef = ref(storage, `profile_photos/${user.uid}/profile.jpg`);
                             await deleteObject(photoRef);
                         }

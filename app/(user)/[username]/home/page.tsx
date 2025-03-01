@@ -193,6 +193,14 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
         setUploadProgress(0);
 
         try {
+            // Check if we have access to storage (client-side only)
+            if (typeof window === 'undefined' || !storage) {
+                toast.error('Upload de fotos só é possível no navegador.');
+                setIsUploading(false);
+                setUploadProgress(null);
+                return;
+            }
+
             const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
             if (!file.type.startsWith('image/')) {
                 toast.error('Por favor, selecione um arquivo de imagem válido.');
@@ -221,6 +229,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
                     console.error('Upload error:', error);
                     setIsUploading(false);
                     setUploadProgress(null);
+                    toast.error('Erro no upload: ' + error.message);
                 },
                 async () => {
                     try {
@@ -252,6 +261,7 @@ const ChildCard = ({ kid }: { kid: KidInfo }) => {
             console.error('Error uploading child photo:', error);
             setIsUploading(false);
             setUploadProgress(null);
+            toast.error('Erro ao iniciar upload. Tente novamente mais tarde.');
         }
     };
 

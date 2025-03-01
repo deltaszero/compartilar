@@ -1,13 +1,14 @@
 // app/components/friendship/FriendSearch.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { collection, query, where, getDocs, addDoc, Timestamp, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@/context/userContext';
-import { FriendshipRequest } from '@/types/friendship.types';
+import { FriendshipRequest, RelationshipType } from '@/types/friendship.types';
 import { toast } from 'react-hot-toast';
+import { KidInfo } from '@/types/signup.types';
 
 interface SearchResult {
     uid: string;
@@ -24,6 +25,47 @@ export default function FriendSearch() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState<{[key: string]: boolean}>({});
     const { userData } = useUser();
+    const [children, setChildren] = useState<KidInfo[]>([]);
+    const [selectedRelationshipType, setSelectedRelationshipType] = useState<RelationshipType>('support');
+    const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+    const [showChildSelect, setShowChildSelect] = useState(false);
+
+    // Load user's children
+    useEffect(() => {
+        const loadChildren = async () => {
+            if (!userData?.uid) return;
+            
+            try {
+                const childrenRef = collection(db, 'children');
+                const q = query(childrenRef, where('parentId', '==', userData.uid));
+                const snapshot = await getDocs(q);
+                
+                const childrenData: KidInfo[] = [];
+                snapshot.forEach(doc => {
+                    childrenData.push({
+                        id: doc.id,
+                        ...doc.data() as KidInfo
+                    });
+                });
+                
+                setChildren(childrenData);
+            } catch (error) {
+                console.error('Error loading children:', error);
+            }
+        };
+        
+        loadChildren();
+    }, [userData]);
+
+    // Watch for relationship type changes to control child selection visibility
+    useEffect(() => {
+        setShowChildSelect(selectedRelationshipType === 'coparent');
+        
+        // Reset selected children if not a coparent
+        if (selectedRelationshipType !== 'coparent') {
+            setSelectedChildren([]);
+        }
+    }, [selectedRelationshipType]);
 
     const handleSearch = async () => {
         if (!searchTerm || searchTerm.length < 3) return;
@@ -74,6 +116,16 @@ export default function FriendSearch() {
         }
     };
 
+    const toggleChildSelection = (childId: string) => {
+        setSelectedChildren(prev => {
+            if (prev.includes(childId)) {
+                return prev.filter(id => id !== childId);
+            } else {
+                return [...prev, childId];
+            }
+        });
+    };
+
     const sendFriendRequest = async (receiver: SearchResult) => {
         if (!userData) {
             toast.error('You must be logged in to send friend requests');
@@ -82,6 +134,12 @@ export default function FriendSearch() {
         
         if (receiver.uid === userData.uid) {
             toast.error('You cannot send a friend request to yourself');
+            return;
+        }
+        
+        // For coparent relationship type, check if children are selected
+        if (selectedRelationshipType === 'coparent' && selectedChildren.length === 0) {
+            toast.error('Please select at least one child for co-parenting');
             return;
         }
         
@@ -129,12 +187,24 @@ export default function FriendSearch() {
                 receiverLastName: receiver.lastName,
                 //
                 status: 'pending',
+                relationshipType: selectedRelationshipType,
+                sharedChildren: selectedRelationshipType === 'coparent' ? selectedChildren : undefined,
                 createdAt: timestamp,
                 updatedAt: timestamp
             };
     
             await addDoc(collection(db, 'friendship_requests'), newRequest);
-            toast.success('Friend request sent successfully!');
+            
+            // Display appropriate success message based on relationship type
+            if (selectedRelationshipType === 'coparent') {
+                toast.success('Co-parent request sent successfully!');
+            } else {
+                toast.success('Friend request sent successfully!');
+            }
+            
+            // Reset relationship type after sending
+            setSelectedRelationshipType('support');
+            setSelectedChildren([]);
             
         } catch (error) {
             console.error('Error sending friend request:', error);
@@ -146,11 +216,15 @@ export default function FriendSearch() {
 
     return (
         <section className="container mx-auto py-4">
+            {/* User Search */}
             <div className="form-control">
+                <label className="label">
+                    <span className="label-text font-medium">Buscar Pessoa</span>
+                </label>
                 <div className="input-group flex flex-row items-center gap-2">
                     <input
                         type="text"
-                        placeholder="Insira um username..."
+                        placeholder="Insira um username ou email..."
                         className="input input-bordered w-full shadow-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -169,14 +243,92 @@ export default function FriendSearch() {
                     </button>
                 </div>
             </div>
+            
             <div className="my-4"></div>
+            
+            {/* Search Results */}
             {searchResults.length > 0 && (
                 <div className="flex flex-col gap-3">
+                    {/* Relationship Type Selector - Only shown after search results */}
+                    <div className="form-control mb-4 bg-base-100 p-3 rounded-lg shadow-sm">
+                        <label className="label">
+                            <span className="label-text font-medium">Tipo de Relacionamento</span>
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            <div className="form-control">
+                                <label className="label cursor-pointer gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="relationshipType" 
+                                        className="radio radio-primary" 
+                                        checked={selectedRelationshipType === 'support'}
+                                        onChange={() => setSelectedRelationshipType('support')}
+                                    />
+                                    <span className="label-text">Rede de Apoio</span>
+                                </label>
+                            </div>
+                            <div className="form-control">
+                                <label className="label cursor-pointer gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="relationshipType" 
+                                        className="radio radio-primary" 
+                                        checked={selectedRelationshipType === 'coparent'}
+                                        onChange={() => setSelectedRelationshipType('coparent')}
+                                    />
+                                    <span className="label-text">Co-Parental</span>
+                                </label>
+                            </div>
+                            <div className="form-control">
+                                <label className="label cursor-pointer gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="relationshipType" 
+                                        className="radio radio-primary" 
+                                        checked={selectedRelationshipType === 'other'}
+                                        onChange={() => setSelectedRelationshipType('other')}
+                                    />
+                                    <span className="label-text">Outro</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        {/* Child Selection (only shown for coparent type) */}
+                        {showChildSelect && (
+                            <div className="form-control mt-4">
+                                <label className="label">
+                                    <span className="label-text font-medium">Selecione as crianças compartilhadas</span>
+                                </label>
+                                {children.length === 0 ? (
+                                    <div className="alert alert-info">
+                                        <p>Você não tem crianças cadastradas. Adicione crianças primeiro.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                                        {children.map(child => (
+                                            <label key={child.id} className="flex items-center p-2 border rounded-lg hover:bg-base-200 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="checkbox checkbox-primary mr-3"
+                                                    checked={selectedChildren.includes(child.id)}
+                                                    onChange={() => toggleChildSelection(child.id)}
+                                                />
+                                                <span>
+                                                    {child.firstName} {child.lastName}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* User Search Results */}
                     {searchResults.map((result) => (
                         <div key={result.uid} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
                             <div className="flex items-center space-x-3">
                                 {result.photoURL ? (
-                                    // <img src={result.photoURL} alt={result.username} className="w-10 h-10 rounded-full" />
                                     <Image src={result.photoURL} alt={result.username} width={40} height={40} className="rounded-full" />
                                 ) : (
                                     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
@@ -195,11 +347,17 @@ export default function FriendSearch() {
                                 </div>
                             </div>
                             <button
-                                className={`btn btn-primary btn-sm ${isSending[result.uid] ? 'loading' : ''}`}
+                                className={`btn ${selectedRelationshipType === 'coparent' ? 'btn-secondary' : 'btn-primary'} btn-sm ${isSending[result.uid] ? 'loading' : ''}`}
                                 onClick={() => sendFriendRequest(result)}
-                                disabled={isSending[result.uid]}
+                                disabled={isSending[result.uid] || (selectedRelationshipType === 'coparent' && selectedChildren.length === 0)}
+                                title={selectedRelationshipType === 'coparent' && selectedChildren.length === 0 ? 'Selecione pelo menos uma criança' : ''}
                             >
-                                {isSending[result.uid] ? 'Enviando...' : 'Adicionar'}
+                                {isSending[result.uid] 
+                                    ? 'Enviando...' 
+                                    : selectedRelationshipType === 'coparent' 
+                                        ? 'Add Co-Parent' 
+                                        : 'Adicionar'
+                                }
                             </button>
                         </div>
                     ))}

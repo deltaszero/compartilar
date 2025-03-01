@@ -1,6 +1,8 @@
 // types/friendship.types.ts
 import { Timestamp } from 'firebase/firestore';
 
+export type RelationshipType = 'coparent' | 'support' | 'other';
+
 export interface FriendshipRequest {
     id: string;
     senderId: string;
@@ -14,6 +16,8 @@ export interface FriendshipRequest {
     receiverFirstName?: string;
     receiverLastName?: string;
     status: 'pending' | 'accepted' | 'declined';
+    relationshipType: RelationshipType;
+    sharedChildren?: string[]; // Array of child IDs (for coparent relationship)
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
@@ -24,15 +28,19 @@ export interface Friend {
     photoURL?: string;
     firstName?: string;
     lastName?: string;
+    relationshipType: RelationshipType;
+    sharedChildren?: string[]; // Array of child IDs (for coparent relationship)
 }
 
 export interface FriendListItem {
     id: string;
     username: string;
     photoURL?: string;
-    addedAt: Timestamp;  // Changed from Date to Timestamp
+    addedAt: Timestamp;
     firstName?: string;
     lastName?: string;
+    relationshipType: RelationshipType;
+    sharedChildren?: string[]; // Array of child IDs (for coparent relationship)
 }
 
 export type FriendshipStatus = 'pending' | 'accepted' | 'declined';

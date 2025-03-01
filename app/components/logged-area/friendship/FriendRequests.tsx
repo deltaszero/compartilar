@@ -60,28 +60,56 @@ export default function FriendRequests() {
                 const request = requests.find(req => req.id === requestId);
                 if (!request) return;
     
-                // Add to current user's friends
+                // Add to current user's friends with relationship type and shared children (if applicable)
                 await setDoc(doc(db, 'friends', userData.uid, 'friendsList', request.senderId), {
                     username: request.senderUsername,
                     photoURL: request.senderPhotoURL,
                     addedAt: timestamp,
                     firstName: request.senderFirstName,
-                    lastName: request.senderLastName
+                    lastName: request.senderLastName,
+                    relationshipType: request.relationshipType || 'support',
+                    ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
                 });
     
-                // Add to sender's friends
+                // Add to sender's friends with relationship type and shared children (if applicable)
                 await setDoc(doc(db, 'friends', request.senderId, 'friendsList', userData.uid), {
                     username: userData.username,
                     photoURL: userData.photoURL,
                     addedAt: timestamp,
                     firstName: userData.firstName,
-                    lastName: userData.lastName
+                    lastName: userData.lastName,
+                    relationshipType: request.relationshipType || 'support',
+                    ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
                 });
+                
+                // If this is a coparent relationship with shared children, 
+                // create co-parenting relationship record
+                if (request.relationshipType === 'coparent' && request.sharedChildren && request.sharedChildren.length > 0) {
+                    const coParentingId = `${userData.uid}_${request.senderId}`;
+                    await setDoc(doc(db, 'co_parenting_relationships', coParentingId), {
+                        parent1Id: userData.uid,
+                        parent2Id: request.senderId,
+                        sharedChildren: request.sharedChildren,
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                        status: 'active'
+                    });
+                    
+                    // Success message specific to co-parenting
+                    toast.success('Co-parenting relationship established');
+                }
             }
     
             // Remove the request from the list
             setRequests(prev => prev.filter(req => req.id !== requestId));
-            toast.success(`Friend request ${status}`);
+            
+            // Show appropriate success message based on relationship type
+            const request = requests.find(req => req.id === requestId);
+            if (status === 'accepted' && request?.relationshipType === 'coparent') {
+                toast.success('Co-parent added successfully');
+            } else {
+                toast.success(`Friend request ${status}`);
+            }
         } catch (error) {
             console.error(`Error ${status} friend request:`, error);
             toast.error(`Failed to ${status} friend request`);
@@ -94,14 +122,15 @@ export default function FriendRequests() {
 
     return (
         <section className="container mx-auto">
+            <h2 className="text-lg font-semibold mb-2">Solicitações Pendentes</h2>
             {requests.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                     Sem pedidos de amizade pendentes
                 </div>
             ) : (
-                <div>
+                <div className="space-y-4">
                     {requests.map((request) => (
-                        <div key={request.id} className="flex flex-row w-full items-center justify-between bg-base-300 rounded-lg p-2">
+                        <div key={request.id} className="flex flex-col sm:flex-row w-full items-center justify-between bg-base-200 rounded-lg p-4 gap-4">
                             <div className="flex items-center gap-4">
                                 {request.senderPhotoURL ? (
                                     <Image src={request.senderPhotoURL} alt={request.senderUsername} width={64} height={64} className="rounded-full" />
@@ -114,11 +143,36 @@ export default function FriendRequests() {
                                 )}
                                 <div>
                                     <h3 className="font-medium">{request.senderUsername}</h3>
+                                    {request.senderFirstName && request.senderLastName && (
+                                        <p className="text-sm text-gray-600">
+                                            {request.senderFirstName} {request.senderLastName}
+                                        </p>
+                                    )}
+                                    
+                                    {/* Relationship Type Badge */}
+                                    <div className="mt-1">
+                                        {request.relationshipType === 'coparent' && (
+                                            <span className="badge badge-secondary">Co-Parental</span>
+                                        )}
+                                        {request.relationshipType === 'support' && (
+                                            <span className="badge badge-primary">Rede de Apoio</span>
+                                        )}
+                                        {request.relationshipType === 'other' && (
+                                            <span className="badge badge-neutral">Outro</span>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Shared Children (if co-parent) */}
+                                    {request.relationshipType === 'coparent' && request.sharedChildren && request.sharedChildren.length > 0 && (
+                                        <div className="mt-2 text-xs">
+                                            <span>Crianças compartilhadas: {request.sharedChildren.length}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex sm:flex-col items-center sm:items-end gap-2">
                                 <button
-                                    className="btn btn-primary btn-sm"
+                                    className={`btn ${request.relationshipType === 'coparent' ? 'btn-secondary' : 'btn-primary'} btn-sm`}
                                     onClick={() => handleRequest(request.id, 'accepted')}
                                 >
                                     Aceitar

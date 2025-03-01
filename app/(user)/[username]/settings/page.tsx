@@ -88,6 +88,11 @@ export default function SettingsPage() {
                 }
                 // handle photo upload
                 if (photoFile) {
+                    // Check if we have access to storage (client-side only)
+                    if (typeof window === 'undefined' || !storage) {
+                        throw new Error('Upload de fotos só é possível no navegador.');
+                    }
+                    
                     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
                     if (!photoFile.type.startsWith('image/')) {
                         throw new Error('Por favor, selecione um arquivo de imagem válido.');

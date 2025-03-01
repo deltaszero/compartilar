@@ -44,7 +44,7 @@ const BottomNav = () => {
             icon: <IconHouse width={24} height={24} />
         },
         {
-            path: `/${userData.username}`,
+            path: `/${userData.username}/perfil`,
             label: 'Perfil',
             icon: <IconUser width={24} height={24} />
         },
