@@ -2,18 +2,36 @@
 // react
 import React from 'react';
 // next
-import Image from 'next/image';
+// import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // firebase
 import { signOut } from 'firebase/auth';
 // custom
-import NavLink from '@/app/components/utils/NavLink';
+// import NavLink from '@/app/components/utils/NavLink';
 import { auth } from '@lib/firebaseConfig';
 import { useUser } from '@context/userContext';
+// shadcn components
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { NavigationMenu,
+//   NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+//   NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 // assets
-// import HomeIcon from '@assets/icons/compartilar-typologo.min.svg';
-import CameraIcon from '@assets/icons/camera.svg';
-import LoginIcon from '@assets/icons/login.svg';
+import { Menu, LogIn, Camera } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * navItems is an array of objects containing the label and href of each navigation item.
@@ -26,51 +44,58 @@ const navItems = [
 ];
 
 /**
- * Logo is a component that renders the CompartiLar logo.
- */
-// const Logo = () => (
-//     <div className="flex items-center gap-2">
-//         <HomeIcon width={300} />
-//         <a href="/" className="text-xl rounded-md p-0">
-//             {/* <h1 className="text-3xl font-nunito font-bold uppercase">
-//                 CompartiLar
-//             </h1> */}
-//         </a>
-//     </div>
-// );
-
-/**
  * MobileNav is a component that renders the mobile navigation menu.
  */
 const MobileNav = () => (
-    <div className="dropdown lg:hidden">
-        <div tabIndex={0} role="button" className="btn btn-ghost">
-            <div className="flex flex-row items-center gap-2">
-                {/* <HomeIcon width={32} height={32} /> */}
-                <h1 className="text-2xl font-nunito font-black uppercase">CompartiLar</h1>
-            </div>
+  <Sheet>
+    <SheetTrigger asChild>
+      <Button variant="ghost" className="lg:hidden px-2">
+        <div className="flex flex-row items-center gap-2">
+          <Menu className="h-5 w-5" />
+          <h1 className="text-2xl font-nunito font-black uppercase">CompartiLar</h1>
         </div>
-        <ul className="menu menu-sm dropdown-content rounded-md z-[1] mt-3 w-52 p-2 shadow bg-base-100">
-            {navItems.map((item) => (
-                <li key={item.label}>
-                    <NavLink href={item.href}>{item.label}</NavLink>
-                </li>
-            ))}
-        </ul>
-    </div>
+      </Button>
+    </SheetTrigger>
+    <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+      <div className="flex flex-col gap-4 mt-8">
+        <h1 className="text-2xl font-nunito font-black uppercase">CompartiLar</h1>
+        <nav className="flex flex-col gap-2">
+          {navItems.map((item) => (
+            <Link 
+              key={item.label} 
+              href={item.href}
+              className="px-2 py-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </SheetContent>
+  </Sheet>
 );
 
 /**
  * DesktopNav is a component that renders the desktop navigation menu.
  */
 const DesktopNav = () => (
-    <ul className="menu menu-horizontal px-1 [&_li>*]:rounded-md">
-        {navItems.map((item) => (
-            <li key={item.label}>
-                <NavLink href={item.href}>{item.label}</NavLink>
-            </li>
-        ))}
-    </ul>
+  <NavigationMenu className="hidden lg:flex">
+    <NavigationMenuList>
+      {navItems.map((item) => (
+        <NavigationMenuItem key={item.label}>
+          <Link href={item.href} legacyBehavior passHref>
+            <NavigationMenuLink className={cn(
+              "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+            )}>
+              {item.label}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+      ))}
+    </NavigationMenuList>
+  </NavigationMenu>
 );
 
 /**
@@ -80,51 +105,51 @@ const UserMenu = ({ userData, onSignOut }: {
     userData: { username: string; photoURL?: string },
     onSignOut: () => void
 }) => (
-    <div className="flex items-center gap-2 z-50 text-neutral">
-        {/* username */}
-        <NavLink href={`/${userData.username}/home`}>
-            <span className="hidden sm:block text-lg">{userData.username}</span>
-        </NavLink>
-        <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="hover:cursor-pointer">
-                {/* profile photo */}
-                <div className="avatar">
-                    {userData.photoURL ? (
-                        <div className="mask mask-squircle">
-                            <Image
-                                src={userData.photoURL}
-                                width={34}
-                                height={34}
-                                alt="Avatar"
-                                className="object-cover"
-                            />
-                        </div>
-                    ) : (
-                        <CameraIcon width={34} height={34} />
-                    )}
-                </div>
-            </label>
-            {/* menul */}
-            <ul className="menu menu-sm dropdown-content mt-3 p-2 shadow rounded-md w-52 bg-base-100 text-neutral">
-                <li><NavLink href={`/${userData.username}/home`}>Perfil</NavLink></li>
-                <li><NavLink href={`/${userData.username}/settings`}>Configurações</NavLink></li>
-                <li><button onClick={onSignOut}>Sair</button></li>
-            </ul>
-        </div>
-    </div>
+  <div className="flex items-center gap-2 z-50">
+    {/* username */}
+    <Link href={`/${userData.username}/home`} className="hidden sm:block text-lg">
+      {userData.username}
+    </Link>
+    
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+          <Avatar className="h-9 w-9">
+            {userData.photoURL ? (
+              <AvatarImage src={userData.photoURL} alt="Avatar" />
+            ) : (
+              <AvatarFallback>
+                <Camera className="h-5 w-5" />
+              </AvatarFallback>
+            )}
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem asChild>
+          <Link href={`/${userData.username}/home`}>Perfil</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/${userData.username}/settings`}>Configurações</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onSignOut}>
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
 );
 
 /**
  * LoginButton is a component that renders the login button.
  */
 const LoginButton = () => (
-    <a
-        href="/login"
-        className="btn bg-neutral text-neutral-content rounded-md font-nunito font-bold gap-2 hover:text-neutral"
-    >
-        <span>Entrar</span>
-        <LoginIcon width={16} height={16} />
-    </a>
+  <Button asChild variant="default">
+    <Link href="/login" className="font-nunito font-bold gap-2">
+      <span>Entrar</span>
+      <LogIn className="h-4 w-4 ml-2" />
+    </Link>
+  </Button>
 );
 
 /**
@@ -144,22 +169,19 @@ const Header = () => {
     };
 
     return (
-        <header className="navbar bg-base-200 text-purpleShade01 lg:fixed lg:inset-x-0 lg:top-0 sm:px-6 z-[9999]">
-            <div className="navbar-start">
+        <header className="flex items-center justify-between bg-muted py-4 px-4 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[9999]">
+            <div className="flex items-center">
                 <MobileNav />
                 <div className="hidden lg:block">
-                    {/* <Logo /> */}
                     <h1 className="text-2xl font-nunito font-bold uppercase">CompartiLar</h1>
                 </div>
             </div>
 
-            <div className="navbar-end">
-                <div className="hidden lg:block">
-                    <DesktopNav />
-                </div>
+            <div className="flex items-center gap-4">
+                <DesktopNav />
                 <div className="mx-2"></div>
                 {loading ? (
-                    <div className="skeleton h-8 w-32 rounded-md" />
+                    <Skeleton className="h-8 w-32 rounded-md" />
                 ) : user && userData ? (
                     <UserMenu userData={userData} onSignOut={handleSignOut} />
                 ) : (

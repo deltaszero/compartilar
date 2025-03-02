@@ -1,0 +1,686 @@
+    const { userData, loading } = useUser();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { username } = useParams();
+
+    // State hooks
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [costGroups, setCostGroups] = useState<CostGroup[]>([]);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [balances, setBalances] = useState<Balance[]>([]);
+    
+    const [isAddingExpense, setIsAddingExpense] = useState(false);
+    const [newExpenseDescription, setNewExpenseDescription] = useState('');
+    const [newExpenseAmount, setNewExpenseAmount] = useState('');
+    const [newExpensePaidBy, setNewExpensePaidBy] = useState('');
+    const [newExpenseCategory, setNewExpenseCategory] = useState('');
+    const [newExpenseDate, setNewExpenseDate] = useState(
+        new Date().toISOString().split('T')[0]
+    );
+    
+    const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+    const [expenseMembers, setExpenseMembers] = useState<ExpenseMember[]>([]);
+    const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+    const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>('30d');
+    
+    const [splitMethod, setSplitMethod] = useState<SplitMethod>('equal');
+
+    // Load friends and cost groups
+    useEffect(() => {
+        if (userData) {
+            loadFriends();
+            loadCostGroups();
+        }
+    }, [userData]);
+
+    // Load expenses when a group is selected
+    useEffect(() => {
+        if (selectedGroup) {
+            loadExpenses(selectedGroup);
+        }
+    }, [selectedGroup]);
+    
+    const loadFriends = async () => {
+        if (!userData) return;
+        
+        try {
+            const friendsQuery = query(
+                collection(db, 'friendships'),
+                where('users', 'array-contains', userData.uid),
+                where('status', '==', 'accepted')
+            );
+            
+            const snapshot = await getDocs(friendsQuery);
+            const friendshipsData = snapshot.docs.map(doc => doc.data());
+            
+            const friendsPromises = friendshipsData.map(async (friendship) => {
+                const friendId = friendship.users.find((id: string) => id !== userData.uid);
+                const userDoc = await getDocs(
+                    query(collection(db, 'users'), where('uid', '==', friendId))
+                );
+                
+                if (!userDoc.empty) {
+                    const friendData = userDoc.docs[0].data();
+                    return {
+                        uid: friendData.uid,
+                        firstName: friendData.firstName,
+                        lastName: friendData.lastName,
+                        username: friendData.username,
+                        email: friendData.email,
+                        photoURL: friendData.photoURL
+                    };
+                }
+                return null;
+            });
+            
+            const friendsList = (await Promise.all(friendsPromises)).filter(Boolean) as Friend[];
+            setFriends(friendsList);
+        } catch (error) {
+            console.error('Error loading friends:', error);
+            toast.error('Erro ao carregar amigos');
+        }
+    };
+    
+    const loadCostGroups = async () => {
+        if (!userData) return;
+        setIsLoadingGroups(true);
+        
+        try {
+            const groupsQuery = query(
+                collection(db, 'cost_groups'),
+                where('members', 'array-contains', userData.uid)
+            );
+            
+            const snapshot = await getDocs(groupsQuery);
+            const groupsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as CostGroup[];
+            
+            setCostGroups(groupsData);
+        } catch (error) {
+            console.error('Error loading cost groups:', error);
+            toast.error('Erro ao carregar grupos');
+        } finally {
+            setIsLoadingGroups(false);
+        }
+    };
+    
+    const loadExpenses = async (groupId: string) => {
+        if (!userData) return;
+        setIsLoadingExpenses(true);
+        
+        try {
+            const expensesQuery = query(
+                collection(db, 'expenses'),
+                where('groupId', '==', groupId)
+            );
+            
+            const snapshot = await getDocs(expensesQuery);
+            const expensesData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Expense[];
+            
+            setExpenses(expensesData);
+            calculateBalances(expensesData);
+        } catch (error) {
+            console.error('Error loading expenses:', error);
+            toast.error('Erro ao carregar despesas');
+        } finally {
+            setIsLoadingExpenses(false);
+        }
+    };
+    
+    const calculateBalances = (expensesData: Expense[]) => {
+        if (!userData || !selectedGroup) return;
+        
+        const group = costGroups.find(g => g.id === selectedGroup);
+        if (!group) return;
+        
+        // Initialize balances for all members
+        const balanceMap: Record<string, { name: string; photoURL?: string; balance: number }> = {};
+        
+        // Add current user
+        balanceMap[userData.uid] = {
+            name: `${userData.firstName} ${userData.lastName}`,
+            photoURL: userData.photoURL,
+            balance: 0
+        };
+        
+        // Add friends who are in the group
+        friends.forEach(friend => {
+            if (group.members.includes(friend.uid)) {
+                balanceMap[friend.uid] = {
+                    name: `${friend.firstName} ${friend.lastName}`,
+                    photoURL: friend.photoURL,
+                    balance: 0
+                };
+            }
+        });
+        
+        // Calculate expenses
+        expensesData.forEach(expense => {
+            // Person who paid gets credit
+            if (balanceMap[expense.paidBy]) {
+                balanceMap[expense.paidBy].balance += expense.amount;
+            }
+            
+            // Each person owes their share
+            expense.members.forEach(member => {
+                if (balanceMap[member.uid]) {
+                    let amountOwed = 0;
+                    
+                    if (member.splitType === 'equal') {
+                        amountOwed = expense.amount / expense.members.length;
+                    } else if (member.splitType === 'percentage') {
+                        amountOwed = (expense.amount * member.splitValue) / 100;
+                    } else if (member.splitType === 'fixed') {
+                        amountOwed = member.splitValue;
+                    }
+                    
+                    balanceMap[member.uid].balance -= amountOwed;
+                }
+            });
+        });
+        
+        // Convert to array
+        const balancesArray = Object.keys(balanceMap).map(uid => ({
+            uid,
+            name: balanceMap[uid].name,
+            photoURL: balanceMap[uid].photoURL,
+            balance: parseFloat(balanceMap[uid].balance.toFixed(2))
+        }));
+        
+        setBalances(balancesArray);
+    };
+    
+    const handleCreateGroup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!userData) {
+            toast.error('Você precisa estar logado');
+            return;
+        }
+        
+        if (!newGroupName.trim()) {
+            toast.error('Nome do grupo é obrigatório');
+            return;
+        }
+        
+        if (newGroupMembers.length === 0) {
+            toast.error('Adicione pelo menos um membro ao grupo');
+            return;
+        }
+        
+        try {
+            // Make sure the creator is in the members list
+            const members = [userData.uid, ...newGroupMembers];
+            
+            const now = Timestamp.now();
+            const _groupRef = await addDoc(collection(db, 'cost_groups'), {
+                name: newGroupName,
+                description: newGroupDescription,
+                createdBy: userData.uid,
+                members,
+                createdAt: now,
+                updatedAt: now
+            });
+            
+            toast.success('Grupo criado com sucesso!');
+            
+            // Reset form
+            setNewGroupName('');
+            setNewGroupDescription('');
+            setNewGroupMembers([]);
+            setIsAddingGroup(false);
+            
+            // Reload groups
+            loadCostGroups();
+        } catch (error) {
+            console.error('Error creating group:', error);
+            toast.error('Erro ao criar grupo');
+        }
+    };
+    
+    const handleCreateExpense = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!userData || !selectedGroup) {
+            toast.error('Selecione um grupo primeiro');
+            return;
+        }
+        
+        if (!newExpenseDescription.trim()) {
+            toast.error('Descrição é obrigatória');
+            return;
+        }
+        
+        if (!newExpenseAmount || parseFloat(newExpenseAmount) <= 0) {
+            toast.error('Valor deve ser maior que zero');
+            return;
+        }
+        
+        if (!newExpensePaidBy) {
+            toast.error('Selecione quem pagou');
+            return;
+        }
+        
+        if (!newExpenseCategory) {
+            toast.error('Selecione uma categoria');
+            return;
+        }
+        
+        // Validate split values
+        if (splitMethod === 'percentage') {
+            const totalPercentage = expenseMembers.reduce((sum, member) => sum + member.splitValue, 0);
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+                toast.error('O total das porcentagens deve ser 100%');
+                return;
+            }
+        } else if (splitMethod === 'fixed') {
+            const totalFixed = expenseMembers.reduce((sum, member) => sum + member.splitValue, 0);
+            const totalAmount = parseFloat(newExpenseAmount);
+            if (Math.abs(totalFixed - totalAmount) > 0.01) {
+                toast.error(`O total dos valores fixos deve ser igual ao valor total (${totalAmount})`);
+                return;
+            }
+        }
+        
+        try {
+            const amount = parseFloat(newExpenseAmount);
+            const now = Timestamp.now();
+            const expenseDate = new Date(newExpenseDate);
+            
+            await addDoc(collection(db, 'expenses'), {
+                groupId: selectedGroup,
+                description: newExpenseDescription,
+                amount,
+                paidBy: newExpensePaidBy,
+                category: newExpenseCategory,
+                date: Timestamp.fromDate(expenseDate),
+                members: expenseMembers,
+                createdAt: now,
+                updatedAt: now
+            });
+            
+            toast.success('Despesa criada com sucesso!');
+            
+            // Reset form
+            setNewExpenseDescription('');
+            setNewExpenseAmount('');
+            setNewExpenseCategory('');
+            setNewExpenseDate(new Date().toISOString().split('T')[0]);
+            setIsAddingExpense(false);
+            
+            // Reload expenses
+            loadExpenses(selectedGroup);
+        } catch (error) {
+            console.error('Error creating expense:', error);
+            toast.error('Erro ao criar despesa');
+        }
+    };
+    
+    const handleDeleteExpense = async (expenseId: string) => {
+        if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
+        
+        try {
+            // Find the expense to check permissions
+            const expense = expenses.find(e => e.id === expenseId);
+            
+            if (!expense) {
+                toast.error('Despesa não encontrada');
+                return;
+            }
+            
+            if (!userData) {
+                toast.error('Usuário não autenticado');
+                return;
+            }
+
+            // Check if current user paid for the expense or is the group creator
+            const group = costGroups.find(g => g.id === expense.groupId);
+            const isGroupCreator = group && group.createdBy === userData.uid;
+            const isPayer = expense.paidBy === userData.uid;
+            
+            if (!isGroupCreator && !isPayer) {
+                toast.error('Você só pode excluir despesas que você pagou ou se for o criador do grupo');
+                return;
+            }
+            
+            await deleteDoc(doc(db, 'expenses', expenseId));
+            toast.success('Despesa excluída com sucesso!');
+            
+            // Reload expenses
+            if (selectedGroup) {
+                loadExpenses(selectedGroup);
+            }
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+            toast.error('Erro ao excluir despesa. Verifique se você tem permissão para esta ação.');
+        }
+    };
+    
+    const handleDeleteGroup = async (groupId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este grupo? Todas as despesas serão perdidas.')) return;
+        
+        try {
+            // Check if the current user is the creator of the group
+            const group = costGroups.find(g => g.id === groupId);
+            
+            if (!group) {
+                toast.error('Grupo não encontrado');
+                return;
+            }
+            
+            // Check if the current user is the creator of the group
+            if (!userData || group.createdBy !== userData.uid) {
+                toast.error('Você não tem permissão para excluir este grupo. Apenas o criador pode excluí-lo.');
+                return;
+            }
+            
+            // Delete the group
+            await deleteDoc(doc(db, 'cost_groups', groupId));
+            
+            // Get all expenses in this group
+            const expensesQuery = query(
+                collection(db, 'expenses'),
+                where('groupId', '==', groupId)
+            );
+            
+            const snapshot = await getDocs(expensesQuery);
+            
+            // Delete each expense one by one to avoid permission issues
+            for (const docSnap of snapshot.docs) {
+                try {
+                    await deleteDoc(docSnap.ref);
+                } catch (err) {
+                    console.error(`Could not delete expense ${docSnap.id}:`, err);
+                    // Continue with other deletions even if one fails
+                }
+            }
+            
+            toast.success('Grupo excluído com sucesso!');
+            
+            // Reset selected group if it was deleted
+            if (selectedGroup === groupId) {
+                setSelectedGroup(null);
+                setExpenses([]);
+                setBalances([]);
+            }
+            
+            // Reload groups
+            loadCostGroups();
+        } catch (error) {
+            console.error('Error deleting group:', error);
+            toast.error('Erro ao excluir grupo. Verifique se você tem permissão para esta ação.');
+        }
+    };
+    
+    // When adding a new expense, initialize members list
+    useEffect(() => {
+        if (isAddingExpense && selectedGroup) {
+            resetSplitPercentages();
+        }
+    }, [isAddingExpense, selectedGroup, splitMethod]);
+    
+    // When adding an expense, set the logged user as the one who paid
+    useEffect(() => {
+        if (isAddingExpense && userData) {
+            setNewExpensePaidBy(userData.uid);
+        }
+    }, [isAddingExpense, userData]);
+    
+    const resetSplitPercentages = () => {
+        if (!selectedGroup) return;
+        
+        const group = costGroups.find(g => g.id === selectedGroup);
+        if (!group) return;
+        
+        // Get all members of the group
+        const members: ExpenseMember[] = [];
+        
+        // Add current user
+        if (userData && group.members.includes(userData.uid)) {
+            members.push({
+                uid: userData.uid,
+                name: `${userData.firstName} ${userData.lastName}`,
+                splitType: splitMethod,
+                splitValue: splitMethod === 'equal' ? 0 : splitMethod === 'percentage' ? 0 : 0
+            });
+        }
+        
+        // Add friends who are in the group
+        friends.forEach(friend => {
+            if (group.members.includes(friend.uid)) {
+                members.push({
+                    uid: friend.uid,
+                    name: `${friend.firstName} ${friend.lastName}`,
+                    photoURL: friend.photoURL,
+                    splitType: splitMethod,
+                    splitValue: splitMethod === 'equal' ? 0 : splitMethod === 'percentage' ? 0 : 0
+                });
+            }
+        });
+        
+        // Calculate default split values
+        if (splitMethod === 'equal') {
+            // All equal - the actual calculation happens at payment time
+            members.forEach(member => {
+                member.splitValue = 0; // Will be calculated on display
+            });
+        } else if (splitMethod === 'percentage') {
+            // Default to equal percentages
+            const equalPercentage = 100 / members.length;
+            members.forEach(member => {
+                member.splitValue = parseFloat(equalPercentage.toFixed(2));
+            });
+            
+            // Adjust last member to ensure 100%
+            const totalPercentage = members.reduce((sum, member) => sum + member.splitValue, 0);
+            if (members.length > 0) {
+                members[members.length - 1].splitValue += (100 - totalPercentage);
+            }
+        } else if (splitMethod === 'fixed') {
+            // Default to equal fixed amounts
+            const amount = parseFloat(newExpenseAmount || '0');
+            const equalAmount = amount / members.length;
+            members.forEach(member => {
+                member.splitValue = parseFloat(equalAmount.toFixed(2));
+            });
+            
+            // Adjust last member to ensure total equals amount
+            const totalFixed = members.reduce((sum, member) => sum + member.splitValue, 0);
+            if (members.length > 0 && amount > 0) {
+                members[members.length - 1].splitValue += (amount - totalFixed);
+            }
+        }
+        
+        setExpenseMembers(members);
+    };
+    
+    const updateMemberSplit = (uid: string, value: number) => {
+        setExpenseMembers(prev => 
+            prev.map(member => 
+                member.uid === uid 
+                    ? { ...member, splitValue: value }
+                    : member
+            )
+        );
+    };
+    
+    // Filter expenses by date period
+    const filteredExpenses = expenses.filter(expense => {
+        if (selectedPeriod === 'all') return true;
+        
+        const expenseDate = expense.date.toDate();
+        const now = new Date();
+        
+        if (selectedPeriod === '7d') {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return expenseDate >= sevenDaysAgo;
+        } else if (selectedPeriod === '30d') {
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return expenseDate >= thirtyDaysAgo;
+        } else if (selectedPeriod === '90d') {
+            const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return expenseDate >= ninetyDaysAgo;
+        }
+        
+        return true;
+    });
+    
+    // Prepare chart data - expenses by category
+    const categoryExpenses = EXPENSE_CATEGORIES.map(category => {
+        const total = filteredExpenses
+            .filter(expense => expense.category === category)
+            .reduce((sum, expense) => sum + expense.amount, 0);
+        return { category, total };
+    }).filter(item => item.total > 0);
+    
+    const chartData: ChartData<'pie'> = {
+        labels: categoryExpenses.map(item => item.category),
+        datasets: [
+            {
+                data: categoryExpenses.map(item => item.total),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#22CFCF', '#FF6B6B', '#7C7CFF'
+                ]
+            }
+        ]
+    };
+    
+    const chartOptions: ChartOptions<'pie'> = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    };
+    
+    // Prepare chart data - expenses by date
+    const dateExpenses: Record<string, number> = {};
+    
+    filteredExpenses.forEach(expense => {
+        const date = expense.date.toDate().toISOString().slice(0, 10);
+        dateExpenses[date] = (dateExpenses[date] || 0) + expense.amount;
+    });
+    
+    const sortedDates = Object.keys(dateExpenses).sort();
+    
+    const barChartData: ChartData<'bar'> = {
+        labels: sortedDates.map(date => {
+            const [_year, month, day] = date.split('-');
+            return `${day}/${month}`;
+        }),
+        datasets: [
+            {
+                label: 'Despesas por Dia',
+                data: sortedDates.map(date => dateExpenses[date]),
+                backgroundColor: '#4BC0C0'
+            }
+        ]
+    };
+    
+    const barChartOptions: ChartOptions<'bar'> = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top'
+            },
+            title: {
+                display: true,
+                text: 'Despesas por Dia'
+            }
+        }
+    };
+    
+    // Handler for creating a new cost group
+    const handleCreateGroup = async (name: string, description: string, members: string[]) => {
+        if (!userData) {
+            toast.error('Você precisa estar logado');
+            return;
+        }
+        
+        if (!name.trim()) {
+            toast.error('Nome do grupo é obrigatório');
+            return;
+        }
+        
+        if (members.length === 0) {
+            toast.error('Adicione pelo menos um membro ao grupo');
+            return;
+        }
+        
+        try {
+            // Make sure the creator is in the members list
+            const allMembers = [userData.uid, ...members];
+            
+            const now = Timestamp.now();
+            const _groupRef = await addDoc(collection(db, 'cost_groups'), {
+                name,
+                description,
+                createdBy: userData.uid,
+                members: allMembers,
+                createdAt: now,
+                updatedAt: now
+            });
+            
+            toast.success('Grupo criado com sucesso!');
+            
+            // Reload groups
+            loadCostGroups();
+        } catch (error) {
+            console.error('Error creating group:', error);
+            toast.error('Erro ao criar grupo');
+            throw error; // Re-throw to let the component know there was an error
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Finanças" />
+                <div className="flex-1 flex items-center justify-center">
+                    <Spinner size="lg" />
+                </div>
+            </div>
+        );
+    }
+    
+    if (!userData) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Finanças" />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle className="h-5 w-5" />
+                        <span>Você precisa estar logado para acessar esta página</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    // Filter expenses by date period
+    const filteredExpenses = expenses.filter(expense => {
+        if (selectedPeriod === 'all') return true;
+        
+        const expenseDate = expense.date.toDate();
+        const now = new Date();
+        
+        if (selectedPeriod === '7d') {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return expenseDate >= sevenDaysAgo;
+        } else if (selectedPeriod === '30d') {
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return expenseDate >= thirtyDaysAgo;
+        } else if (selectedPeriod === '90d') {
+            const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return expenseDate >= ninetyDaysAgo;
+        }
+        
+        return true;
+    });

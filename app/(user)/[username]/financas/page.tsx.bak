@@ -1,0 +1,562 @@
+// app/(user)/[username]/financas/page.tsx
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useUser } from '@context/userContext';
+import { useParams } from 'next/navigation';
+import {
+    collection,
+    addDoc,
+    getDocs,
+    doc,
+    deleteDoc,
+    where,
+    query,
+    Timestamp
+} from 'firebase/firestore';
+import { db } from '@/app/lib/firebaseConfig';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+} from 'chart.js';
+import toast from 'react-hot-toast';
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
+
+// shadcn components
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Spinner } from "@/components/ui/spinner";
+import { AlertCircle, Trash2 } from "lucide-react";
+
+// types import
+import type { Friend, CostGroup, Expense, Balance, ExpenseMember, SplitMethod, PeriodFilter } from './components/types';
+
+// Constant import 
+import { EXPENSE_CATEGORIES } from './components/constants';
+
+// Register ChartJS components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement
+);
+
+// Import components
+import { CostGroupList } from './components/CostGroupList';
+import { ExpenseForm } from './components/ExpenseForm';
+import { ExpenseList } from './components/ExpenseList';
+import { ExpenseAnalytics } from './components/ExpenseAnalytics';
+import { BalanceTable } from './components/BalanceTable';
+import { NoGroupSelected } from './components/NoGroupSelected';
+
+export default function FinancasPage() {
+    return (
+        <div className="flex flex-col min-h-screen pb-20 md:pb-0">
+            <UserProfileBar pathname="Finanças" />
+            
+            <div className="flex-1 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Left Column - Groups */}
+                    <div className="md:col-span-1">
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex justify-between items-center">
+                                    <CardTitle>Grupos de Despesas</CardTitle>
+                                    <Button 
+                                        variant={isAddingGroup ? "outline" : "default"}
+                                        size="sm"
+                                        onClick={() => setIsAddingGroup(!isAddingGroup)}
+                                    >
+                                        {isAddingGroup ? 'Cancelar' : 'Novo Grupo'}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            
+                            <CardContent>
+                                {isAddingGroup && (
+                                    <form onSubmit={handleCreateGroup} className="mt-2 space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="group-name">Nome do Grupo</Label>
+                                            <Input 
+                                                id="group-name"
+                                                type="text" 
+                                                value={newGroupName}
+                                                onChange={e => setNewGroupName(e.target.value)}
+                                                placeholder="Ex: Apartamento, Viagem, etc."
+                                                required
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="group-description">Descrição (opcional)</Label>
+                                            <Textarea 
+                                                id="group-description"
+                                                value={newGroupDescription}
+                                                onChange={e => setNewGroupDescription(e.target.value)}
+                                                placeholder="Descreva o propósito deste grupo"
+                                                className="resize-none"
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="group-members">Membros</Label>
+                                            <Select
+                                                onValueChange={value => {
+                                                    if (value && !newGroupMembers.includes(value)) {
+                                                        setNewGroupMembers([...newGroupMembers, value]);
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger id="group-members">
+                                                    <SelectValue placeholder="Selecione um amigo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {friends.map(friend => (
+                                                        <SelectItem key={friend.uid} value={friend.uid}>
+                                                            {`${friend.firstName} ${friend.lastName}`}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            
+                                            <div className="mt-2 space-y-2">
+                                                {newGroupMembers.map(memberId => {
+                                                    const friend = friends.find(f => f.uid === memberId);
+                                                    return friend ? (
+                                                        <div key={memberId} className="flex justify-between items-center p-2 bg-muted rounded-lg">
+                                                            <span>{`${friend.firstName} ${friend.lastName}`}</span>
+                                                            <Button 
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => setNewGroupMembers(
+                                                                    newGroupMembers.filter(id => id !== memberId)
+                                                                )}
+                                                            >
+                                                                ✕
+                                                            </Button>
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                        
+                                        <Button type="submit" className="w-full mt-4">
+                                            Criar Grupo
+                                        </Button>
+                                    </form>
+                                )}
+                                
+                                {isLoadingGroups ? (
+                                    <div className="flex justify-center py-4">
+                                        <Spinner size="md" />
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 space-y-2">
+                                        {costGroups.length === 0 ? (
+                                            <div className="text-center py-4 text-muted-foreground">
+                                                Você ainda não tem grupos de despesas
+                                            </div>
+                                        ) : (
+                                            costGroups.map(group => (
+                                                <div 
+                                                    key={group.id}
+                                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                                                        selectedGroup === group.id 
+                                                            ? 'bg-primary text-primary-foreground' 
+                                                            : 'bg-muted hover:bg-muted/80'
+                                                    }`}
+                                                    onClick={() => setSelectedGroup(group.id)}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <h3 className="font-semibold">{group.name}</h3>
+                                                        <Button 
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteGroup(group.id);
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    {group.description && (
+                                                        <p className="text-sm mt-1">{group.description}</p>
+                                                    )}
+                                                    <div className="text-xs mt-2">
+                                                        {group.members.length} membros
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Right Column - Expenses */}
+                    <div className="md:col-span-2">
+                        {selectedGroup ? (
+                            <><div className="space-y-4">
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle>Despesas</CardTitle>
+                                        <div className="flex space-x-2">
+                                            <Select
+                                                value={selectedPeriod}
+                                                onValueChange={(value) => setSelectedPeriod(value as any)}
+                                            >
+                                                <SelectTrigger className="w-[180px]">
+                                                    <SelectValue placeholder="Selecione o período" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                                                    <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                                                    <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                                                    <SelectItem value="all">Todos</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Button
+                                                variant={isAddingExpense ? "outline" : "default"}
+                                                size="sm"
+                                                onClick={() => setIsAddingExpense(!isAddingExpense)}
+                                            >
+                                                {isAddingExpense ? 'Cancelar' : 'Nova Despesa'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent>
+                                    {isAddingExpense && (
+                                        <form onSubmit={handleCreateExpense} className="mt-4 space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-description">Descrição</Label>
+                                                    <Input
+                                                        id="expense-description"
+                                                        type="text"
+                                                        value={newExpenseDescription}
+                                                        onChange={e => setNewExpenseDescription(e.target.value)}
+                                                        placeholder="Ex: Supermercado, Aluguel, etc."
+                                                        required />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-amount">Valor (R$)</Label>
+                                                    <Input
+                                                        id="expense-amount"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0.01"
+                                                        value={newExpenseAmount}
+                                                        onChange={e => {
+                                                            setNewExpenseAmount(e.target.value);
+                                                            if (splitMethod === 'fixed') {
+                                                                resetSplitPercentages();
+                                                            }
+                                                        } }
+                                                        placeholder="0.00"
+                                                        required />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-paid-by">Pago por</Label>
+                                                    <Select
+                                                        value={newExpensePaidBy}
+                                                        onValueChange={setNewExpensePaidBy}
+                                                    >
+                                                        <SelectTrigger id="expense-paid-by">
+                                                            <SelectValue placeholder="Selecione quem pagou" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value={userData.uid}>
+                                                                Você ({userData.firstName})
+                                                            </SelectItem>
+                                                            {friends.map(friend => {
+                                                                const group = costGroups.find(g => g.id === selectedGroup);
+                                                                if (group && group.members.includes(friend.uid)) {
+                                                                    return (
+                                                                        <SelectItem key={friend.uid} value={friend.uid}>
+                                                                            {`${friend.firstName} ${friend.lastName}`}
+                                                                        </SelectItem>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-category">Categoria</Label>
+                                                    <Select
+                                                        value={newExpenseCategory}
+                                                        onValueChange={setNewExpenseCategory}
+                                                    >
+                                                        <SelectTrigger id="expense-category">
+                                                            <SelectValue placeholder="Selecione a categoria" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {EXPENSE_CATEGORIES.map(category => (
+                                                                <SelectItem key={category} value={category}>
+                                                                    {category}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-date">Data</Label>
+                                                    <Input
+                                                        id="expense-date"
+                                                        type="date"
+                                                        value={newExpenseDate}
+                                                        onChange={e => setNewExpenseDate(e.target.value)}
+                                                        required />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="expense-split-method">Método de Divisão</Label>
+                                                    <Select
+                                                        value={splitMethod}
+                                                        onValueChange={(value) => setSplitMethod(value as any)}
+                                                    >
+                                                        <SelectTrigger id="expense-split-method">
+                                                            <SelectValue placeholder="Selecione o método" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="equal">Igual para todos</SelectItem>
+                                                            <SelectItem value="percentage">Porcentagens</SelectItem>
+                                                            <SelectItem value="fixed">Valores Fixos</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="my-4" />
+                                            <h3 className="text-base font-medium mb-3">Divisão de Despesas</h3>
+
+                                            <div className="space-y-2">
+                                                {expenseMembers.map(member => (
+                                                    <div key={member.uid} className="flex items-center space-x-2 p-2 bg-muted rounded-lg">
+                                                        <div className="flex-1">
+                                                            {member.uid === userData.uid ? 'Você' : member.name}
+                                                        </div>
+
+                                                        {splitMethod === 'equal' ? (
+                                                            <Badge variant="secondary">
+                                                                {(100 / expenseMembers.length).toFixed(0)}%
+                                                            </Badge>
+                                                        ) : splitMethod === 'percentage' ? (
+                                                            <div className="flex items-center space-x-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    max="100"
+                                                                    className="w-20"
+                                                                    value={member.splitValue}
+                                                                    onChange={e => updateMemberSplit(
+                                                                        member.uid,
+                                                                        parseFloat(e.target.value) || 0
+                                                                    )} />
+                                                                <span>%</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center space-x-2">
+                                                                <span>R$</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    className="w-20"
+                                                                    value={member.splitValue}
+                                                                    onChange={e => updateMemberSplit(
+                                                                        member.uid,
+                                                                        parseFloat(e.target.value) || 0
+                                                                    )} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <Button type="submit" className="w-full mt-6">
+                                                Adicionar Despesa
+                                            </Button>
+                                        </form>
+                                    )}
+
+                                    {isLoadingExpenses ? (
+                                        <div className="flex justify-center py-4">
+                                            <Spinner size="md" />
+                                        </div>
+                                    ) : (
+                                        <div className="mt-4">
+                                            {filteredExpenses.length === 0 ? (
+                                                <div className="text-center py-4 text-muted-foreground">
+                                                    Nenhuma despesa registrada no período selecionado
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Data</TableHead>
+                                                                <TableHead>Descrição</TableHead>
+                                                                <TableHead>Categoria</TableHead>
+                                                                <TableHead>Pago por</TableHead>
+                                                                <TableHead>Valor</TableHead>
+                                                                <TableHead></TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {filteredExpenses.sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime()
+                                                            ).map(expense => (
+                                                                <TableRow key={expense.id}>
+                                                                    <TableCell>{expense.date.toDate().toLocaleDateString()}</TableCell>
+                                                                    <TableCell>{expense.description}</TableCell>
+                                                                    <TableCell>{expense.category}</TableCell>
+                                                                    <TableCell>
+                                                                        {expense.paidBy === userData.uid
+                                                                            ? 'Você'
+                                                                            : friends.find(f => f.uid === expense.paidBy)?.firstName || 'Desconhecido'}
+                                                                    </TableCell>
+                                                                    <TableCell>R$ {expense.amount.toFixed(2)}</TableCell>
+                                                                    <TableCell>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-7 w-7"
+                                                                            onClick={() => handleDeleteExpense(expense.id)}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </></div><Card>
+                                <CardHeader>
+                                    <CardTitle>Análise de Despesas</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                        {filteredExpenses.length === 0 ? (
+                                            <div className="col-span-2 text-center py-4 text-muted-foreground">
+                                                Sem dados suficientes para análise
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="h-64">
+                                                    <h3 className="text-center text-sm font-medium mb-2">Despesas por Categoria</h3>
+                                                    <Pie data={chartData} options={chartOptions} />
+                                                </div>
+
+                                                <div className="h-64">
+                                                    <h3 className="text-center text-sm font-medium mb-2">Despesas por Dia</h3>
+                                                    <Bar data={barChartData} options={barChartOptions} />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card><Card>
+                                <CardHeader>
+                                    <CardTitle>Saldos</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {balances.length === 0 ? (
+                                        <div className="text-center py-4 text-muted-foreground">
+                                            Sem dados para cálculo de saldo
+                                        </div>
+                                    ) : (
+                                        <div className="overflow-x-auto mt-2">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Pessoa</TableHead>
+                                                        <TableHead>Saldo</TableHead>
+                                                        <TableHead>Situação</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {balances.map(balance => (
+                                                        <TableRow key={balance.uid}>
+                                                            <TableCell>{balance.uid === userData.uid ? 'Você' : balance.name}</TableCell>
+                                                            <TableCell
+                                                                className={balance.balance > 0
+                                                                    ? 'text-emerald-600 dark:text-emerald-500'
+                                                                    : balance.balance < 0
+                                                                        ? 'text-red-600 dark:text-red-500'
+                                                                        : ''}
+                                                            >
+                                                                R$ {balance.balance.toFixed(2)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {balance.balance > 0 ? (
+                                                                    <Badge variant="success">A receber</Badge>
+                                                                ) : balance.balance < 0 ? (
+                                                                    <Badge variant="destructive">A pagar</Badge>
+                                                                ) : (
+                                                                    <Badge variant="outline">Neutro</Badge>
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card></>
+                            </div>
+                        ) : (
+                            <Card className="h-full">
+                                <CardContent className="flex flex-col items-center justify-center h-full py-12">
+                                    <h2 className="text-xl font-semibold text-center">
+                                        Selecione um grupo para ver as despesas
+                                    </h2>
+                                    <p className="text-center text-muted-foreground mt-2">
+                                        {costGroups.length === 0 
+                                            ? 'Comece criando um grupo de despesas' 
+                                            : 'Ou crie um novo grupo para começar a registrar despesas'}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

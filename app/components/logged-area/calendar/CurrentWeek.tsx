@@ -7,11 +7,17 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useUser } from '@context/userContext';
-import Image from 'next/image';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, QuerySnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { CalendarEvent } from '@/types/shared.types';
 import toast from 'react-hot-toast';
+
+// shadcn imports
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Add required plugins
 dayjs.extend(weekOfYear);
@@ -34,13 +40,11 @@ interface DayInfo {
 }
 
 interface ModernWeekCalendarProps {
-    events?: CalendarEventWithChild[];
     onDateSelect?: (date: Dayjs) => void;
     selectedDate?: Dayjs;
 }
 
 const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
-    events = [],
     onDateSelect,
     selectedDate,
 }) => {
@@ -82,8 +86,8 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                 const eventsMap = new Map<string, CalendarEventWithChild>();
 
                 // Process results and filter by date range in memory
-                const processSnapshot = (snapshot: any) => {
-                    snapshot.forEach((doc: any) => {
+                const processSnapshot = (snapshot: QuerySnapshot<DocumentData>) => {
+                    snapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
                         if (!eventsMap.has(doc.id)) {
                             const eventData = doc.data() as CalendarEvent;
 
@@ -173,7 +177,7 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
         }
     };
 
-    // Helper functions
+    // Helper functions for event categories
     const getCategoryColor = (category: string) => {
         switch (category) {
             case 'school':
@@ -220,61 +224,57 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
         <div className="font-sans w-full max-w-2xl mx-auto">
             {/* Week Navigation */}
             <div className="flex justify-between items-center mb-6">
-                <button
-                    onClick={prevWeek}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none"
+                <Button 
+                    onClick={prevWeek} 
+                    variant="ghost" 
+                    size="icon"
                     aria-label="Previous week"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M15.75 19.5L8.25 12l7.5-7.5" />
-                    </svg>
-                </button>
+                    <ChevronLeft className="h-5 w-5" />
+                </Button>
 
                 <div className="text-center">
-                    <h2 className="text-lg text-gray-800">
+                    <h2 className="text-lg font-medium">
                         {weekDays.length > 0 ? `${weekDays[0].date.format('MMM D')} - ${weekDays[6].date.format('MMM D, YYYY')}` : ''}
                     </h2>
                 </div>
 
-                <button
-                    onClick={nextWeek}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none"
+                <Button 
+                    onClick={nextWeek} 
+                    variant="ghost" 
+                    size="icon"
                     aria-label="Next week"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                </button>
+                    <ChevronRight className="h-5 w-5" />
+                </Button>
             </div>
 
             {/* Week Days */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 mb-6">
                 {weekDays.map((day, index) => (
-                    <div
+                    <Button
                         key={index}
                         onClick={() => handleDaySelect(day)}
+                        variant="ghost"
                         className={`
-                            flex flex-col items-center p-3 rounded-lg transition-all cursor-pointer
-                            ${day.isToday
-                                ? 'bg-indigo-50 border-indigo-200 border'
-                                : day.isSelected
-                                    ? 'bg-indigo-100 border-indigo-300 border'
-                                    : 'hover:bg-gray-50'}
+                            h-auto flex flex-col items-center py-3 px-1 rounded-lg
+                            ${day.isToday ? 'bg-primary/10 hover:bg-primary/15' : 
+                              day.isSelected ? 'bg-primary/20 hover:bg-primary/25' : ''}
                         `}
                     >
                         {/* Day Name */}
-                        <span className="text-xs text-gray-500 font-medium mb-1">
+                        <span className="text-xs text-muted-foreground font-medium mb-1">
                             {day.dayName[0].toUpperCase()}
                         </span>
 
                         {/* Day Number */}
-                        <span className={
-                            `flex items-center justify-center w-10 h-10 rounded-full mb-1 font-nunito text-2xl font-semibold 
+                        <span className={`
+                            flex items-center justify-center w-8 h-8 rounded-full mb-1 font-medium
                             ${day.isToday
-                                ? 'bg-purpleShade04 text-white'
+                                ? 'bg-primary text-primary-foreground'
                                 : day.isSelected && !day.isToday
-                                    ? 'bg-indigo-400 text-white'
-                                    : 'text-gray-800'
+                                    ? 'bg-primary/50 text-primary-foreground'
+                                    : ''
                             }
                         `}>
                             {day.dayNumber}
@@ -290,98 +290,114 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                                     />
                                 ))}
                                 {day.events.length > 3 && (
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-muted-foreground">
                                         +{day.events.length - 3}
                                     </span>
                                 )}
                             </div>
                         )}
-                    </div>
+                    </Button>
                 ))}
             </div>
 
             {/* Today's Events */}
-            <div className="">
-                <h3 className="text-lg mb-3 font-playfair font-semibold">
-                    Eventos de Hoje {isLoading && <span className="loading loading-spinner loading-xs ml-2"></span>}
+            <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                    Eventos de Hoje 
+                    {isLoading && (
+                        <Skeleton className="h-4 w-4 rounded-full ml-2" />
+                    )}
                 </h3>
+                
                 {todayEvents.length === 0 ? (
-                    <div className="text-sm text-gray-500 p-4 bg-base-200 rounded-lg text-center">
-                        Nenhum evento agendado para hoje
-                    </div>
+                    <Card>
+                        <CardContent className="p-4 text-center text-muted-foreground text-sm">
+                            Nenhum evento agendado para hoje
+                        </CardContent>
+                    </Card>
                 ) : (
                     <div className="space-y-3">
                         {todayEvents.map(event => (
-                            <div key={event.id} className="p-3 bg-base-200 rounded-lg">
-                                <div className="flex items-center mb-1">
-                                    <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
-                                    <h4 className="text-base font-medium flex-1">{event.title}</h4>
-                                    <span className="text-xs font-medium px-2 py-1 rounded bg-purpleShade01 text-purpleShade04">
-                                        {dayjs(event.startTime.toDate()).format('HH:mm')}
-                                    </span>
-                                </div>
-                                {event.description && (
-                                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                                )}
-                                {event.location?.address && (
-                                    <div className="text-xs text-gray-500 mt-1 flex items-center">
-                                        <span className="mr-1">📍</span>
-                                        {event.location.address}
+                            <Card key={event.id}>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center mb-1">
+                                        <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
+                                        <h4 className="text-base font-medium flex-1">{event.title}</h4>
+                                        <Badge variant="outline" className="ml-2">
+                                            {dayjs(event.startTime.toDate()).format('HH:mm')}
+                                        </Badge>
                                     </div>
-                                )}
-                            </div>
+                                    
+                                    {event.description && (
+                                        <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                                    )}
+                                    
+                                    {event.location?.address && (
+                                        <div className="text-xs text-muted-foreground mt-1 flex items-center">
+                                            <span className="mr-1">📍</span>
+                                            {event.location.address}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         ))}
                     </div>
                 )}
             </div>
 
             {/* Upcoming Events */}
-            <div className="mt-2">
-                <h3 className="text-lg mb-3 font-playfair font-semibold">
+            <div>
+                <h3 className="text-lg font-semibold mb-3">
                     Próximos Eventos
                 </h3>
+                
                 {upcomingEvents.length === 0 ? (
-                    <div className="text-sm text-gray-500 p-4 bg-base-200 rounded-lg text-center">
-                        Nenhum evento agendado para os próximos dias
-                    </div>
+                    <Card>
+                        <CardContent className="p-4 text-center text-muted-foreground text-sm">
+                            Nenhum evento agendado para os próximos dias
+                        </CardContent>
+                    </Card>
                 ) : (
-                    <div className="">
+                    <div className="space-y-3">
                         {upcomingEvents.slice(0, 5).map(event => (
-                            <div key={event.id} className="p-3 bg-base-200 rounded-lg">
-                                <div className="flex flex-row items-start">
-                                    {/* category icon */}
-                                    <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
-                                    {/* event info */}
-                                    <div className='flex flex-col flex-1 justify-between'>
-                                        <div className="flex flex-row items-start">
-                                            <h4 className="text-base font-medium flex-1 font-raleway">
-                                                {event.title}
-                                            </h4>
-                                            <div className="text-right">
-                                                <div className="text-xs font-bold">
-                                                    {dayjs(event.startTime.toDate()).format('DD/MM')}
-                                                </div>
-                                                <div className="text-xs">
-                                                    {dayjs(event.startTime.toDate()).format('HH:mm')}
+                            <Card key={event.id}>
+                                <CardContent className="p-4">
+                                    <div className="flex flex-row items-start">
+                                        {/* category icon */}
+                                        <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
+                                        
+                                        {/* event info */}
+                                        <div className='flex flex-col flex-1 justify-between'>
+                                            <div className="flex flex-row items-start">
+                                                <h4 className="text-base font-medium flex-1">
+                                                    {event.title}
+                                                </h4>
+                                                <div className="text-right">
+                                                    <Badge variant="outline" className="ml-2">
+                                                        {dayjs(event.startTime.toDate()).format('DD/MM HH:mm')}
+                                                    </Badge>
                                                 </div>
                                             </div>
-                                        </div>
-                                        {/* description */}
-                                        {event.description && (
-                                            <p className="text-sm text-gray-600 line-clamp-1">
-                                                {event.description}
-                                            </p>
-                                        )}
-                                        {/* location */}
-                                        <div className="text-xs text-gray-500">
-                                            {dayjs(event.startTime.toDate()).fromNow()}
+                                            
+                                            {/* description */}
+                                            {event.description && (
+                                                <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                                                    {event.description}
+                                                </p>
+                                            )}
+                                            
+                                            {/* relative time */}
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                {dayjs(event.startTime.toDate()).fromNow()}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         ))}
+                        
                         {upcomingEvents.length > 5 && (
-                            <div className="text-center text-sm text-purpleShade04 mt-2">
+                            <div className="text-center text-sm text-primary mt-2">
                                 + {upcomingEvents.length - 5} eventos futuros
                             </div>
                         )}

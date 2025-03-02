@@ -3,16 +3,16 @@
 // importing modules
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-// import Image from 'next/image';
+import Link from 'next/link';
 // importing components
-import NavLink from '@/app/components/utils/NavLink';
-// import LoginHeader from "@components/layout/LoginHeader";
 import { useUser } from '@context/userContext';
-// importing assets
-// import premiumImage from "@assets/images/hand_house_vertical_rect_2.jpg";
 import LoginHeader from "@/app/components/LoginHeader";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useWindowSize } from '@/app/hooks/useWindowSize';
+
+// importing assets
 import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
-// import IconInfo from '@assets/icons/icon_meu_lar_info.svg';
 import IconPlan from '@assets/icons/icon_meu_lar_plan.svg';
 import IconCalendar from '@assets/icons/icon_meu_lar_calendar.svg';
 import IconFinance from '@assets/icons/icon_meu_lar_finance.svg';
@@ -35,11 +35,41 @@ const sidebarVariants = {
         }
     }
 };
-const itemVariants = {
-    hidden: { x: -20, opacity: 0 },
+
+// Avoid using x/y transforms when used inside BottomNav
+const mobileVariants = {
+    hidden: { opacity: 0, scale: 0.98 },
     visible: {
-        x: 0,
         opacity: 1,
+        scale: 1,
+        transition: {
+            type: "spring",
+            stiffness: 100,
+            damping: 20,
+            when: "beforeChildren",
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, scale: 0.96 },
+    visible: {
+        opacity: 1,
+        scale: 1,
+        transition: {
+            type: "spring",
+            stiffness: 100,
+            damping: 10
+        }
+    }
+};
+
+const mobileItemVariants = {
+    hidden: { opacity: 0, scale: 0.98 },
+    visible: {
+        opacity: 1,
+        scale: 1,
         transition: {
             type: "spring",
             stiffness: 100,
@@ -57,35 +87,62 @@ interface NavItemProps {
         path: string;
         label: string;
     }>;
+    isMobile?: boolean;
 }
 
-const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) => {
+interface SidebarProps {
+    isBottomNavModal?: boolean;
+}
+
+const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false }: NavItemProps) => {
     const isActive = currentPath === href;
     const hasSubpages = subpages && subpages.length > 0;
-
+    
     return (
-        <div className="mt-6 mx-2">
+        <div className={isMobile ? "mb-3" : "mt-6 mx-4"}>
             {/* Main Menu Item */}
-            <div className="flex flex-row items-center gap-4">
-                <div className={`${isActive ? 'text-purpleShade03' : ''}`}>
+            <Link 
+                href={href}
+                className={cn(
+                    "flex items-center gap-4 px-3 py-2 rounded-md text-sm transition-colors",
+                    isActive 
+                        ? "bg-primary-foreground/10 text-white font-medium" 
+                        : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                )}
+            >
+                <div className={cn(
+                    isActive ? "text-white" : "text-primary-foreground/70"
+                )}>
                     {icon}
                 </div>
-                <NavLink href={href}>
-                    <p className={`text-md hover:text-purpleShade03 ${isActive ? 'text-purpleShade03 font-bold text-lg' : ''}`}>
-                        {children}
-                    </p>
-                </NavLink>
-            </div>
+                <span className={cn(
+                    isMobile ? "text-base" : "text-md",
+                    isActive ? "font-medium" : ""
+                )}>
+                    {children}
+                </span>
+            </Link>
 
             {/* Subpages (always visible if they exist) */}
             {hasSubpages && (
-                <div className="ml-10 mt-1">
+                <div className={cn(
+                    "mt-1 space-y-1",
+                    isMobile ? "ml-8" : "ml-10" 
+                )}>
                     {subpages.map(subpage => (
-                        <NavLink key={subpage.path} href={subpage.path}>
-                            <p className={`pb-1 text-sm font-raleway hover:text-purpleShade03 ${currentPath === subpage.path ? 'text-purpleShade03 text-lg' : ''}`}>
-                                {subpage.label}
-                            </p>
-                        </NavLink>
+                        <Link 
+                            key={subpage.path} 
+                            href={subpage.path}
+                            className={cn(
+                                "block px-3 py-1 rounded-md transition-colors",
+                                isMobile ? "text-sm" : "text-sm",
+                                currentPath === subpage.path 
+                                    ? "text-white bg-primary-foreground/10 font-medium" 
+                                    : "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                            )}
+                        >
+                            {subpage.label}
+                        </Link>
                     ))}
                 </div>
             )}
@@ -93,42 +150,18 @@ const NavItem = ({ href, currentPath, icon, children, subpages }: NavItemProps) 
     );
 };
 
-
-// const PremiumCard = () => (
-//     <div className={`card card-compact shadow-xl mx-8 bg-white text-neutral`}>
-//         <Image
-//             src={premiumImage}
-//             alt="Call to Action Image: Hand holding a house"
-//             className='rounded-t-xl'
-//         />
-//         <div className="card-body flex flex-col gap-2">
-//             <p className="card-title font-Raleway text-md">
-//                 Aprimore Sua Experiência
-//             </p>
-//             <p className="font-Raleway text-sm">
-//                 Consiga acesso a ferramentas avançadas para uma coparentalidade mais fluida e organizada.
-//             </p>
-//             <div className="card-actions justify-end">
-//                 <button className={`btn rounded-lg hover:border-primary bg-primary text-base-100 hover:bg-white hover:text-primary font-raleway`}>
-//                     Ver Planos
-//                 </button>
-//             </div>
-//         </div>
-//     </div>
-// );
-
-export default function Sidebar() {
+export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
     const { userData, loading } = useUser();
     const pathname = usePathname();
+    const { width } = useWindowSize();
+    const isMobile = isBottomNavModal || (width ? width < 768 : false);
 
     // If userData is not available yet, don't try to construct nav items with undefined values
     const navItems = (userData && userData.username) ? [
         {
             path: `/${userData.username}/home`, label: 'Compartilar', icon: <IconMeuLar width={24} height={24} />,
             subpages: [
-                // { path: `/${userData.username}/home`, label: 'Meu Lar' },
                 { path: `/${userData.username}/perfil`, label: 'Perfil' },
-                    // { path: `/${userData.username}/familia`, label: 'Família' },
                 { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
             ]
         },
@@ -146,35 +179,49 @@ export default function Sidebar() {
         { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={24} height={24} /> },
     ] : [];
 
+    // Choose animations based on context - disable animations completely when in BottomNav modal
+    const containerVariants = isBottomNavModal ? {} : (isMobile ? mobileVariants : sidebarVariants);
+    const animationVariants = isBottomNavModal ? {} : (isMobile ? mobileItemVariants : itemVariants);
 
     return (
-        // <div className="flex flex-col justify-between sticky top-0 overflow-y-none pt-3">
-        <nav className="
-                flex flex-col justify-between
-                xl:h-screen overflow-y-none 
-            ">
-            <div className="pt-4">
-                <div className="hidden xl:flex flex-row justify-center items-center space-x-2">
-                    <LoginHeader />
-                </div>
-                {/* menu */}
+        <nav className={cn(
+            "flex flex-col w-full",
+            isMobile ? "py-2" : "h-full"
+        )}>
+            <div className={cn(
+                isMobile ? "px-4" : "pt-6 px-4"
+            )}>
+                {!isMobile && (
+                    <div className="hidden xl:flex flex-row justify-center items-center space-x-2 mb-8">
+                        <LoginHeader />
+                    </div>
+                )}
+                
+                {/* menu - disable animations when in BottomNav modal */}
                 <motion.nav
-                    initial="hidden"
-                    animate="visible"
-                    variants={sidebarVariants}
-                    className="flex flex-col gap-2 xl:my-4"
+                    initial={isBottomNavModal ? false : "hidden"}
+                    animate={isBottomNavModal ? false : "visible"}
+                    variants={containerVariants}
+                    className="flex flex-col gap-1"
                 >
                     {loading ? (
-                        <motion.div variants={itemVariants} className="flex flex-col gap-4 mx-6 my-6">
-                            <div className="skeleton h-8 w-full rounded-md"></div>
-                            <div className="skeleton h-8 w-full rounded-md"></div>
-                            <div className="skeleton h-8 w-full rounded-md"></div>
-                            <div className="skeleton h-8 w-full rounded-md"></div>
-                            <div className="skeleton h-8 w-full rounded-md"></div>
-                            <div className="skeleton h-8 w-full rounded-md"></div>
+                        <motion.div 
+                            variants={isBottomNavModal ? undefined : animationVariants} 
+                            className="flex flex-col gap-4 mx-6 my-6"
+                        >
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
                         </motion.div>
                     ) : (
-                        <motion.div className="flex flex-col" variants={itemVariants}>
+                        <motion.div 
+                            className={cn(
+                                "flex flex-col",
+                                isMobile ? "gap-1 px-2" : ""
+                            )} 
+                            variants={isBottomNavModal ? undefined : animationVariants}
+                        >
                             {navItems.map(
                                 (item) => (
                                     <NavItem
@@ -183,6 +230,7 @@ export default function Sidebar() {
                                         currentPath={pathname}
                                         icon={item.icon}
                                         subpages={item.subpages}
+                                        isMobile={isMobile}
                                     >
                                         {item.label}
                                     </NavItem>
@@ -192,10 +240,6 @@ export default function Sidebar() {
                     )}
                 </motion.nav>
             </div>
-            {/* <div className="divider mx-6"></div>
-            <div>
-                <PremiumCard />
-            </div> */}
         </nav>
     );
 }

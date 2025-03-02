@@ -43,7 +43,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     return (
         <div className="flex flex-col xl:flex-row font-nunito min-h-screen">
             {/* Sidebar (Browser) */}
-            <div className="hidden xl:block w-full xl:w-1/6 bg-neutral text-neutral-content">
+            <div className="hidden xl:block w-full xl:w-1/6 bg-primary text-primary-foreground">
                 <Sidebar />
             </div>
             {/* Content Area */}

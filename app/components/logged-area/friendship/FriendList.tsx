@@ -79,10 +79,10 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
             key={friend.username}
             className="block transition-all hover:scale-[1.02]"
         >
-            <div className="flex items-center space-x-3 p-3 bg-base-200 rounded-lg hover:bg-base-300">
+            <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-base-200 rounded-lg hover:bg-base-300">
                 {friend.photoURL ? (
                     <div className="avatar">
-                        <div className="w-12 h-12 rounded-full">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full">
                             <Image
                                 src={friend.photoURL}
                                 alt={friend.username}
@@ -94,8 +94,8 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                     </div>
                 ) : (
                     <div className="avatar placeholder">
-                        <div className="w-12 h-12 rounded-full bg-neutral text-neutral-content">
-                            <span className="text-xl">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-neutral text-neutral-content">
+                            <span className="text-sm sm:text-xl">
                                 {friend.username[0].toUpperCase()}
                             </span>
                         </div>
@@ -134,17 +134,21 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
     );
 
     return (
-        <div className="w-full max-w-xl mx-auto py-2">
+        <div className="w-full max-w-xl mx-auto">
             {friends.length === 0 ? (
-                <div className="text-center py-4 text-gray-500">
-                    Você ainda não tem amigos adicionados
+                <div className="text-center py-6 flex flex-col items-center gap-2 text-gray-500">
+                    <span className="text-4xl">👥</span>
+                    <p>Você ainda não tem amigos adicionados</p>
                 </div>
             ) : (
                 <>
                     {coparentFriends.length > 0 && (
                         <div className="mb-4">
-                            <h2 className="text-lg font-semibold mb-2">Co-Pais</h2>
-                            <div className="grid gap-3">
+                            <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">
+                                <span className="mr-2 text-secondary">👨‍👩‍👧‍👦</span>
+                                Co-Pais
+                            </h2>
+                            <div className="grid gap-2">
                                 {coparentFriends.map(renderFriendItem)}
                             </div>
                         </div>
@@ -152,8 +156,11 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                     
                     {supportFriends.length > 0 && (
                         <div className="mb-4">
-                            <h2 className="text-lg font-semibold mb-2">Rede de Apoio</h2>
-                            <div className="grid gap-3">
+                            <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">
+                                <span className="mr-2 text-primary">💜</span>
+                                Rede de Apoio
+                            </h2>
+                            <div className="grid gap-2">
                                 {supportFriends.map(renderFriendItem)}
                             </div>
                         </div>
@@ -161,8 +168,11 @@ const FriendList: React.FC<FriendListProps> = ({ userId }) => {
                     
                     {otherFriends.length > 0 && (
                         <div className="mb-4">
-                            <h2 className="text-lg font-semibold mb-2">Outros Contatos</h2>
-                            <div className="grid gap-3">
+                            <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">
+                                <span className="mr-2">👤</span>
+                                Outros Contatos
+                            </h2>
+                            <div className="grid gap-2">
                                 {otherFriends.map(renderFriendItem)}
                             </div>
                         </div>

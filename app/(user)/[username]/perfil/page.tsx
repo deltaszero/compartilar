@@ -1,15 +1,20 @@
 // app/(user)/[username]/perfil/page.tsx
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@context/userContext';
 import LoadingPage from '@/app/components/LoadingPage';
-import CameraIcon from '@assets/icons/camera.svg';
+// import CameraIcon from '@assets/icons/camera.svg';
 import { motion } from 'framer-motion';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 import { checkFriendshipStatus, FriendshipStatus, getUserByUsername } from '@/app/lib/firebaseConfig';
 import toast from 'react-hot-toast';
+
+// shadcn components
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export interface SignupFormData {
     firstName: string;
@@ -24,7 +29,7 @@ export interface SignupFormData {
 
 const UserNotFound = () => (
     <div className="flex flex-1 items-center justify-center">
-        <p className="text-xl text-error uppercase">
+        <p className="text-xl text-destructive uppercase">
             User not found
         </p>
     </div>
@@ -32,10 +37,10 @@ const UserNotFound = () => (
 
 const AccessDenied = () => (
     <div className="flex flex-1 flex-col items-center justify-center p-8 gap-4">
-        <p className="text-xl text-error font-semibold text-center">
+        <p className="text-xl text-destructive font-semibold text-center">
             Acesso Negado
         </p>
-        <p className="text-center text-gray-600">
+        <p className="text-center text-muted-foreground">
             Você precisa ser amigo ou familiar para visualizar este perfil.
         </p>
     </div>
@@ -45,54 +50,60 @@ const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
-const AvatarSection = ({ photoURL }: { photoURL?: string }) => (
+const AvatarSection = ({ photoURL, firstName, lastName }: { photoURL?: string, firstName?: string, lastName?: string }) => (
     <motion.div
-        className="mask mask-squircle bg-gray-100 flex items-center justify-center w-48 h-48"
-        whileHover={{ scale: 1.1 }}
+        className="flex items-center justify-center"
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-        {photoURL ? (
-            <Image
-                src={photoURL}
-                width={256}
-                height={256}
-                alt="User avatar"
-                className="object-cover"
-                priority
-            />
-        ) : (
-            <CameraIcon className="w-12 h-12 text-gray-400" />
-        )}
+        <Avatar className="h-48 w-48 rounded-xl border-2 border-border shadow-md">
+            {photoURL ? (
+                <AvatarImage src={photoURL} alt={`${firstName || 'User'}'s avatar`} />
+            ) : (
+                <AvatarFallback className="bg-muted text-2xl">
+                    {firstName?.charAt(0)}{lastName?.charAt(0)}
+                </AvatarFallback>
+            )}
+        </Avatar>
     </motion.div>
 );
 
 const UserProfileCard = ({ userData, isOwnProfile }: { userData: Partial<SignupFormData>, isOwnProfile: boolean }) => (
-    <div className="flex flex-col items-center justify-center bg-base-100 rounded-3xl shadow-xl mx-auto py-4">
-        <AvatarSection photoURL={userData?.photoURL} />
-        <div className="flex flex-col gap-0 items-center justify-center font-playfair">
-            <div className="text-2xl font-semibold">
+    <Card className="mx-auto w-full max-w-md bg-card shadow-md">
+        <CardHeader className="flex flex-col items-center pb-2">
+            <AvatarSection 
+                photoURL={userData?.photoURL} 
+                firstName={userData.firstName} 
+                lastName={userData.lastName}
+            />
+        </CardHeader>
+        <CardContent className="flex flex-col items-center text-center pt-4">
+            <h2 className="text-2xl font-semibold mb-1">
                 {capitalizeFirstLetter(userData.firstName || '')} {capitalizeFirstLetter(userData.lastName || '')}
-            </div>
-            <div className="text-gray-500 font-raleway">
+            </h2>
+            <p className="text-muted-foreground">
                 @{userData.username}
-            </div>
+            </p>
             {!isOwnProfile && (
-                <div className="mt-4 badge badge-primary">Perfil Visitante</div>
+                <Badge variant="secondary" className="mt-4">
+                    Perfil Visitante
+                </Badge>
             )}
-        </div>
-    </div>
+        </CardContent>
+    </Card>
 );
 
 const RelationshipBadge = ({ status }: { status: FriendshipStatus }) => {
-    const getBadgeClass = () => {
+    const getBadgeVariant = () => {
         switch (status) {
             case 'coparent':
-                return 'badge-secondary';
+                return 'secondary';
             case 'support':
-                return 'badge-primary';
+                return 'info';
             case 'other':
-                return 'badge-neutral';
+                return 'default';
             default:
-                return 'badge-neutral';
+                return 'default';
         }
     };
 
@@ -110,9 +121,9 @@ const RelationshipBadge = ({ status }: { status: FriendshipStatus }) => {
     };
 
     return (
-        <div className={`badge ${getBadgeClass()} gap-2 mt-2`}>
+        <Badge variant={getBadgeVariant() as "default" | "secondary" | "destructive" | "outline" | "info"} className="mt-2">
             {getRelationshipText()}
-        </div>
+        </Badge>
     );
 };
 
@@ -193,8 +204,9 @@ export default function UserProfilePage() {
         <div className="flex flex-col items-start overflow-hidden h-screen">
             {/* NAVBAR */}
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
-            {/* PROFILE BAR */}
-            <div className='w-full p-2'>
+            
+            {/* PROFILE CONTENT */}
+            <div className="w-full p-4 max-w-3xl mx-auto">
                 <UserProfileCard userData={profileData} isOwnProfile={isOwnProfile} />
                 
                 {/* Only show relationship badge for other people's profiles */}
@@ -205,7 +217,7 @@ export default function UserProfilePage() {
                 )}
                 
                 {/* Additional profile sections go here */}
-                <div className="mt-8 px-4">
+                <div className="mt-8">
                     {/* These sections would only appear with editing capabilities on own profile */}
                     {/* For other profiles, they would be view-only */}
                 </div>

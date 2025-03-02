@@ -3,12 +3,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import Analytics, {
     trackEvent,
     AnalyticsEventType,
 } from "@/app/components/Analytics";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+
 // assets
 import hero_img from "@assets/images/compartilar-anthropic-hero.png";
 import feature_img from "@assets/images/compartilar-anthropic-img-01.png";
@@ -160,8 +165,8 @@ export default function Home() {
             <Header />
 
             {/* HERO */}
-            <section className="hero bg-base-200" ref={heroRef}>
-                <div className="hero-content flex-col lg:flex-row-reverse sm:py-24">
+            <section className="bg-muted" ref={heroRef}>
+                <div className="container flex flex-col lg:flex-row-reverse items-center justify-between gap-8 sm:py-24">
                     <Image
                         src={hero_img}
                         alt="Hero image"
@@ -175,19 +180,13 @@ export default function Home() {
                             })
                         }
                     />
-                    <div
-                        className="
-                        container relative z-10 mx-auto
-                        px-2 sm:px-6 lg:px-8
-                        py-2 sm:py-16 lg:py-24
-                    "
-                    >
+                    <div className="relative z-10 px-2 sm:px-6 lg:px-8 py-2 sm:py-16 lg:py-24">
                         <div className="max-w-4xl animate-fade-in">
-                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair font-bold mb-4 sm:mb-6">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair font-bold mb-4 sm:mb-6 text-foreground">
                                 Facilite a coparentalidade organizando tudo em um só lugar
                             </h1>
 
-                            <p className="font-raleway font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 leading-[1em]">
+                            <p className="font-raleway font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 leading-[1em] text-muted-foreground">
                                 Uma plataforma feita para você manter todas as informações
                                 importantes sobre seus filhos de forma segura e acessível,
                                 facilitando o planejamento e a comunicação, trazendo clareza e
@@ -195,34 +194,23 @@ export default function Home() {
                             </p>
 
                             <div className="flex flex-row gap-4 mb-[5em]">
-                                <button
-                                    className="btn btn-outline inline-flex items-center px-6 text-base sm:text-lg md:text-xl font-nunito font-bold rounded-md"
+                                <Button 
+                                    variant="outline" 
+                                    className="px-6 text-base sm:text-lg md:text-xl font-nunito font-bold"
                                     onClick={handleLearnMoreClick}
                                     aria-label="Saiba mais sobre o CompartiLar"
                                 >
-                                    <span>Saiba mais</span>
-                                </button>
-                                <button
-                                    className="btn bg-neutral text-neutral-content border-none group inline-flex items-center px-6 sm:text-lg md:text-xl font-nunito font-bold rounded-md hover:text-neutral"
+                                    Saiba mais
+                                </Button>
+                                <Button 
+                                    variant="default" 
+                                    className="px-6 text-base sm:text-lg md:text-xl font-nunito font-bold group"
                                     onClick={handleGetStartedClick}
                                     aria-label="Crie sua conta no CompartiLar"
                                 >
                                     <span>Comece agora</span>
-                                    <svg
-                                        className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M12.75 22.5 23.25 12 12.75 1.5"
-                                        />
-                                    </svg>
-                                </button>
+                                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -232,40 +220,44 @@ export default function Home() {
             {/* FEATURES SECTION */}
             <div
                 ref={featuresRef}
-                className="flex flex-row bg-base-200 justify-center items-center text-center py-12 font-raleway font-bold text-4xl"
+                className="flex flex-row bg-muted justify-center items-center text-center py-12 font-raleway font-bold text-4xl"
             >
                 Principais funcionalidades
             </div>
-            <div className="flex flex-col justify-center gap-6 py-12 bg-base-200 sm:flex-row">
+            <div className="flex flex-col justify-center gap-6 py-12 bg-muted sm:flex-row container mx-auto">
                 {features.map((feature, index) => (
-                    <section
+                    <Card
                         key={feature.id}
-                        className="flex flex-col items-center w-full sm:w-1/5 px-2 hover:scale-105 transition-transform duration-300 cursor-pointer animate-fade-in"
                         id={feature.id}
+                        className="w-full sm:w-1/5 hover:scale-105 transition-transform duration-300 cursor-pointer animate-fade-in"
+                        style={{ animationDelay: `${index * 0.1}s` }}
                         onClick={() => handleFeatureClick(feature.id, feature.analyticsId)}
-                        role="button"
                         tabIndex={0}
+                        role="button"
                         aria-label={`Saiba mais sobre ${feature.title}`}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                                 handleFeatureClick(feature.id, feature.analyticsId);
                             }
                         }}
-                        style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                        <Image
-                            src={feature_img}
-                            alt={`${feature.title} image`}
-                            width={256}
-                            className="mb-4"
-                        />
-                        <h2 className="font-raleway font-bold text-2xl mb-2">
-                            {feature.title}
-                        </h2>
-                        <p className="font-serif font-light text-xl text-center">
-                            {feature.description}
-                        </p>
-                    </section>
+                        <CardContent className="flex flex-col items-center pt-6">
+                            <Image
+                                src={feature_img}
+                                alt={`${feature.title} image`}
+                                width={256}
+                                className="mb-4"
+                            />
+                            <CardHeader className="p-0">
+                                <CardTitle className="font-raleway font-bold text-2xl mb-2 text-center">
+                                    {feature.title}
+                                </CardTitle>
+                            </CardHeader>
+                            <p className="font-serif font-light text-xl text-center text-muted-foreground">
+                                {feature.description}
+                            </p>
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
 

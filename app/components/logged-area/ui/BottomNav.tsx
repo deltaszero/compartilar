@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import Link from 'next/link';
 import Sidebar from '@/app/components/logged-area/ui/Sidebar';
-import { useWindowSize } from '@/app/hooks/useWindowSize';
+// import { useWindowSize } from '@/app/hooks/useWindowSize';
 
 import { usePathname } from 'next/navigation';
-import NavLink from '@/app/components/utils/NavLink';
 import { useUser } from '@context/userContext';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
 // importing assets
 import IconUser from '@assets/icons/bottom_bar_user.svg';
 import IconMaplocation from '@assets/icons/bottom_bar_maplocation.svg';
@@ -17,8 +21,8 @@ const BottomNav = () => {
     const { userData, loading } = useUser();
     const pathname = usePathname();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { width } = useWindowSize();
-    const isMobile = width ? width < 768 : false;
+    // const { width } = useWindowSize();
+    // const isMobile = width ? width < 768 : true;
     
     // Close when user navigates
     useEffect(() => {
@@ -34,10 +38,10 @@ const BottomNav = () => {
 
     if (loading) {
         return (
-            <div className="btm-nav bg-neutral animate-pulse">
-                <div className="flex flex-row items-center justify-center gap-2">
-                    {[...Array(6)].map((_, index) => (
-                        <div key={index} className="skeleton h-12 w-12"></div>
+            <div className="fixed bottom-0 left-0 right-0 h-16 border-t bg-background flex items-center justify-around">
+                <div className="flex items-center justify-center gap-8 w-full px-4">
+                    {[...Array(5)].map((_, index) => (
+                        <Skeleton key={index} className="h-12 w-12" />
                     ))}
                 </div>
             </div>
@@ -68,100 +72,144 @@ const BottomNav = () => {
             icon: <IconChat width={24} height={24} />
         },
         {
-            path: 'mais',
+            path: 'more',
             label: 'Mais',
-            icon: <IconMore width={24} height={24} onClick={() => setIsModalOpen(true)} />
+            icon: <IconMore width={24} height={24} />
         },
     ];
 
     return (
         <>
-            <footer className="btm-nav btm-nav-sm bg-base-100 z-[9998] shadow-lg">
+            <footer className="fixed bottom-0 left-0 right-0 h-16 border-t bg-background z-[9998] shadow-lg flex items-center justify-around">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
-                    return (
-                        <button
-                            key={item.path}
-                            className={`block ${isActive ? 'active text-purpleShade04' : ''}`}
-                            onClick={item.label === 'Mais' ? () => setIsModalOpen(true) : undefined}
-                        >
-                            {item.label === 'Mais' ? (
-                                // Render without NavLink for "Mais"
+                    
+                    // Special case for "Mais" item
+                    if (item.label === 'Mais') {
+                        return (
+                            <Button
+                                key={item.path}
+                                variant="ghost"
+                                className="h-full flex flex-col items-center justify-center rounded-none w-full max-w-[72px]"
+                                onClick={() => setIsModalOpen(true)}
+                            >
                                 <motion.div 
-                                    className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}
+                                    className="flex flex-col items-center"
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    <div className="flex items-center justify-center">
+                                    <div className={cn(
+                                        "flex items-center justify-center",
+                                        isActive ? "text-primary" : "text-muted-foreground"
+                                    )}>
                                         {item.icon}
                                     </div>
-                                    <p className="text-[10px] sm:text-xs font-nunito font-bold mt-0.5">
+                                    <span className={cn(
+                                        "text-[10px] sm:text-xs font-medium mt-0.5",
+                                        isActive ? "text-primary" : "text-muted-foreground"
+                                    )}>
                                         {item.label}
-                                    </p>
+                                    </span>
                                 </motion.div>
-                            ) : (
-                                // Render with NavLink for other items
-                                <NavLink href={item.path}>
-                                    <motion.div 
-                                        className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}
-                                        whileTap={{ scale: 0.9 }}
-                                    >
-                                        <div className="flex items-center justify-center">
-                                            {item.icon}
-                                        </div>
-                                        <p className="text-[10px] sm:text-xs font-nunito font-bold mt-0.5">
-                                            {item.label}
-                                        </p>
-                                    </motion.div>
-                                </NavLink>
+                            </Button>
+                        );
+                    }
+                    
+                    // Regular navigation items
+                    return (
+                        <Link
+                            key={item.path}
+                            href={item.path}
+                            className={cn(
+                                "h-full flex flex-col items-center justify-center rounded-none w-full max-w-[72px]",
+                                "hover:bg-accent/50 transition-colors",
+                                isActive ? "border-t-2 border-primary" : ""
                             )}
-                        </button>
+                        >
+                            <motion.div 
+                                className="flex flex-col items-center"
+                                whileTap={{ scale: 0.9 }}
+                            >
+                                <div className={cn(
+                                    "flex items-center justify-center",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                    {item.icon}
+                                </div>
+                                <span className={cn(
+                                    "text-[10px] sm:text-xs font-medium mt-0.5",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                    {item.label}
+                                </span>
+                            </motion.div>
+                        </Link>
                     );
                 })}
             </footer>
 
+            {/* Simplified AnimatePresence structure */}
             <AnimatePresence>
                 {isModalOpen && (
-                    <motion.div
-                        className="fixed inset-0 z-[9999] bg-black/50"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setIsModalOpen(false)}
-                    >
+                    <>
+                        {/* Backdrop */}
                         <motion.div
-                            className="absolute bottom-0 left-0 right-0 bg-base-300 rounded-t-xl p-4 max-h-[80vh] overflow-y-auto safe-area-bottom"
+                            key="backdrop"
+                            className="fixed inset-0 z-[9999] bg-black/50 touch-none"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsModalOpen(false)}
+                        />
+                        
+                        {/* Content Panel */}
+                        <motion.div
+                            key="panel"
+                            style={{ 
+                                translateX: 0,  // Explicitly prevent X translation
+                                x: 0,           // Reset any X movement
+                                position: 'fixed',
+                                bottom: 0, 
+                                left: 0, 
+                                right: 0,
+                                zIndex: 10000
+                            }}
+                            className="bg-black rounded-t-xl p-4 max-h-[85vh] overflow-y-auto"
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ 
                                 type: 'spring', 
-                                damping: isMobile ? 40 : 25, 
-                                stiffness: isMobile ? 400 : 300,
-                                mass: 0.8 
+                                damping: 25,
+                                stiffness: 250 
                             }}
                             drag="y"
-                            dragConstraints={{ top: 0, bottom: 0 }}
-                            dragElastic={0.5}
-                            dragTransition={{ bounceStiffness: 600, bounceDamping: 10 }}
+                            dragConstraints={{ top: 0 }}
+                            dragElastic={0}
+                            dragTransition={{ 
+                                bounceDamping: 20
+                            }}
                             onDragEnd={handleDragEnd}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Drag handle - made more visible */}
-                            <div className="w-20 h-1.5 bg-neutral/50 rounded-full mx-auto mb-6"></div>
+                            {/* Drag handle */}
+                            <div className="w-16 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-6"></div>
                             
-                            {/* Modal content with improved spacing */}
-                            <div className="pb-safe pb-4">
-                                <Sidebar />
+                            {/* Modal content with transform-none to prevent conflicts */}
+                            <div className="pb-20">
+                                <div className="transform-none !translate-x-0">
+                                    <Sidebar isBottomNavModal={true} />
+                                </div>
                                 
-                                <button
-                                    className="btn btn-outline btn-neutral w-full mt-8 rounded-xl"
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-8"
                                     onClick={() => setIsModalOpen(false)}
                                 >
                                     Fechar
-                                </button>
+                                </Button>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </>
