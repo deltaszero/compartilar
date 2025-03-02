@@ -25,6 +25,8 @@ import {
 } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
+
 export default function SettingsPage() {
     // get vars
     const { user, userData, loading } = useUser();
@@ -163,6 +165,7 @@ export default function SettingsPage() {
 
     return (
         <div className="h-screen flex flex-col">
+             <UserProfileBar pathname='Configurações' />
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold mb-4">Configurações da Conta</h1>
                 <form

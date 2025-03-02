@@ -5,16 +5,23 @@ import React, { useState, useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { useUser } from '@context/userContext';
+import Image from 'next/image';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '@/app/lib/firebaseConfig';
+import { CalendarEvent } from '@/types/shared.types';
+import toast from 'react-hot-toast';
 
 // Add required plugins
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
+dayjs.extend(relativeTime);
 
-// Define types
-interface Event {
-    id: string;
-    date: string; // ISO format date
-    color?: string;
+// Enhanced Event interface
+interface CalendarEventWithChild extends CalendarEvent {
+    childName?: string;
+    childPhotoURL?: string;
 }
 
 interface DayInfo {
@@ -23,11 +30,11 @@ interface DayInfo {
     dayNumber: number;
     isToday: boolean;
     isSelected: boolean;
-    events: Event[];
+    events: CalendarEventWithChild[];
 }
 
 interface ModernWeekCalendarProps {
-    events?: Event[];
+    events?: CalendarEventWithChild[];
     onDateSelect?: (date: Dayjs) => void;
     selectedDate?: Dayjs;
 }
@@ -37,8 +44,76 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
     onDateSelect,
     selectedDate,
 }) => {
+    const { userData } = useUser();
     const [weekDays, setWeekDays] = useState<DayInfo[]>([]);
     const [currentDate, setCurrentDate] = useState<Dayjs>(selectedDate || dayjs());
+    const [calendarEvents, setCalendarEvents] = useState<CalendarEventWithChild[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Load calendar events
+    useEffect(() => {
+        const loadEvents = async () => {
+            if (!userData) return;
+
+            setIsLoading(true);
+            try {
+                const startOfWeek = currentDate.startOf('week').toDate();
+                const endOfNextWeek = currentDate.add(14, 'day').endOf('day').toDate();
+
+                const eventsRef = collection(db, 'calendar_events');
+
+                // Get events created by this user
+                const createdByQuery = query(
+                    eventsRef,
+                    where('createdBy', '==', userData.uid)
+                );
+
+                // Get events where user is responsible parent
+                const responsibleQuery = query(
+                    eventsRef,
+                    where('responsibleParentId', '==', userData.uid)
+                );
+
+                const [createdBySnapshot, responsibleSnapshot] = await Promise.all([
+                    getDocs(createdByQuery),
+                    getDocs(responsibleQuery)
+                ]);
+
+                const eventsMap = new Map<string, CalendarEventWithChild>();
+
+                // Process results and filter by date range in memory
+                const processSnapshot = (snapshot: any) => {
+                    snapshot.forEach((doc: any) => {
+                        if (!eventsMap.has(doc.id)) {
+                            const eventData = doc.data() as CalendarEvent;
+
+                            // Filter by date range
+                            const eventStartTime = eventData.startTime.toDate();
+                            if (eventStartTime >= startOfWeek && eventStartTime <= endOfNextWeek) {
+                                eventsMap.set(doc.id, {
+                                    ...eventData,
+                                    childName: eventData.childId ? 'Criança' : undefined,
+                                });
+                            }
+                        }
+                    });
+                };
+
+                processSnapshot(createdBySnapshot);
+                processSnapshot(responsibleSnapshot);
+
+                const eventsArray = Array.from(eventsMap.values());
+                setCalendarEvents(eventsArray);
+            } catch (error) {
+                console.error('Error loading events:', error);
+                toast.error('Erro ao carregar eventos');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadEvents();
+    }, [userData, currentDate]);
 
     // Generate week days
     useEffect(() => {
@@ -53,7 +128,12 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
 
         for (let i = 0; i < 7; i++) {
             const currentDay = weekStart.add(i, 'day');
-            const dateStr = currentDay.format('YYYY-MM-DD');
+
+            // Filter events for this day
+            const dayEvents = calendarEvents.filter(event => {
+                const eventDate = dayjs(event.startTime.toDate());
+                return eventDate.isSame(currentDay, 'day');
+            });
 
             days.push({
                 date: currentDay,
@@ -61,12 +141,12 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                 dayNumber: currentDay.date(),
                 isToday: currentDay.isSame(dayjs(), 'day'),
                 isSelected: currentDay.isSame(selectedDate || currentDate, 'day'),
-                events: events.filter(event => event.date === dateStr)
+                events: dayEvents
             });
         }
 
         setWeekDays(days);
-    }, [currentDate, events, selectedDate]);
+    }, [currentDate, calendarEvents, selectedDate]);
 
     // Navigate to previous week
     const prevWeek = () => {
@@ -92,6 +172,49 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
             onDateSelect(day.date);
         }
     };
+
+    // Helper functions
+    const getCategoryColor = (category: string) => {
+        switch (category) {
+            case 'school':
+                return 'bg-blue-500';
+            case 'medical':
+                return 'bg-red-500';
+            case 'activity':
+                return 'bg-green-500';
+            case 'visitation':
+                return 'bg-purple-500';
+            default:
+                return 'bg-gray-500';
+        }
+    };
+
+    const getCategoryIcon = (category: string) => {
+        switch (category) {
+            case 'school':
+                return '🏫';
+            case 'medical':
+                return '🏥';
+            case 'activity':
+                return '🎯';
+            case 'visitation':
+                return '👨‍👧‍👦';
+            default:
+                return '📌';
+        }
+    };
+
+    // Get today's and upcoming events
+    const todayEvents = calendarEvents
+        .filter(event => dayjs(event.startTime.toDate()).isSame(dayjs(), 'day'))
+        .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+
+    const upcomingEvents = calendarEvents
+        .filter(event => {
+            const eventDate = dayjs(event.startTime.toDate());
+            return eventDate.isAfter(dayjs(), 'day') && eventDate.isBefore(dayjs().add(14, 'day'));
+        })
+        .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
 
     return (
         <div className="font-sans w-full max-w-2xl mx-auto">
@@ -131,13 +254,13 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                         key={index}
                         onClick={() => handleDaySelect(day)}
                         className={`
-              flex flex-col items-center p-3 rounded-lg transition-all cursor-pointer
-              ${day.isToday
+                            flex flex-col items-center p-3 rounded-lg transition-all cursor-pointer
+                            ${day.isToday
                                 ? 'bg-indigo-50 border-indigo-200 border'
                                 : day.isSelected
                                     ? 'bg-indigo-100 border-indigo-300 border'
                                     : 'hover:bg-gray-50'}
-            `}
+                        `}
                     >
                         {/* Day Name */}
                         <span className="text-xs text-gray-500 font-medium mb-1">
@@ -157,14 +280,13 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                             {day.dayNumber}
                         </span>
 
-                        {/* Event Badges
+                        {/* Event Badges */}
                         {day.events.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-1 mt-1 w-full">
                                 {day.events.slice(0, 3).map((event, i) => (
                                     <span
                                         key={event.id || i}
-                                        className="block w-2 h-2 rounded-full"
-                                        style={{ backgroundColor: event.color || '#6366F1' }}
+                                        className={`block w-2 h-2 rounded-full ${getCategoryColor(event.category)}`}
                                     />
                                 ))}
                                 {day.events.length > 3 && (
@@ -173,9 +295,98 @@ const ModernWeekCalendar: React.FC<ModernWeekCalendarProps> = ({
                                     </span>
                                 )}
                             </div>
-                        )} */}
+                        )}
                     </div>
                 ))}
+            </div>
+
+            {/* Today's Events */}
+            <div className="">
+                <h3 className="text-lg mb-3 font-playfair font-semibold">
+                    Eventos de Hoje {isLoading && <span className="loading loading-spinner loading-xs ml-2"></span>}
+                </h3>
+                {todayEvents.length === 0 ? (
+                    <div className="text-sm text-gray-500 p-4 bg-base-200 rounded-lg text-center">
+                        Nenhum evento agendado para hoje
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {todayEvents.map(event => (
+                            <div key={event.id} className="p-3 bg-base-200 rounded-lg">
+                                <div className="flex items-center mb-1">
+                                    <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
+                                    <h4 className="text-base font-medium flex-1">{event.title}</h4>
+                                    <span className="text-xs font-medium px-2 py-1 rounded bg-purpleShade01 text-purpleShade04">
+                                        {dayjs(event.startTime.toDate()).format('HH:mm')}
+                                    </span>
+                                </div>
+                                {event.description && (
+                                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                                )}
+                                {event.location?.address && (
+                                    <div className="text-xs text-gray-500 mt-1 flex items-center">
+                                        <span className="mr-1">📍</span>
+                                        {event.location.address}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="mt-2">
+                <h3 className="text-lg mb-3 font-playfair font-semibold">
+                    Próximos Eventos
+                </h3>
+                {upcomingEvents.length === 0 ? (
+                    <div className="text-sm text-gray-500 p-4 bg-base-200 rounded-lg text-center">
+                        Nenhum evento agendado para os próximos dias
+                    </div>
+                ) : (
+                    <div className="">
+                        {upcomingEvents.slice(0, 5).map(event => (
+                            <div key={event.id} className="p-3 bg-base-200 rounded-lg">
+                                <div className="flex flex-row items-start">
+                                    {/* category icon */}
+                                    <span className="text-lg mr-2">{getCategoryIcon(event.category)}</span>
+                                    {/* event info */}
+                                    <div className='flex flex-col flex-1 justify-between'>
+                                        <div className="flex flex-row items-start">
+                                            <h4 className="text-base font-medium flex-1 font-raleway">
+                                                {event.title}
+                                            </h4>
+                                            <div className="text-right">
+                                                <div className="text-xs font-bold">
+                                                    {dayjs(event.startTime.toDate()).format('DD/MM')}
+                                                </div>
+                                                <div className="text-xs">
+                                                    {dayjs(event.startTime.toDate()).format('HH:mm')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* description */}
+                                        {event.description && (
+                                            <p className="text-sm text-gray-600 line-clamp-1">
+                                                {event.description}
+                                            </p>
+                                        )}
+                                        {/* location */}
+                                        <div className="text-xs text-gray-500">
+                                            {dayjs(event.startTime.toDate()).fromNow()}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {upcomingEvents.length > 5 && (
+                            <div className="text-center text-sm text-purpleShade04 mt-2">
+                                + {upcomingEvents.length - 5} eventos futuros
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

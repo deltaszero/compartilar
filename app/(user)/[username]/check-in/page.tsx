@@ -63,8 +63,6 @@ export default function GeolocationPage() {
 
     // Error message handler
     function getGeolocationErrorMessage(error: GeolocationPositionError): string {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
         switch (error.code) {
             case error.PERMISSION_DENIED:
                 return "Acesso à localização negado. Por favor, habilite as permissões de localização.";
@@ -139,7 +137,7 @@ export default function GeolocationPage() {
                                             <li>Acesse Configurações do seu telefone</li>
                                             <li>Toque em Aplicativos &gt; Chrome</li>
                                             <li>Toque em Permissões &gt; Localização</li>
-                                            <li>Selecione "Permitir"</li>
+                                            <li>Selecione &quot;Permitir&quot;</li>
                                             <li>Volte e tente novamente</li>
                                         </ol>
                                     </div>
@@ -150,7 +148,7 @@ export default function GeolocationPage() {
                                             <li>Acesse Ajustes do seu iPhone</li>
                                             <li>Role até Safari ou Chrome</li>
                                             <li>Toque em Localização</li>
-                                            <li>Selecione "Ao Usar o App"</li>
+                                            <li>Selecione &quot;Ao Usar o App&quot;</li>
                                             <li>Volte e tente novamente</li>
                                         </ol>
                                     </div>
@@ -218,22 +216,6 @@ export default function GeolocationPage() {
                             </div>
                         )}
                     </div>
-                </div>
-                
-                {/* Development Banner */}
-                <div className="alert alert-warning w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto text-xs sm:text-sm">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 sm:h-6 sm:w-6 shrink-0 stroke-current"
-                        fill="none"
-                        viewBox="0 0 24 24">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>EM DESENVOLVIMENTO</span>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 // app/components/Analytics.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { analytics } from '@/app/lib/firebaseConfig';
 import { logEvent, setUserProperties } from 'firebase/analytics';
@@ -20,11 +20,11 @@ export enum AnalyticsEventType {
 
 // Interface for event parameters
 export interface AnalyticsEventParams {
-    [key: string]: any;
+    [key: string]: string | number | boolean | null | undefined;
 }
 
-// Analytics component for tracking page views
-const Analytics = () => {
+// Inner Analytics component that uses searchParams
+const AnalyticsTracker = () => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
@@ -50,6 +50,15 @@ const Analytics = () => {
     }, [pathname, searchParams]);
 
     return null;
+};
+
+// Analytics component wrapped in Suspense
+const Analytics = () => {
+    return (
+        <Suspense fallback={null}>
+            <AnalyticsTracker />
+        </Suspense>
+    );
 };
 
 // Helper function to determine device type

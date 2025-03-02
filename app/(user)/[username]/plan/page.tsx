@@ -43,7 +43,7 @@ const ParentalPlansPage: React.FC = () => {
         fetchPlans();
     }, [user]);
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: { toDate: () => Date } | null) => {
         if (!timestamp) return 'Data não disponível';
         const date = timestamp.toDate();
         return new Intl.DateTimeFormat('pt-BR', {

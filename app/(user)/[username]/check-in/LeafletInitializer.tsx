@@ -6,7 +6,7 @@ import L from 'leaflet';
 export default function LeafletInitializer() {
   useEffect(() => {
     // Fix Leaflet default icon issues
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    delete (L.Icon.Default.prototype as {_getIconUrl?: unknown})._getIconUrl;
     
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',

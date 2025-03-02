@@ -1,12 +1,13 @@
 // app/(user)/[username]/handshake/page.tsx
 'use client';
-
 import React from 'react';
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
-export default function SettingsPage() {
+export default function ChatPage() {
 
     return (
         <div className="h-screen flex flex-col">
+            <UserProfileBar pathname='Decisões' />
             <section className="flex flex-row flex-start gap-8 w-full mx-auto p-4">
                 <div role="alert" className="alert alert-warning">
                     <svg

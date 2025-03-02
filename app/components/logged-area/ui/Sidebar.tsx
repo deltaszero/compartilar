@@ -128,7 +128,7 @@ export default function Sidebar() {
             subpages: [
                 // { path: `/${userData.username}/home`, label: 'Meu Lar' },
                 { path: `/${userData.username}/perfil`, label: 'Perfil' },
-                { path: `/${userData.username}/familia`, label: 'Família' },
+                    // { path: `/${userData.username}/familia`, label: 'Família' },
                 { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
             ]
         },

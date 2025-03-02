@@ -1,3 +1,4 @@
+// app/(user)/[username]/financas/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import {
     addDoc,
     getDocs,
     doc,
-    updateDoc,
+    // updateDoc, // Commented out since it's unused
     deleteDoc,
     where,
     query,
@@ -24,11 +25,12 @@ import {
     Tooltip,
     Legend,
     ArcElement,
-    PointElement,
-    LineElement
+    ChartOptions,
+    ChartData
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
 // Register ChartJS components
 ChartJS.register(
@@ -38,17 +40,16 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    ArcElement,
-    PointElement,
-    LineElement
+    ArcElement
 );
 
 // Types
 interface Friend {
-    id: string;
-    username: string;
+    uid: string;
     firstName: string;
     lastName: string;
+    username: string;
+    email: string;
     photoURL?: string;
 }
 
@@ -62,70 +63,80 @@ interface CostGroup {
     updatedAt: Timestamp;
 }
 
+interface ExpenseMember {
+    uid: string;
+    name: string;
+    splitType: 'equal' | 'percentage' | 'fixed';
+    splitValue: number;
+    photoURL?: string;
+}
+
 interface Expense {
     id: string;
     groupId: string;
-    name: string;
-    description?: string;
+    description: string;
     amount: number;
     paidBy: string;
-    date: Timestamp;
     category: string;
-    split: {
-        [userId: string]: number; // Percentage of the expense
-    };
+    date: Timestamp;
+    members: ExpenseMember[];
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
 
 interface Balance {
-    userId: string;
+    uid: string;
     name: string;
-    amount: number;
+    photoURL?: string;
+    balance: number;
 }
 
-// Categories
-const expenseCategories = [
+// Constants
+const EXPENSE_CATEGORIES = [
     'Alimentação',
     'Moradia',
     'Transporte',
     'Saúde',
     'Educação',
     'Lazer',
-    'Viagem',
-    'Compras',
-    'Presente',
+    'Vestuário',
     'Serviços',
     'Outros'
 ];
 
 export default function FinancasPage() {
     const { userData, loading } = useUser();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { username } = useParams();
 
     const [friends, setFriends] = useState<Friend[]>([]);
     const [costGroups, setCostGroups] = useState<CostGroup[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [balances, setBalances] = useState<Balance[]>([]);
-
-    // Form states
+    
     const [isAddingGroup, setIsAddingGroup] = useState(false);
-    const [isAddingExpense, setIsAddingExpense] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [newGroupDescription, setNewGroupDescription] = useState('');
     const [newGroupMembers, setNewGroupMembers] = useState<string[]>([]);
-    const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-
-    // New expense form
-    const [newExpenseName, setNewExpenseName] = useState('');
+    
+    const [isAddingExpense, setIsAddingExpense] = useState(false);
     const [newExpenseDescription, setNewExpenseDescription] = useState('');
-    const [newExpenseAmount, setNewExpenseAmount] = useState<number>(0);
+    const [newExpenseAmount, setNewExpenseAmount] = useState('');
     const [newExpensePaidBy, setNewExpensePaidBy] = useState('');
-    const [newExpenseDate, setNewExpenseDate] = useState(new Date().toISOString().split('T')[0]);
-    const [newExpenseCategory, setNewExpenseCategory] = useState(expenseCategories[0]);
-    const [newExpenseSplits, setNewExpenseSplits] = useState<{ [key: string]: number }>({});
+    const [newExpenseCategory, setNewExpenseCategory] = useState('');
+    const [newExpenseDate, setNewExpenseDate] = useState(
+        new Date().toISOString().split('T')[0]
+    );
+    
+    const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+    const [expenseMembers, setExpenseMembers] = useState<ExpenseMember[]>([]);
+    const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+    const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+    
+    const [splitMethod, setSplitMethod] = useState<'equal' | 'percentage' | 'fixed'>('equal');
 
-    // Load data
+    // Load friends and cost groups
     useEffect(() => {
         if (userData) {
             loadFriends();
@@ -133,172 +144,192 @@ export default function FinancasPage() {
         }
     }, [userData]);
 
+    // Load expenses when a group is selected
     useEffect(() => {
         if (selectedGroup) {
             loadExpenses(selectedGroup);
         }
     }, [selectedGroup]);
-
-    // Load user's friends
+    
     const loadFriends = async () => {
+        if (!userData) return;
+        
         try {
-            // Query the nested friendsList collection
-            if (!userData?.uid) return;
+            const friendsQuery = query(
+                collection(db, 'friendships'),
+                where('users', 'array-contains', userData.uid),
+                where('status', '==', 'accepted')
+            );
             
-            const friendsRef = collection(db, 'friends', userData.uid, 'friendsList');
-            const snapshot = await getDocs(friendsRef);
-
-            const friendsData: Friend[] = [];
-            snapshot.forEach((doc) => {
-                const friendData = doc.data();
-                friendsData.push({
-                    id: doc.id,
-                    username: friendData.username,
-                    firstName: friendData.firstName || '',
-                    lastName: friendData.lastName || '',
-                    photoURL: friendData.photoURL
-                });
+            const snapshot = await getDocs(friendsQuery);
+            const friendshipsData = snapshot.docs.map(doc => doc.data());
+            
+            const friendsPromises = friendshipsData.map(async (friendship) => {
+                const friendId = friendship.users.find((id: string) => id !== userData.uid);
+                const userDoc = await getDocs(
+                    query(collection(db, 'users'), where('uid', '==', friendId))
+                );
+                
+                if (!userDoc.empty) {
+                    const friendData = userDoc.docs[0].data();
+                    return {
+                        uid: friendData.uid,
+                        firstName: friendData.firstName,
+                        lastName: friendData.lastName,
+                        username: friendData.username,
+                        email: friendData.email,
+                        photoURL: friendData.photoURL
+                    };
+                }
+                return null;
             });
             
-            setFriends(friendsData);
-            console.log('Friends loaded successfully:', friendsData);
+            const friendsList = (await Promise.all(friendsPromises)).filter(Boolean) as Friend[];
+            setFriends(friendsList);
         } catch (error) {
             console.error('Error loading friends:', error);
             toast.error('Erro ao carregar amigos');
         }
     };
-
-    // Load user's cost groups
+    
     const loadCostGroups = async () => {
+        if (!userData) return;
+        setIsLoadingGroups(true);
+        
         try {
             const groupsQuery = query(
                 collection(db, 'cost_groups'),
-                where('members', 'array-contains', userData?.uid)
+                where('members', 'array-contains', userData.uid)
             );
-
+            
             const snapshot = await getDocs(groupsQuery);
-            const groups: CostGroup[] = [];
-
-            snapshot.forEach(doc => {
-                groups.push({
-                    id: doc.id,
-                    ...doc.data()
-                } as CostGroup);
-            });
-
-            setCostGroups(groups);
-
-            if (groups.length > 0 && !selectedGroup) {
-                setSelectedGroup(groups[0].id);
-            }
+            const groupsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as CostGroup[];
+            
+            setCostGroups(groupsData);
         } catch (error) {
             console.error('Error loading cost groups:', error);
-            toast.error('Erro ao carregar grupos de despesas');
+            toast.error('Erro ao carregar grupos');
+        } finally {
+            setIsLoadingGroups(false);
         }
     };
-
-    // Load expenses for the selected group
+    
     const loadExpenses = async (groupId: string) => {
+        if (!userData) return;
+        setIsLoadingExpenses(true);
+        
         try {
             const expensesQuery = query(
                 collection(db, 'expenses'),
                 where('groupId', '==', groupId)
             );
-
+            
             const snapshot = await getDocs(expensesQuery);
-            const expenseList: Expense[] = [];
-
-            snapshot.forEach(doc => {
-                expenseList.push({
-                    id: doc.id,
-                    ...doc.data()
-                } as Expense);
-            });
-
-            setExpenses(expenseList);
-            calculateBalances(expenseList);
+            const expensesData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Expense[];
+            
+            setExpenses(expensesData);
+            calculateBalances(expensesData);
         } catch (error) {
             console.error('Error loading expenses:', error);
             toast.error('Erro ao carregar despesas');
+        } finally {
+            setIsLoadingExpenses(false);
         }
     };
-
-    // Calculate balances for all group members
-    const calculateBalances = (expenseList: Expense[]) => {
-        if (!selectedGroup) return;
-
+    
+    const calculateBalances = (expensesData: Expense[]) => {
+        if (!userData || !selectedGroup) return;
+        
         const group = costGroups.find(g => g.id === selectedGroup);
         if (!group) return;
-
-        const memberBalances: { [key: string]: number } = {};
-
-        // Initialize all members with zero balance
-        group.members.forEach(memberId => {
-            memberBalances[memberId] = 0;
-        });
-
-        // Calculate each expense
-        expenseList.forEach(expense => {
-            // Add the full amount to the person who paid
-            memberBalances[expense.paidBy] += expense.amount;
-
-            // Subtract each person's share
-            for (const [userId, percentage] of Object.entries(expense.split)) {
-                memberBalances[userId] -= (expense.amount * percentage / 100);
+        
+        // Initialize balances for all members
+        const balanceMap: Record<string, { name: string; photoURL?: string; balance: number }> = {};
+        
+        // Add current user
+        balanceMap[userData.uid] = {
+            name: `${userData.firstName} ${userData.lastName}`,
+            photoURL: userData.photoURL,
+            balance: 0
+        };
+        
+        // Add friends who are in the group
+        friends.forEach(friend => {
+            if (group.members.includes(friend.uid)) {
+                balanceMap[friend.uid] = {
+                    name: `${friend.firstName} ${friend.lastName}`,
+                    photoURL: friend.photoURL,
+                    balance: 0
+                };
             }
         });
-
-        // Convert to balance array with names
-        const balanceArray: Balance[] = [];
-
-        for (const [userId, amount] of Object.entries(memberBalances)) {
-            let name = userId;
-
-            // Get user name
-            if (userId === userData?.uid) {
-                name = `${userData.firstName} ${userData.lastName} (Você)`;
-            } else {
-                const friend = friends.find(f => f.id === userId);
-                if (friend) {
-                    name = `${friend.firstName} ${friend.lastName}`;
+        
+        // Calculate expenses
+        expensesData.forEach(expense => {
+            // Person who paid gets credit
+            if (balanceMap[expense.paidBy]) {
+                balanceMap[expense.paidBy].balance += expense.amount;
+            }
+            
+            // Each person owes their share
+            expense.members.forEach(member => {
+                if (balanceMap[member.uid]) {
+                    let amountOwed = 0;
+                    
+                    if (member.splitType === 'equal') {
+                        amountOwed = expense.amount / expense.members.length;
+                    } else if (member.splitType === 'percentage') {
+                        amountOwed = (expense.amount * member.splitValue) / 100;
+                    } else if (member.splitType === 'fixed') {
+                        amountOwed = member.splitValue;
+                    }
+                    
+                    balanceMap[member.uid].balance -= amountOwed;
                 }
-            }
-
-            balanceArray.push({
-                userId,
-                name,
-                amount: parseFloat(amount.toFixed(2))
             });
-        }
-
-        setBalances(balanceArray);
+        });
+        
+        // Convert to array
+        const balancesArray = Object.keys(balanceMap).map(uid => ({
+            uid,
+            name: balanceMap[uid].name,
+            photoURL: balanceMap[uid].photoURL,
+            balance: parseFloat(balanceMap[uid].balance.toFixed(2))
+        }));
+        
+        setBalances(balancesArray);
     };
-
-    // Create a new cost group
+    
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        
         if (!userData) {
             toast.error('Você precisa estar logado');
             return;
         }
-
+        
         if (!newGroupName.trim()) {
             toast.error('Nome do grupo é obrigatório');
             return;
         }
-
+        
         if (newGroupMembers.length === 0) {
             toast.error('Adicione pelo menos um membro ao grupo');
             return;
         }
-
+        
         try {
             // Make sure the creator is in the members list
             const members = [userData.uid, ...newGroupMembers];
-
+            
             const now = Timestamp.now();
-            const groupRef = await addDoc(collection(db, 'cost_groups'), {
+            const _groupRef = await addDoc(collection(db, 'cost_groups'), {
                 name: newGroupName,
                 description: newGroupDescription,
                 createdBy: userData.uid,
@@ -306,15 +337,15 @@ export default function FinancasPage() {
                 createdAt: now,
                 updatedAt: now
             });
-
+            
             toast.success('Grupo criado com sucesso!');
-
+            
             // Reset form
             setNewGroupName('');
             setNewGroupDescription('');
             setNewGroupMembers([]);
             setIsAddingGroup(false);
-
+            
             // Reload groups
             loadCostGroups();
         } catch (error) {
@@ -322,697 +353,876 @@ export default function FinancasPage() {
             toast.error('Erro ao criar grupo');
         }
     };
-
-    // Add a new expense
-    const handleAddExpense = async (e: React.FormEvent) => {
+    
+    const handleCreateExpense = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        
         if (!userData || !selectedGroup) {
-            toast.error('Ocorreu um erro. Tente novamente.');
+            toast.error('Selecione um grupo primeiro');
             return;
         }
-
-        if (!newExpenseName.trim()) {
-            toast.error('Nome da despesa é obrigatório');
+        
+        if (!newExpenseDescription.trim()) {
+            toast.error('Descrição é obrigatória');
             return;
         }
-
-        if (newExpenseAmount <= 0) {
+        
+        if (!newExpenseAmount || parseFloat(newExpenseAmount) <= 0) {
             toast.error('Valor deve ser maior que zero');
             return;
         }
-
+        
         if (!newExpensePaidBy) {
-            toast.error('Selecione quem pagou a despesa');
+            toast.error('Selecione quem pagou');
             return;
         }
-
-        // Validate that split percentages add up to 100%
-        const totalPercentage = Object.values(newExpenseSplits).reduce((total, val) => total + val, 0);
-        if (Math.abs(totalPercentage - 100) > 0.01) { // Allow small floating point errors
-            toast.error('As porcentagens de divisão devem somar 100%');
+        
+        if (!newExpenseCategory) {
+            toast.error('Selecione uma categoria');
             return;
         }
-
+        
+        // Validate split values
+        if (splitMethod === 'percentage') {
+            const totalPercentage = expenseMembers.reduce((sum, member) => sum + member.splitValue, 0);
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+                toast.error('O total das porcentagens deve ser 100%');
+                return;
+            }
+        } else if (splitMethod === 'fixed') {
+            const totalFixed = expenseMembers.reduce((sum, member) => sum + member.splitValue, 0);
+            const totalAmount = parseFloat(newExpenseAmount);
+            if (Math.abs(totalFixed - totalAmount) > 0.01) {
+                toast.error(`O total dos valores fixos deve ser igual ao valor total (${totalAmount})`);
+                return;
+            }
+        }
+        
         try {
-            const expenseDate = new Date(newExpenseDate);
+            const amount = parseFloat(newExpenseAmount);
             const now = Timestamp.now();
-
+            const expenseDate = new Date(newExpenseDate);
+            
             await addDoc(collection(db, 'expenses'), {
                 groupId: selectedGroup,
-                name: newExpenseName,
                 description: newExpenseDescription,
-                amount: newExpenseAmount,
+                amount,
                 paidBy: newExpensePaidBy,
-                date: Timestamp.fromDate(expenseDate),
                 category: newExpenseCategory,
-                split: newExpenseSplits,
+                date: Timestamp.fromDate(expenseDate),
+                members: expenseMembers,
                 createdAt: now,
                 updatedAt: now
             });
-
-            toast.success('Despesa adicionada com sucesso!');
-
+            
+            toast.success('Despesa criada com sucesso!');
+            
             // Reset form
-            setNewExpenseName('');
             setNewExpenseDescription('');
-            setNewExpenseAmount(0);
-            setNewExpensePaidBy('');
+            setNewExpenseAmount('');
+            setNewExpenseCategory('');
             setNewExpenseDate(new Date().toISOString().split('T')[0]);
-            setNewExpenseCategory(expenseCategories[0]);
-            setNewExpenseSplits({});
             setIsAddingExpense(false);
-
+            
             // Reload expenses
             loadExpenses(selectedGroup);
         } catch (error) {
-            console.error('Error adding expense:', error);
-            toast.error('Erro ao adicionar despesa');
+            console.error('Error creating expense:', error);
+            toast.error('Erro ao criar despesa');
         }
     };
-
-    // Delete an expense
+    
     const handleDeleteExpense = async (expenseId: string) => {
-        if (!window.confirm('Tem certeza que deseja excluir esta despesa?')) {
-            return;
-        }
-
+        if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
+        
         try {
+            // Find the expense to check permissions
+            const expense = expenses.find(e => e.id === expenseId);
+            
+            if (!expense) {
+                toast.error('Despesa não encontrada');
+                return;
+            }
+            
+            if (!userData) {
+                toast.error('Usuário não autenticado');
+                return;
+            }
+
+            // Check if current user paid for the expense or is the group creator
+            const group = costGroups.find(g => g.id === expense.groupId);
+            const isGroupCreator = group && group.createdBy === userData.uid;
+            const isPayer = expense.paidBy === userData.uid;
+            
+            if (!isGroupCreator && !isPayer) {
+                toast.error('Você só pode excluir despesas que você pagou ou se for o criador do grupo');
+                return;
+            }
+            
             await deleteDoc(doc(db, 'expenses', expenseId));
             toast.success('Despesa excluída com sucesso!');
-
+            
             // Reload expenses
             if (selectedGroup) {
                 loadExpenses(selectedGroup);
             }
         } catch (error) {
             console.error('Error deleting expense:', error);
-            toast.error('Erro ao excluir despesa');
+            toast.error('Erro ao excluir despesa. Verifique se você tem permissão para esta ação.');
         }
     };
-
-    // Handle member selection for new group
-    const handleMemberSelection = (friendId: string) => {
-        setNewGroupMembers(prev => {
-            if (prev.includes(friendId)) {
-                return prev.filter(id => id !== friendId);
-            } else {
-                return [...prev, friendId];
+    
+    const handleDeleteGroup = async (groupId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este grupo? Todas as despesas serão perdidas.')) return;
+        
+        try {
+            // Check if the current user is the creator of the group
+            const group = costGroups.find(g => g.id === groupId);
+            
+            if (!group) {
+                toast.error('Grupo não encontrado');
+                return;
             }
-        });
+            
+            // Check if the current user is the creator of the group
+            if (!userData || group.createdBy !== userData.uid) {
+                toast.error('Você não tem permissão para excluir este grupo. Apenas o criador pode excluí-lo.');
+                return;
+            }
+            
+            // Delete the group
+            await deleteDoc(doc(db, 'cost_groups', groupId));
+            
+            // Get all expenses in this group
+            const expensesQuery = query(
+                collection(db, 'expenses'),
+                where('groupId', '==', groupId)
+            );
+            
+            const snapshot = await getDocs(expensesQuery);
+            
+            // Delete each expense one by one to avoid permission issues
+            for (const docSnap of snapshot.docs) {
+                try {
+                    await deleteDoc(docSnap.ref);
+                } catch (err) {
+                    console.error(`Could not delete expense ${docSnap.id}:`, err);
+                    // Continue with other deletions even if one fails
+                }
+            }
+            
+            toast.success('Grupo excluído com sucesso!');
+            
+            // Reset selected group if it was deleted
+            if (selectedGroup === groupId) {
+                setSelectedGroup(null);
+                setExpenses([]);
+                setBalances([]);
+            }
+            
+            // Reload groups
+            loadCostGroups();
+        } catch (error) {
+            console.error('Error deleting group:', error);
+            toast.error('Erro ao excluir grupo. Verifique se você tem permissão para esta ação.');
+        }
     };
-
-    // Handle split percentage change
-    const handleSplitChange = (userId: string, percentage: number) => {
-        setNewExpenseSplits(prev => ({
-            ...prev,
-            [userId]: percentage
-        }));
-    };
-
-    // Reset and initialize split percentages for the selected group
-    const resetSplitPercentages = () => {
-        if (!selectedGroup) return;
-
-        const group = costGroups.find(g => g.id === selectedGroup);
-        if (!group) return;
-
-        // Split evenly by default
-        const evenSplit = 100 / group.members.length;
-        const splits: { [key: string]: number } = {};
-
-        group.members.forEach(memberId => {
-            splits[memberId] = evenSplit;
-        });
-
-        setNewExpenseSplits(splits);
-    };
-
-    // Initialize split percentages when adding a new expense
+    
+    // When adding a new expense, initialize members list
     useEffect(() => {
         if (isAddingExpense && selectedGroup) {
             resetSplitPercentages();
         }
-    }, [isAddingExpense, selectedGroup]);
-
-    // Initialize paidBy when adding a new expense
+    }, [isAddingExpense, selectedGroup, splitMethod]);
+    
+    // When adding an expense, set the logged user as the one who paid
     useEffect(() => {
         if (isAddingExpense && userData) {
             setNewExpensePaidBy(userData.uid);
         }
     }, [isAddingExpense, userData]);
-
-    // Get user name by ID
-    const getUserName = (userId: string): string => {
-        if (!userData) return '';
-
-        if (userId === userData.uid) {
-            return `${userData.firstName} ${userData.lastName} (Você)`;
+    
+    const resetSplitPercentages = () => {
+        if (!selectedGroup) return;
+        
+        const group = costGroups.find(g => g.id === selectedGroup);
+        if (!group) return;
+        
+        // Get all members of the group
+        const members: ExpenseMember[] = [];
+        
+        // Add current user
+        if (userData && group.members.includes(userData.uid)) {
+            members.push({
+                uid: userData.uid,
+                name: `${userData.firstName} ${userData.lastName}`,
+                splitType: splitMethod,
+                splitValue: splitMethod === 'equal' ? 0 : splitMethod === 'percentage' ? 0 : 0
+            });
         }
-
-        const friend = friends.find(f => f.id === userId);
-        if (friend) {
-            return `${friend.firstName} ${friend.lastName}`;
-        }
-
-        return 'Usuário desconhecido';
-    };
-
-    // Chart data for expenses by category
-    const getCategoryChartData = () => {
-        const categoryTotals: { [key: string]: number } = {};
-
-        expenses.forEach(expense => {
-            if (!categoryTotals[expense.category]) {
-                categoryTotals[expense.category] = 0;
-            }
-            categoryTotals[expense.category] += expense.amount;
-        });
-
-        return {
-            labels: Object.keys(categoryTotals),
-            datasets: [
-                {
-                    label: 'Despesas por Categoria',
-                    data: Object.values(categoryTotals),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(153, 102, 255, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(199, 199, 199, 0.6)',
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)',
-                        'rgba(199, 199, 199, 1)',
-                    ],
-                    borderWidth: 1,
-                },
-            ],
-        };
-    };
-
-    // Chart data for expenses by user
-    const getUserExpenseChartData = () => {
-        const selectedGroupData = costGroups.find(g => g.id === selectedGroup);
-        if (!selectedGroupData) return { labels: [], datasets: [] };
-
-        const userTotals: { [key: string]: number } = {};
-
-        // Initialize all members with zero
-        selectedGroupData.members.forEach(memberId => {
-            userTotals[memberId] = 0;
-        });
-
-        expenses.forEach(expense => {
-            for (const [userId, percentage] of Object.entries(expense.split)) {
-                userTotals[userId] += (expense.amount * percentage / 100);
+        
+        // Add friends who are in the group
+        friends.forEach(friend => {
+            if (group.members.includes(friend.uid)) {
+                members.push({
+                    uid: friend.uid,
+                    name: `${friend.firstName} ${friend.lastName}`,
+                    photoURL: friend.photoURL,
+                    splitType: splitMethod,
+                    splitValue: splitMethod === 'equal' ? 0 : splitMethod === 'percentage' ? 0 : 0
+                });
             }
         });
-
-        return {
-            labels: Object.keys(userTotals).map(getUserName),
-            datasets: [
-                {
-                    label: 'Despesas por Pessoa',
-                    data: Object.values(userTotals),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                }
-            ]
-        };
+        
+        // Calculate default split values
+        if (splitMethod === 'equal') {
+            // All equal - the actual calculation happens at payment time
+            members.forEach(member => {
+                member.splitValue = 0; // Will be calculated on display
+            });
+        } else if (splitMethod === 'percentage') {
+            // Default to equal percentages
+            const equalPercentage = 100 / members.length;
+            members.forEach(member => {
+                member.splitValue = parseFloat(equalPercentage.toFixed(2));
+            });
+            
+            // Adjust last member to ensure 100%
+            const totalPercentage = members.reduce((sum, member) => sum + member.splitValue, 0);
+            if (members.length > 0) {
+                members[members.length - 1].splitValue += (100 - totalPercentage);
+            }
+        } else if (splitMethod === 'fixed') {
+            // Default to equal fixed amounts
+            const amount = parseFloat(newExpenseAmount || '0');
+            const equalAmount = amount / members.length;
+            members.forEach(member => {
+                member.splitValue = parseFloat(equalAmount.toFixed(2));
+            });
+            
+            // Adjust last member to ensure total equals amount
+            const totalFixed = members.reduce((sum, member) => sum + member.splitValue, 0);
+            if (members.length > 0 && amount > 0) {
+                members[members.length - 1].splitValue += (amount - totalFixed);
+            }
+        }
+        
+        setExpenseMembers(members);
     };
-
+    
+    const updateMemberSplit = (uid: string, value: number) => {
+        setExpenseMembers(prev => 
+            prev.map(member => 
+                member.uid === uid 
+                    ? { ...member, splitValue: value }
+                    : member
+            )
+        );
+    };
+    
+    // Filter expenses by date period
+    const filteredExpenses = expenses.filter(expense => {
+        if (selectedPeriod === 'all') return true;
+        
+        const expenseDate = expense.date.toDate();
+        const now = new Date();
+        
+        if (selectedPeriod === '7d') {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return expenseDate >= sevenDaysAgo;
+        } else if (selectedPeriod === '30d') {
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return expenseDate >= thirtyDaysAgo;
+        } else if (selectedPeriod === '90d') {
+            const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            return expenseDate >= ninetyDaysAgo;
+        }
+        
+        return true;
+    });
+    
+    // Prepare chart data - expenses by category
+    const categoryExpenses = EXPENSE_CATEGORIES.map(category => {
+        const total = filteredExpenses
+            .filter(expense => expense.category === category)
+            .reduce((sum, expense) => sum + expense.amount, 0);
+        return { category, total };
+    }).filter(item => item.total > 0);
+    
+    const chartData: ChartData<'pie'> = {
+        labels: categoryExpenses.map(item => item.category),
+        datasets: [
+            {
+                data: categoryExpenses.map(item => item.total),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#22CFCF', '#FF6B6B', '#7C7CFF'
+                ]
+            }
+        ]
+    };
+    
+    const chartOptions: ChartOptions<'pie'> = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    };
+    
+    // Prepare chart data - expenses by date
+    const dateExpenses: Record<string, number> = {};
+    
+    filteredExpenses.forEach(expense => {
+        const date = expense.date.toDate().toISOString().slice(0, 10);
+        dateExpenses[date] = (dateExpenses[date] || 0) + expense.amount;
+    });
+    
+    const sortedDates = Object.keys(dateExpenses).sort();
+    
+    const barChartData: ChartData<'bar'> = {
+        labels: sortedDates.map(date => {
+            const [_year, month, day] = date.split('-');
+            return `${day}/${month}`;
+        }),
+        datasets: [
+            {
+                label: 'Despesas por Dia',
+                data: sortedDates.map(date => dateExpenses[date]),
+                backgroundColor: '#4BC0C0'
+            }
+        ]
+    };
+    
+    const barChartOptions: ChartOptions<'bar'> = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top'
+            },
+            title: {
+                display: true,
+                text: 'Despesas por Dia'
+            }
+        }
+    };
+    
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-full p-4">
-                <div className="flex flex-col items-center gap-4">
-                    <span className="loading loading-spinner loading-lg text-primary"></span>
-                    <p className="text-lg">Carregando...</p>
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Finanças" />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                 </div>
             </div>
         );
     }
-
+    
     if (!userData) {
         return (
-            <div className="flex flex-col items-center justify-center h-full p-4">
-                <div className="alert alert-error">
-                    <p>Você precisa estar logado para acessar esta página.</p>
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Finanças" />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-error">
+                        Você precisa estar logado para acessar esta página
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col p-4 md:p-8">
-            <h1 className="text-2xl md:text-3xl font-bold mb-6">Finanças Compartilhadas</h1>
-
-            {/* Balance Summary */}
-            {selectedGroup && balances.length > 0 && (
-                <div className="mb-8 bg-base-200 rounded-lg p-4">
-                    <h2 className="text-xl font-semibold mb-4">Resumo do Saldo</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {balances.map(balance => (
-                            <div
-                                key={balance.userId}
-                                className={`card ${balance.amount >= 0 ? 'bg-success/20' : 'bg-error/20'} p-4`}
-                            >
-                                <div className="card-body p-2">
-                                    <h3 className="card-title text-lg">{balance.name}</h3>
-                                    <p className={`text-xl font-bold ${balance.amount >= 0 ? 'text-success' : 'text-error'}`}>
-                                        {balance.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                    </p>
-                                    <p className="text-sm opacity-80">
-                                        {balance.amount >= 0
-                                            ? 'Deve receber'
-                                            : 'Deve pagar'}
-                                    </p>
+        <div className="flex flex-col min-h-screen pb-20 md:pb-0">
+            <UserProfileBar pathname="Finanças" />
+            
+            <div className="flex-1 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Left Column - Groups */}
+                    <div className="md:col-span-1">
+                        <div className="card bg-base-100 shadow-xl">
+                            <div className="card-body">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="card-title">Grupos de Despesas</h2>
+                                    <button 
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => setIsAddingGroup(!isAddingGroup)}
+                                    >
+                                        {isAddingGroup ? 'Cancelar' : 'Novo Grupo'}
+                                    </button>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Charts */}
-            {selectedGroup && expenses.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="card bg-base-200 p-4">
-                        <h2 className="text-xl font-semibold mb-4">Despesas por Categoria</h2>
-                        <div className="h-64">
-                            <Pie data={getCategoryChartData()} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </div>
-
-                    <div className="card bg-base-200 p-4">
-                        <h2 className="text-xl font-semibold mb-4">Despesas por Pessoa</h2>
-                        <div className="h-64">
-                            <Bar
-                                data={getUserExpenseChartData()}
-                                options={{
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true
-                                        }
-                                    }
-                                }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Group selection and management */}
-            <div className="mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                    <div className="form-control w-full md:w-1/2">
-                        <div className="flex flex-row gap-2">
-                            <select
-                                className="select select-bordered flex-1"
-                                value={selectedGroup || ''}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                disabled={costGroups.length === 0}
-                            >
-                                {costGroups.length === 0 ? (
-                                    <option value="">Nenhum grupo disponível</option>
-                                ) : (
-                                    costGroups.map(group => (
-                                        <option key={group.id} value={group.id}>{group.name}</option>
-                                    ))
-                                )}
-                            </select>
-
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => setIsAddingGroup(true)}
-                            >
-                                Novo Grupo
-                            </button>
-                        </div>
-                    </div>
-
-                    {selectedGroup && (
-                        <button
-                            className="btn btn-accent w-full md:w-auto"
-                            onClick={() => setIsAddingExpense(true)}
-                        >
-                            Nova Despesa
-                        </button>
-                    )}
-                </div>
-
-                {/* Selected group info */}
-                {selectedGroup && (
-                    <div className="bg-base-200 p-4 rounded-lg mb-6">
-                        {costGroups.find(g => g.id === selectedGroup)?.description && (
-                            <p className="mb-2 text-sm opacity-80">
-                                {costGroups.find(g => g.id === selectedGroup)?.description}
-                            </p>
-                        )}
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="text-sm font-medium mr-2">Membros:</span>
-                            {costGroups.find(g => g.id === selectedGroup)?.members.map(memberId => (
-                                <span key={memberId} className="badge badge-outline">
-                                    {getUserName(memberId)}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Expense list */}
-            {selectedGroup && (
-                <div className="overflow-x-auto">
-                    <h2 className="text-xl font-semibold mb-4">Despesas</h2>
-
-                    {expenses.length === 0 ? (
-                        <div className="alert">
-                            <p>Nenhuma despesa cadastrada. Adicione uma despesa para começar.</p>
-                        </div>
-                    ) : (
-                        <table className="table table-zebra w-full">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Valor</th>
-                                    <th className="hidden md:table-cell">Categoria</th>
-                                    <th className="hidden md:table-cell">Data</th>
-                                    <th>Pago por</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {expenses.map(expense => (
-                                    <tr key={expense.id}>
-                                        <td className="font-medium">
-                                            {expense.name}
-                                            {expense.description && (
-                                                <p className="text-xs text-opacity-70 mt-1">{expense.description}</p>
-                                            )}
-                                        </td>
-                                        <td className="font-mono">
-                                            {expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                        </td>
-                                        <td className="hidden md:table-cell">
-                                            <span className="badge">{expense.category}</span>
-                                        </td>
-                                        <td className="hidden md:table-cell">
-                                            {expense.date.toDate().toLocaleDateString('pt-BR')}
-                                        </td>
-                                        <td>
-                                            <span className="text-sm">{getUserName(expense.paidBy)}</span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-error btn-sm"
-                                                onClick={() => handleDeleteExpense(expense.id)}
-                                            >
-                                                Excluir
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            )}
-
-            {/* Add Group Modal */}
-            {isAddingGroup && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="modal-box max-w-2xl w-full">
-                        <h3 className="font-bold text-lg mb-4">Novo Grupo de Despesas</h3>
-
-                        <form onSubmit={handleCreateGroup}>
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Nome do Grupo</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered w-full"
-                                    value={newGroupName}
-                                    onChange={(e) => setNewGroupName(e.target.value)}
-                                    placeholder="Ex: Viagem para a Praia"
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Descrição (opcional)</span>
-                                </label>
-                                <textarea
-                                    className="textarea textarea-bordered w-full"
-                                    value={newGroupDescription}
-                                    onChange={(e) => setNewGroupDescription(e.target.value)}
-                                    placeholder="Ex: Despesas da viagem em janeiro/2023"
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Adicionar Membros</span>
-                                </label>
-
-                                {friends.length === 0 ? (
-                                    <div className="alert">
-                                        <p>Você não tem amigos para adicionar. Adicione amigos para criar um grupo.</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                                        {friends.map(friend => (
-                                            <label key={friend.id} className="flex items-center p-3 border rounded-lg hover:bg-base-200 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="checkbox checkbox-primary mr-3"
-                                                    checked={newGroupMembers.includes(friend.id)}
-                                                    onChange={() => handleMemberSelection(friend.id)}
-                                                />
-                                                <span>
-                                                    {friend.firstName} {friend.lastName}
-                                                </span>
+                                
+                                {isAddingGroup && (
+                                    <form onSubmit={handleCreateGroup} className="mt-4 space-y-3">
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Nome do Grupo</span>
                                             </label>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="modal-action">
-                                <button
-                                    type="button"
-                                    className="btn"
-                                    onClick={() => setIsAddingGroup(false)}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    disabled={friends.length === 0 || !newGroupName.trim() || newGroupMembers.length === 0}
-                                >
-                                    Criar Grupo
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Expense Modal */}
-            {isAddingExpense && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="modal-box max-w-2xl w-full">
-                        <h3 className="font-bold text-lg mb-4">Nova Despesa</h3>
-
-                        <form onSubmit={handleAddExpense}>
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Nome da Despesa</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered w-full"
-                                    value={newExpenseName}
-                                    onChange={(e) => setNewExpenseName(e.target.value)}
-                                    placeholder="Ex: Almoço no restaurante"
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Descrição (opcional)</span>
-                                </label>
-                                <textarea
-                                    className="textarea textarea-bordered w-full"
-                                    value={newExpenseDescription}
-                                    onChange={(e) => setNewExpenseDescription(e.target.value)}
-                                    placeholder="Ex: Almoço durante a viagem"
-                                    rows={2}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Valor</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="input input-bordered w-full"
-                                        value={newExpenseAmount}
-                                        onChange={(e) => setNewExpenseAmount(parseFloat(e.target.value) || 0)}
-                                        step="0.01"
-                                        min="0.01"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Data</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        className="input input-bordered w-full"
-                                        value={newExpenseDate}
-                                        onChange={(e) => setNewExpenseDate(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Categoria</span>
-                                    </label>
-                                    <select
-                                        className="select select-bordered w-full"
-                                        value={newExpenseCategory}
-                                        onChange={(e) => setNewExpenseCategory(e.target.value)}
-                                        required
-                                    >
-                                        {expenseCategories.map(category => (
-                                            <option key={category} value={category}>{category}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="form-control">
-                                    <label className="label">
-                                        <span className="label-text">Pago por</span>
-                                    </label>
-                                    <select
-                                        className="select select-bordered w-full"
-                                        value={newExpensePaidBy}
-                                        onChange={(e) => setNewExpensePaidBy(e.target.value)}
-                                        required
-                                    >
-                                        <option value={userData.uid}>
-                                            {userData.firstName} {userData.lastName} (Você)
-                                        </option>
-                                        {friends
-                                            .filter(friend =>
-                                                selectedGroup &&
-                                                costGroups.find(g => g.id === selectedGroup)?.members.includes(friend.id)
-                                            )
-                                            .map(friend => (
-                                                <option key={friend.id} value={friend.id}>
-                                                    {friend.firstName} {friend.lastName}
-                                                </option>
-                                            ))
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="form-control mb-4">
-                                <label className="label">
-                                    <span className="label-text">Divisão da Despesa (%)</span>
-                                </label>
-
-                                <div className="mt-2 space-y-3">
-                                    {selectedGroup && costGroups.find(g => g.id === selectedGroup)?.members.map(memberId => (
-                                        <div key={memberId} className="flex items-center">
-                                            <span className="w-1/2">{getUserName(memberId)}</span>
-                                            <input
-                                                type="number"
-                                                className="input input-bordered w-1/2"
-                                                value={newExpenseSplits[memberId] || 0}
-                                                onChange={(e) => handleSplitChange(memberId, parseFloat(e.target.value) || 0)}
-                                                step="0.01"
-                                                min="0"
-                                                max="100"
+                                            <input 
+                                                type="text" 
+                                                className="input input-bordered w-full" 
+                                                value={newGroupName}
+                                                onChange={e => setNewGroupName(e.target.value)}
+                                                placeholder="Ex: Apartamento, Viagem, etc."
                                                 required
                                             />
                                         </div>
-                                    ))}
-
-                                    <div className="flex items-center justify-between mt-2">
-                                        <span className="font-medium">Total:</span>
-                                        <span
-                                            className={`font-mono text-lg ${Math.abs(Object.values(newExpenseSplits).reduce((a, b) => a + b, 0) - 100) <= 0.01
-                                                    ? 'text-success'
-                                                    : 'text-error'
-                                                }`}
-                                        >
-                                            {Object.values(newExpenseSplits).reduce((a, b) => a + b, 0).toFixed(2)}%
-                                        </span>
+                                        
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Descrição (opcional)</span>
+                                            </label>
+                                            <textarea 
+                                                className="textarea textarea-bordered w-full" 
+                                                value={newGroupDescription}
+                                                onChange={e => setNewGroupDescription(e.target.value)}
+                                                placeholder="Descreva o propósito deste grupo"
+                                            />
+                                        </div>
+                                        
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Membros</span>
+                                            </label>
+                                            <select 
+                                                className="select select-bordered w-full" 
+                                                value=""
+                                                onChange={e => {
+                                                    if (e.target.value && !newGroupMembers.includes(e.target.value)) {
+                                                        setNewGroupMembers([...newGroupMembers, e.target.value]);
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">Selecione um amigo</option>
+                                                {friends.map(friend => (
+                                                    <option key={friend.uid} value={friend.uid}>
+                                                        {`${friend.firstName} ${friend.lastName}`}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            
+                                            <div className="mt-2 space-y-1">
+                                                {newGroupMembers.map(memberId => {
+                                                    const friend = friends.find(f => f.uid === memberId);
+                                                    return friend ? (
+                                                        <div key={memberId} className="flex justify-between items-center p-2 bg-base-200 rounded-lg">
+                                                            <span>{`${friend.firstName} ${friend.lastName}`}</span>
+                                                            <button 
+                                                                type="button"
+                                                                className="btn btn-ghost btn-xs"
+                                                                onClick={() => setNewGroupMembers(
+                                                                    newGroupMembers.filter(id => id !== memberId)
+                                                                )}
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="form-control mt-4">
+                                            <button type="submit" className="btn btn-primary">Criar Grupo</button>
+                                        </div>
+                                    </form>
+                                )}
+                                
+                                {isLoadingGroups ? (
+                                    <div className="flex justify-center py-4">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                                     </div>
-
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline"
-                                            onClick={resetSplitPercentages}
-                                        >
-                                            Dividir Igualmente
-                                        </button>
+                                ) : (
+                                    <div className="mt-4 space-y-2">
+                                        {costGroups.length === 0 ? (
+                                            <div className="text-center py-4 text-gray-500">
+                                                Você ainda não tem grupos de despesas
+                                            </div>
+                                        ) : (
+                                            costGroups.map(group => (
+                                                <div 
+                                                    key={group.id}
+                                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                                                        selectedGroup === group.id ? 'bg-primary text-primary-content' : 'bg-base-200 hover:bg-base-300'
+                                                    }`}
+                                                    onClick={() => setSelectedGroup(group.id)}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <h3 className="font-semibold">{group.name}</h3>
+                                                        <button 
+                                                            className="btn btn-ghost btn-xs"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteGroup(group.id);
+                                                            }}
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                    {group.description && (
+                                                        <p className="text-sm mt-1">{group.description}</p>
+                                                    )}
+                                                    <div className="text-xs mt-2">
+                                                        {group.members.length} membros
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Right Column - Expenses */}
+                    <div className="md:col-span-2">
+                        {selectedGroup ? (
+                            <div className="space-y-4">
+                                <div className="card bg-base-100 shadow-xl">
+                                    <div className="card-body">
+                                        <div className="flex justify-between items-center">
+                                            <h2 className="card-title">
+                                                Despesas
+                                            </h2>
+                                            <div className="flex space-x-2">
+                                                <select 
+                                                    className="select select-bordered select-sm"
+                                                    value={selectedPeriod}
+                                                    onChange={e => setSelectedPeriod(e.target.value as any)}
+                                                >
+                                                    <option value="7d">Últimos 7 dias</option>
+                                                    <option value="30d">Últimos 30 dias</option>
+                                                    <option value="90d">Últimos 90 dias</option>
+                                                    <option value="all">Todos</option>
+                                                </select>
+                                                <button 
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={() => setIsAddingExpense(!isAddingExpense)}
+                                                >
+                                                    {isAddingExpense ? 'Cancelar' : 'Nova Despesa'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        {isAddingExpense && (
+                                            <form onSubmit={handleCreateExpense} className="mt-4 space-y-3">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Descrição</span>
+                                                        </label>
+                                                        <input 
+                                                            type="text" 
+                                                            className="input input-bordered w-full" 
+                                                            value={newExpenseDescription}
+                                                            onChange={e => setNewExpenseDescription(e.target.value)}
+                                                            placeholder="Ex: Supermercado, Aluguel, etc."
+                                                            required
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Valor (R$)</span>
+                                                        </label>
+                                                        <input 
+                                                            type="number" 
+                                                            step="0.01"
+                                                            min="0.01"
+                                                            className="input input-bordered w-full" 
+                                                            value={newExpenseAmount}
+                                                            onChange={e => {
+                                                                setNewExpenseAmount(e.target.value);
+                                                                if (splitMethod === 'fixed') {
+                                                                    resetSplitPercentages();
+                                                                }
+                                                            }}
+                                                            placeholder="0.00"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Pago por</span>
+                                                        </label>
+                                                        <select 
+                                                            className="select select-bordered w-full" 
+                                                            value={newExpensePaidBy}
+                                                            onChange={e => setNewExpensePaidBy(e.target.value)}
+                                                            required
+                                                        >
+                                                            <option value="">Selecione</option>
+                                                            <option value={userData.uid}>
+                                                                Você ({userData.firstName})
+                                                            </option>
+                                                            {friends.map(friend => {
+                                                                const group = costGroups.find(g => g.id === selectedGroup);
+                                                                if (group && group.members.includes(friend.uid)) {
+                                                                    return (
+                                                                        <option key={friend.uid} value={friend.uid}>
+                                                                            {`${friend.firstName} ${friend.lastName}`}
+                                                                        </option>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Categoria</span>
+                                                        </label>
+                                                        <select 
+                                                            className="select select-bordered w-full" 
+                                                            value={newExpenseCategory}
+                                                            onChange={e => setNewExpenseCategory(e.target.value)}
+                                                            required
+                                                        >
+                                                            <option value="">Selecione</option>
+                                                            {EXPENSE_CATEGORIES.map(category => (
+                                                                <option key={category} value={category}>
+                                                                    {category}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Data</span>
+                                                        </label>
+                                                        <input 
+                                                            type="date" 
+                                                            className="input input-bordered w-full" 
+                                                            value={newExpenseDate}
+                                                            onChange={e => setNewExpenseDate(e.target.value)}
+                                                            required
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="form-control">
+                                                        <label className="label">
+                                                            <span className="label-text">Método de Divisão</span>
+                                                        </label>
+                                                        <select 
+                                                            className="select select-bordered w-full" 
+                                                            value={splitMethod}
+                                                            onChange={e => {
+                                                                setSplitMethod(e.target.value as any);
+                                                            }}
+                                                        >
+                                                            <option value="equal">Igual para todos</option>
+                                                            <option value="percentage">Porcentagens</option>
+                                                            <option value="fixed">Valores Fixos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="divider">Divisão de Despesas</div>
+                                                
+                                                <div className="space-y-2">
+                                                    {expenseMembers.map(member => (
+                                                        <div key={member.uid} className="flex items-center space-x-2 p-2 bg-base-200 rounded-lg">
+                                                            <div className="flex-1">
+                                                                {member.uid === userData.uid ? 'Você' : member.name}
+                                                            </div>
+                                                            
+                                                            {splitMethod === 'equal' ? (
+                                                                <div className="badge badge-primary">
+                                                                    {(100 / expenseMembers.length).toFixed(0)}%
+                                                                </div>
+                                                            ) : splitMethod === 'percentage' ? (
+                                                                <div className="flex items-center space-x-2">
+                                                                    <input 
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        max="100"
+                                                                        className="input input-bordered input-sm w-20"
+                                                                        value={member.splitValue}
+                                                                        onChange={e => updateMemberSplit(
+                                                                            member.uid, 
+                                                                            parseFloat(e.target.value) || 0
+                                                                        )}
+                                                                    />
+                                                                    <span>%</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center space-x-2">
+                                                                    <span>R$</span>
+                                                                    <input 
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        className="input input-bordered input-sm w-20"
+                                                                        value={member.splitValue}
+                                                                        onChange={e => updateMemberSplit(
+                                                                            member.uid, 
+                                                                            parseFloat(e.target.value) || 0
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                
+                                                <div className="form-control mt-4">
+                                                    <button type="submit" className="btn btn-primary">Adicionar Despesa</button>
+                                                </div>
+                                            </form>
+                                        )}
+                                        
+                                        {isLoadingExpenses ? (
+                                            <div className="flex justify-center py-4">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                                            </div>
+                                        ) : (
+                                            <div className="mt-4">
+                                                {filteredExpenses.length === 0 ? (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                        Nenhuma despesa registrada no período selecionado
+                                                    </div>
+                                                ) : (
+                                                    <div className="overflow-x-auto">
+                                                        <table className="table table-zebra w-full">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Data</th>
+                                                                    <th>Descrição</th>
+                                                                    <th>Categoria</th>
+                                                                    <th>Pago por</th>
+                                                                    <th>Valor</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {filteredExpenses.sort((a, b) => 
+                                                                    b.date.toDate().getTime() - a.date.toDate().getTime()
+                                                                ).map(expense => (
+                                                                    <tr key={expense.id}>
+                                                                        <td>{expense.date.toDate().toLocaleDateString()}</td>
+                                                                        <td>{expense.description}</td>
+                                                                        <td>{expense.category}</td>
+                                                                        <td>
+                                                                            {expense.paidBy === userData.uid 
+                                                                                ? 'Você' 
+                                                                                : friends.find(f => f.uid === expense.paidBy)?.firstName || 'Desconhecido'}
+                                                                        </td>
+                                                                        <td>R$ {expense.amount.toFixed(2)}</td>
+                                                                        <td>
+                                                                            <button 
+                                                                                className="btn btn-ghost btn-xs"
+                                                                                onClick={() => handleDeleteExpense(expense.id)}
+                                                                            >
+                                                                                🗑️
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                <div className="card bg-base-100 shadow-xl">
+                                    <div className="card-body">
+                                        <h2 className="card-title">Análise de Despesas</h2>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                            {filteredExpenses.length === 0 ? (
+                                                <div className="col-span-2 text-center py-4 text-gray-500">
+                                                    Sem dados suficientes para análise
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="h-64">
+                                                        <h3 className="text-center">Despesas por Categoria</h3>
+                                                        <Pie data={chartData} options={chartOptions} />
+                                                    </div>
+                                                    
+                                                    <div className="h-64">
+                                                        <h3 className="text-center">Despesas por Dia</h3>
+                                                        <Bar data={barChartData} options={barChartOptions} />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="card bg-base-100 shadow-xl">
+                                    <div className="card-body">
+                                        <h2 className="card-title">Saldos</h2>
+                                        
+                                        {balances.length === 0 ? (
+                                            <div className="text-center py-4 text-gray-500">
+                                                Sem dados para cálculo de saldo
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto mt-4">
+                                                <table className="table w-full">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Pessoa</th>
+                                                            <th>Saldo</th>
+                                                            <th>Situação</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {balances.map(balance => (
+                                                            <tr key={balance.uid}>
+                                                                <td>{balance.uid === userData.uid ? 'Você' : balance.name}</td>
+                                                                <td 
+                                                                    className={
+                                                                        balance.balance > 0 
+                                                                            ? 'text-success' 
+                                                                            : balance.balance < 0 
+                                                                            ? 'text-error' 
+                                                                            : ''
+                                                                    }
+                                                                >
+                                                                    R$ {balance.balance.toFixed(2)}
+                                                                </td>
+                                                                <td>
+                                                                    {balance.balance > 0 ? (
+                                                                        <span className="badge badge-success">A receber</span>
+                                                                    ) : balance.balance < 0 ? (
+                                                                        <span className="badge badge-error">A pagar</span>
+                                                                    ) : (
+                                                                        <span className="badge">Neutro</span>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="modal-action">
-                                <button
-                                    type="button"
-                                    className="btn"
-                                    onClick={() => setIsAddingExpense(false)}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    disabled={
-                                        !newExpenseName.trim() ||
-                                        newExpenseAmount <= 0 ||
-                                        !newExpensePaidBy ||
-                                        Math.abs(Object.values(newExpenseSplits).reduce((a, b) => a + b, 0) - 100) > 0.01
-                                    }
-                                >
-                                    Adicionar Despesa
-                                </button>
+                        ) : (
+                            <div className="card bg-base-100 shadow-xl h-full">
+                                <div className="card-body flex flex-col items-center justify-center">
+                                    <h2 className="card-title text-center">Selecione um grupo para ver as despesas</h2>
+                                    <p className="text-center text-gray-500 mt-2">
+                                        {costGroups.length === 0 
+                                            ? 'Comece criando um grupo de despesas' 
+                                            : 'Ou crie um novo grupo para começar a registrar despesas'}
+                                    </p>
+                                </div>
                             </div>
-                        </form>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

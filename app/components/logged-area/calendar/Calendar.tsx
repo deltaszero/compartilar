@@ -72,7 +72,7 @@ export default function Calendar() {
     endDate: selectedDate.format('YYYY-MM-DD'),
     endTime: '10:00',
     location: '',
-    category: 'other',
+    category: 'other' as 'school' | 'medical' | 'activity' | 'visitation' | 'other',
     childId: '',
     responsibleParentId: userData?.uid || '',
     checkInRequired: false
@@ -162,9 +162,10 @@ export default function Calendar() {
       const childrenData: Child[] = [];
       
       snapshot.forEach(doc => {
+        const data = doc.data() as Child;
         childrenData.push({
-          id: doc.id,
-          ...doc.data() as Child
+          ...data,
+          id: doc.id
         });
       });
       
@@ -281,57 +282,66 @@ export default function Calendar() {
       const startOfMonth = currentMonth.startOf('month').subtract(7, 'day');
       const endOfMonth = currentMonth.endOf('month').add(7, 'day');
       
-      // Find events for this user, either by:
-      // 1. Created by user
-      // 2. User is the responsible parent
-      
-      let eventsRef: CollectionReference<DocumentData> = collection(db, 'calendar_events');
-      
-      // We'll make two separate queries to simplify our approach
-      
-      // First query: Events created by the user
-      const createdByQuery = query(
-        eventsRef,
-        where('createdBy', '==', userData.uid),
-        where('startTime', '>=', Timestamp.fromDate(startOfMonth.toDate())),
-        where('startTime', '<=', Timestamp.fromDate(endOfMonth.toDate()))
-      );
-      
-      // Second query: Events where user is responsible parent
-      const responsibleQuery = query(
-        eventsRef,
-        where('responsibleParentId', '==', userData.uid),
-        where('startTime', '>=', Timestamp.fromDate(startOfMonth.toDate())),
-        where('startTime', '<=', Timestamp.fromDate(endOfMonth.toDate()))
-      );
-      
-      // Execute both queries
-      const [createdBySnapshot, responsibleSnapshot] = await Promise.all([
-        getDocs(createdByQuery),
-        getDocs(responsibleQuery)
-      ]);
-      
-      // Process results
+      // Find events for this user
+      const eventsRef = collection(db, 'calendar_events');
       const eventsMap = new Map<string, CalendarEventWithChild>(); // Use map to avoid duplicates
       
-      const processSnapshot = (snapshot: any) => {
-        snapshot.forEach((doc: any) => {
-          if (!eventsMap.has(doc.id)) {
-            const eventData = doc.data() as CalendarEvent;
-            const childInfo = children.find(child => child.id === eventData.childId);
-            
-            eventsMap.set(doc.id, {
-              id: doc.id,
-              ...eventData,
-              childName: childInfo ? `${childInfo.firstName} ${childInfo.lastName}` : undefined,
-              childPhotoURL: childInfo?.photoURL
-            });
+      // Get events created by this user
+      try {
+        const createdByQuery = query(eventsRef, where('createdBy', '==', userData.uid));
+        const createdBySnapshot = await getDocs(createdByQuery);
+        
+        createdBySnapshot.forEach(doc => {
+          const eventData = doc.data() as CalendarEvent;
+          const eventStartTime = eventData.startTime.toDate();
+          
+          // Filter by date range in code
+          if (eventStartTime >= startOfMonth.toDate() && eventStartTime <= endOfMonth.toDate()) {
+            if (!eventsMap.has(doc.id)) {
+              const childInfo = children.find(child => child.id === eventData.childId);
+              
+              const { id: _, ...eventDataWithoutId } = eventData;
+              eventsMap.set(doc.id, {
+                ...eventDataWithoutId,
+                id: doc.id,
+                childName: childInfo ? `${childInfo.firstName} ${childInfo.lastName}` : 'Sem criança',
+                childPhotoURL: childInfo?.photoURL || undefined
+              });
+            }
           }
         });
-      };
+      } catch (err) {
+        console.warn('Error loading created events:', err);
+        // Continue with other query
+      }
       
-      processSnapshot(createdBySnapshot);
-      processSnapshot(responsibleSnapshot);
+      // Get events where user is responsible parent
+      try {
+        const responsibleQuery = query(eventsRef, where('responsibleParentId', '==', userData.uid));
+        const responsibleSnapshot = await getDocs(responsibleQuery);
+        
+        responsibleSnapshot.forEach(doc => {
+          const eventData = doc.data() as CalendarEvent;
+          const eventStartTime = eventData.startTime.toDate();
+          
+          // Filter by date range in code
+          if (eventStartTime >= startOfMonth.toDate() && eventStartTime <= endOfMonth.toDate()) {
+            if (!eventsMap.has(doc.id)) {
+              const childInfo = children.find(child => child.id === eventData.childId);
+              
+              const { id: _, ...eventDataWithoutId } = eventData;
+              eventsMap.set(doc.id, {
+                ...eventDataWithoutId,
+                id: doc.id,
+                childName: childInfo ? `${childInfo.firstName} ${childInfo.lastName}` : 'Sem criança',
+                childPhotoURL: childInfo?.photoURL || undefined
+              });
+            }
+          }
+        });
+      } catch (err) {
+        console.warn('Error loading responsible events:', err);
+      }
       
       // Convert map to array
       const eventsData = Array.from(eventsMap.values());
@@ -379,17 +389,17 @@ export default function Calendar() {
       
       const eventData = {
         title: formData.title,
-        description: formData.description,
+        description: formData.description || '',
         startTime: Timestamp.fromDate(startDateTime),
         endTime: Timestamp.fromDate(endDateTime),
-        location: formData.location ? {
-          address: formData.location
-        } : undefined,
+        location: {
+          address: formData.location || ''
+        },
         category: formData.category,
         childId: formData.childId,
-        coParentingId,
-        responsibleParentId: formData.responsibleParentId,
-        checkInRequired: formData.checkInRequired,
+        coParentingId: coParentingId || '',
+        responsibleParentId: formData.responsibleParentId || userData.uid,
+        checkInRequired: Boolean(formData.checkInRequired),
         checkInStatus: 'pending',
         createdBy: userData.uid,
         updatedAt: Timestamp.now()

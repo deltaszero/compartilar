@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, /* limit, */ Timestamp } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
@@ -22,7 +22,7 @@ interface AnalyticsData {
 interface Event {
   eventName: string;
   count: number;
-  params?: any;
+  params?: Record<string, string | number | boolean | null | undefined>;
   timestamp: Timestamp;
 }
 
@@ -107,21 +107,21 @@ const AnalyticsDashboard: React.FC = () => {
         
         // Process by event type
         if (event.eventName === 'page_view') {
-          const deviceType = event.params?.device_type || 'unknown';
+          const deviceType = String(event.params?.device_type || 'unknown');
           visitorsByDevice[deviceType] = (visitorsByDevice[deviceType] || 0) + 1;
           
-          const pagePath = event.params?.page_path || 'unknown';
+          const pagePath = String(event.params?.page_path || 'unknown');
           pageViews[pagePath] = (pageViews[pagePath] || 0) + 1;
         }
         
         if (event.eventName === 'cta_click') {
           ctaEvents++;
-          const ctaId = event.params?.cta_id || 'unknown';
+          const ctaId = String(event.params?.cta_id || 'unknown');
           ctaClicks[ctaId] = (ctaClicks[ctaId] || 0) + 1;
         }
         
         if (event.eventName === 'feature_click') {
-          const featureId = event.params?.feature_analytics_id || 'unknown';
+          const featureId = String(event.params?.feature_analytics_id || 'unknown');
           featureInteractions[featureId] = (featureInteractions[featureId] || 0) + 1;
         }
         

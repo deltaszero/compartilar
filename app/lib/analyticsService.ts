@@ -46,11 +46,11 @@ export const trackAnalyticsEvent = async (
 /**
  * Helper function to identify and format user for analytics
  */
-export const identifyUser = (userId: string, userData: any): AnalyticsEventParams => {
+export const identifyUser = (userId: string, userData: Record<string, any>): AnalyticsEventParams => {
   return {
     user_id: userId,
     user_email: userData.email || null,
     user_name: userData.firstName ? `${userData.firstName} ${userData.lastName || ''}` : null,
-    user_since: userData.createdAt ? userData.createdAt.toDate().toISOString() : null,
+    user_since: userData.createdAt && typeof userData.createdAt === 'object' && 'toDate' in userData.createdAt ? userData.createdAt.toDate().toISOString() : null,
   };
 };

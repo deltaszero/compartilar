@@ -525,7 +525,8 @@ export default function SignupPage() {
                                             lastName: '',
                                             birthDate: '',
                                             gender: null,
-                                            relationship: null
+                                            relationship: null,
+                                            parentId: '' // Empty string as placeholder, will be set on form submission
                                         })}
                                         className="btn btn-ghost max-w-xs text-primary font-bold"
                                     >

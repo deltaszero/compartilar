@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import Sidebar from '@/app/components/logged-area/ui/Sidebar';
+import { useWindowSize } from '@/app/hooks/useWindowSize';
 
 import { usePathname } from 'next/navigation';
 import NavLink from '@/app/components/utils/NavLink';
@@ -16,9 +17,17 @@ const BottomNav = () => {
     const { userData, loading } = useUser();
     const pathname = usePathname();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { width } = useWindowSize();
+    const isMobile = width ? width < 768 : false;
+    
+    // Close when user navigates
+    useEffect(() => {
+        setIsModalOpen(false);
+    }, [pathname]);
 
-    const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { y: number } }) => {
-        if (info.offset.y > 100) {
+    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        // Close if the user has dragged down by more than 50px
+        if (info.offset.y > 50) {
             setIsModalOpen(false);
         }
     };
@@ -49,8 +58,8 @@ const BottomNav = () => {
             icon: <IconUser width={24} height={24} />
         },
         {
-            path: `/${userData.username}/geolocation`,
-            label: 'Localização',
+            path: `/${userData.username}/check-in`,
+            label: 'Check-in',
             icon: <IconMaplocation width={24} height={24} />
         },
         {
@@ -67,7 +76,7 @@ const BottomNav = () => {
 
     return (
         <>
-            <footer className="btm-nav btm-nav-sm bg-base-100 z-[9998]">
+            <footer className="btm-nav btm-nav-sm bg-base-100 z-[9998] shadow-lg">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -78,25 +87,31 @@ const BottomNav = () => {
                         >
                             {item.label === 'Mais' ? (
                                 // Render without NavLink for "Mais"
-                                <div className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}>
-                                    <div className="flex flex-col items-center justify-center">
+                                <motion.div 
+                                    className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <div className="flex items-center justify-center">
                                         {item.icon}
                                     </div>
-                                    <p className="text-xs font-nunito font-bold">
+                                    <p className="text-[10px] sm:text-xs font-nunito font-bold mt-0.5">
                                         {item.label}
                                     </p>
-                                </div>
+                                </motion.div>
                             ) : (
                                 // Render with NavLink for other items
                                 <NavLink href={item.path}>
-                                    <div className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}>
-                                        <div className="flex flex-col items-center justify-center">
+                                    <motion.div 
+                                        className={`flex flex-col items-center justify-center py-1 ${isActive ? '' : 'text-neutral'}`}
+                                        whileTap={{ scale: 0.9 }}
+                                    >
+                                        <div className="flex items-center justify-center">
                                             {item.icon}
                                         </div>
-                                        <p className="text-xs font-nunito font-bold">
+                                        <p className="text-[10px] sm:text-xs font-nunito font-bold mt-0.5">
                                             {item.label}
                                         </p>
-                                    </div>
+                                    </motion.div>
                                 </NavLink>
                             )}
                         </button>
@@ -107,35 +122,44 @@ const BottomNav = () => {
             <AnimatePresence>
                 {isModalOpen && (
                     <motion.div
-                        className="fixed inset-0 z-[9999] 50 bg-black/50"
+                        className="fixed inset-0 z-[9999] bg-black/50"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsModalOpen(false)}
                     >
                         <motion.div
-                            className="absolute bottom-0 left-0 right-0 bg-primary-content rounded-t-xl p-4 max-h-[90vh] overflow-y-auto"
+                            className="absolute bottom-0 left-0 right-0 bg-base-300 rounded-t-xl p-4 max-h-[80vh] overflow-y-auto safe-area-bottom"
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            transition={{ 
+                                type: 'spring', 
+                                damping: isMobile ? 40 : 25, 
+                                stiffness: isMobile ? 400 : 300,
+                                mass: 0.8 
+                            }}
                             drag="y"
                             dragConstraints={{ top: 0, bottom: 0 }}
-                            dragElastic={0.7}
+                            dragElastic={0.5}
+                            dragTransition={{ bounceStiffness: 600, bounceDamping: 10 }}
                             onDragEnd={handleDragEnd}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Drag handle */}
-                            <div className="w-16 h-1 bg-primary rounded-full mx-auto mb-4"></div>
-
-                            <Sidebar />
-
-                            <button
-                                className="btn btn-outline btn-primary w-full mt-4"
-                                onClick={() => setIsModalOpen(false)}
-                            >
-                                Fechar
-                            </button>
+                            {/* Drag handle - made more visible */}
+                            <div className="w-20 h-1.5 bg-neutral/50 rounded-full mx-auto mb-6"></div>
+                            
+                            {/* Modal content with improved spacing */}
+                            <div className="pb-safe pb-4">
+                                <Sidebar />
+                                
+                                <button
+                                    className="btn btn-outline btn-neutral w-full mt-8 rounded-xl"
+                                    onClick={() => setIsModalOpen(false)}
+                                >
+                                    Fechar
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

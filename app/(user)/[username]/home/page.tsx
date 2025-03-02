@@ -11,7 +11,8 @@ import {
     where,
     getDocs,
     doc,
-    runTransaction
+    runTransaction,
+    Timestamp
 } from 'firebase/firestore';
 import {
     ref,
@@ -39,7 +40,7 @@ import support_img from "@assets/images/support-icon.png";
 import calendar_img from "@assets/images/calendar-icon.png";
 import family_img from "@assets/images/family-icon.png";
 
-import feature_img from "@assets/images/compartilar-anthropic-img-01.png";
+// Removed unused import
 
 import IconBell from '@assets/icons/icon_meu_lar_bell.svg';
 
@@ -574,47 +575,81 @@ export default function HomePage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
-    // Sample events
+    // Sample events - converting to proper CalendarEventWithChild format
+    const createTimestamp = (date: string) => {
+        return Timestamp.fromDate(new Date(date));
+    };
+
     const events = [
         {
             id: '1',
-            date: dayjs().format('YYYY-MM-DD'),
-            color: '#6366F1' // indigo
+            coParentingId: 'sample1',
+            title: 'Evento 1',
+            description: 'Descrição do evento 1',
+            startTime: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            endTime: createTimestamp(dayjs().add(1, 'hour').format('YYYY-MM-DD')),
+            category: 'school' as const,
+            responsibleParentId: 'parent1',
+            checkInRequired: false,
+            createdBy: 'user1',
+            createdAt: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            updatedAt: createTimestamp(dayjs().format('YYYY-MM-DD'))
         },
         {
             id: '2',
-            date: dayjs().format('YYYY-MM-DD'),
-            color: '#EC4899' // pink
+            coParentingId: 'sample2',
+            title: 'Evento 2',
+            description: 'Descrição do evento 2',
+            startTime: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            endTime: createTimestamp(dayjs().add(2, 'hour').format('YYYY-MM-DD')),
+            category: 'medical' as const,
+            responsibleParentId: 'parent1',
+            checkInRequired: false,
+            createdBy: 'user1',
+            createdAt: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            updatedAt: createTimestamp(dayjs().format('YYYY-MM-DD'))
         },
         {
             id: '3',
-            date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
-            color: '#8B5CF6' // purple
+            coParentingId: 'sample3',
+            title: 'Evento 3',
+            description: 'Descrição do evento 3',
+            startTime: createTimestamp(dayjs().add(1, 'day').format('YYYY-MM-DD')),
+            endTime: createTimestamp(dayjs().add(1, 'day').add(1, 'hour').format('YYYY-MM-DD')),
+            category: 'activity' as const,
+            responsibleParentId: 'parent2',
+            checkInRequired: true,
+            createdBy: 'user1',
+            createdAt: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            updatedAt: createTimestamp(dayjs().format('YYYY-MM-DD'))
         },
         {
             id: '4',
-            date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
-            color: '#10B981' // emerald
+            coParentingId: 'sample4',
+            title: 'Evento 4',
+            description: 'Descrição do evento 4',
+            startTime: createTimestamp(dayjs().add(1, 'day').format('YYYY-MM-DD')),
+            endTime: createTimestamp(dayjs().add(1, 'day').add(3, 'hour').format('YYYY-MM-DD')),
+            category: 'visitation' as const,
+            responsibleParentId: 'parent2',
+            checkInRequired: true,
+            createdBy: 'user2',
+            createdAt: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            updatedAt: createTimestamp(dayjs().format('YYYY-MM-DD'))
         },
         {
             id: '5',
-            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-            color: '#F59E0B' // amber
-        },
-        {
-            id: '6',
-            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-            color: '#F59E0B' // amber
-        },
-        {
-            id: '7',
-            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-            color: '#F59E0B' // amber
-        },
-        {
-            id: '8',
-            date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
-            color: '#F59E0B' // amber
+            coParentingId: 'sample5',
+            title: 'Evento 5',
+            description: 'Descrição do evento 5',
+            startTime: createTimestamp(dayjs().add(3, 'day').format('YYYY-MM-DD')),
+            endTime: createTimestamp(dayjs().add(3, 'day').add(2, 'hour').format('YYYY-MM-DD')),
+            category: 'other' as const,
+            responsibleParentId: 'parent1',
+            checkInRequired: false,
+            createdBy: 'user2',
+            createdAt: createTimestamp(dayjs().format('YYYY-MM-DD')),
+            updatedAt: createTimestamp(dayjs().format('YYYY-MM-DD'))
         }
     ];
 
@@ -676,7 +711,7 @@ export default function HomePage() {
                                 </p> */}
                                 <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto h-[8em]">
                                     <div className='flex flex-col gap-2'>
-                                        <h2 className='text-4xl font-raleway text-secondaryGreen font-semibold'>
+                                        <h2 className='text-4xl font-playfair text-secondaryGreen font-semibold'>
                                             Planeje-se para a semana
                                         </h2>
                                         <p className="text-xs text-gray-700 font-raleway">
@@ -738,7 +773,7 @@ export default function HomePage() {
                                     </p> */}
                                     <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto h-[8em]">
                                     <div className='flex flex-col gap-2'>
-                                        <h2 className='text-4xl font-raleway text-warning font-semibold'>
+                                        <h2 className='text-4xl font-playfair text-warning font-semibold'>
                                             Cuide dos seus pequenos
                                         </h2>
                                         <p className="text-xs text-gray-700 font-raleway">

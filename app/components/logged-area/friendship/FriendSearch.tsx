@@ -43,8 +43,8 @@ export default function FriendSearch() {
                 const childrenData: KidInfo[] = [];
                 snapshot.forEach(doc => {
                     childrenData.push({
-                        id: doc.id,
-                        ...doc.data() as KidInfo
+                        ...doc.data() as KidInfo,
+                        id: doc.id
                     });
                 });
                 

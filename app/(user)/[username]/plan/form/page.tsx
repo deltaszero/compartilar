@@ -9,7 +9,7 @@ import {
     query, 
     where, 
     getDocs,
-    getDoc,
+    // getDoc,
     updateDoc,
     arrayUnion,
     Timestamp 
@@ -24,7 +24,7 @@ import IconIdea from '@assets/icons/icon_meu_lar_idea.svg';
 
 // General Form Component
 const GeneralForm: React.FC = () => {
-    const { user, userData } = useUser();
+    const { user } = useUser();
     const searchParams = useSearchParams();
     const planId = searchParams.get('planId');
     
