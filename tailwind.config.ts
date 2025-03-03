@@ -22,6 +22,7 @@ export default {
 			  ringOffset: 'var(--ring-offset)',
 			  
 			  secondaryBlack: '#212121', 
+			  secondaryMain: "#A3E636",
 			},
 			borderRadius: {
 			  base: '5px'

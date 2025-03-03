@@ -2,31 +2,37 @@
 
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useUser } from '@/context/userContext'
+import LoadingPage from '@/app/components/LoadingPage'
 
 export default function LoginRedirect() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+  const callbackUrl = searchParams.get('callbackUrl') || '/chat'
+  const { user, userData, loading } = useUser()
 
   useEffect(() => {
-    // We'll use this to handle redirections after login
-    // This assumes the user is already authenticated at this point
+    // We need to wait for userData to be loaded
+    if (loading) return
     
-    // You can add additional logic here if needed:
-    // - Check if user profile is complete
-    // - Check user roles for conditional redirects
-    // - Show loading state
-
-    // For now, just redirect to the callback URL
-    router.push(callbackUrl)
-  }, [callbackUrl, router])
+    // If we have a user and userData with username, redirect to their area
+    if (user && userData?.username) {
+      router.push(`/${userData.username}`)
+    } else if (user) {
+      // If we have a user but no userData yet, wait a bit longer
+      // This handles the case where Firebase auth is faster than Firestore
+      const timeout = setTimeout(() => {
+        router.push(callbackUrl)
+      }, 2000)
+      
+      return () => clearTimeout(timeout)
+    } else {
+      // No user, redirect back to login
+      router.push('/login')
+    }
+  }, [callbackUrl, router, user, userData, loading])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Redirecionando...</h1>
-        <p>Você será redirecionado em instantes.</p>
-      </div>
-    </div>
+    <LoadingPage />
   )
 }
