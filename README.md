@@ -30,19 +30,5 @@ npx shadcn@latest add https://neobrutalism.dev/r/toast.json
 
 
 ```
-please, read the following files
-
-+ /home/dusoudeth/Documentos/github/compartilar_backup/app/(auth)/signup/layout.tsx
-+ /home/dusoudeth/Documentos/github/compartilar_backup/app/(auth)/login/page.tsx
-+ /home/dusoudeth/Documentos/github/compartilar_backup/app/(auth)/login/redirect/page.tsx 
-+ /home/dusoudeth/Documentos/github/compartilar_backup/app/(auth)/signup/page.tsx
-
-I'd like to refactor them into a new login page at /home/dusoudeth/Documentos/github/compartilar/app/(auth)/login/page.tsx as following: 
-i'd like to maintain the two-side layout of login page, with typing effect at left, but at left i'd like to unify login and signup in a shadcn "tabs" component composed by login fields and a simplified signup tab in which the user defines only email, username and password
-
-for authentication i'll use Firebase Auth, which is governed by
-- /home/dusoudeth/Documentos/github/compartilar/context/userContext.tsx
-- /home/dusoudeth/Documentos/github/compartilar/lib/firebaseConfig.ts do not create any folder
-
-All these files already exists, you do not need to create them
+please add the svg /home/dusoudeth/Documentos/github/compartilar/app/assets/icons/compartilar-icon.svg at the top of right side of /home/dusoudeth/Documentos/github/compartilar/app/(auth)/login/page.tsx, the icon should redirect to the home page
 ```
