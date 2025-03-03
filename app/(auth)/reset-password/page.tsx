@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
 import { auth } from '@lib/firebaseConfig';
-import LoginHeader from "@components/layout/LoginHeader";
+import LoginHeader from "@/app/components/LoginHeader";
 
 
 export default function ResetPasswordPage() {
