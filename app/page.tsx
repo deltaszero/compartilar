@@ -77,14 +77,17 @@ export default function Home() {
             <Header />
 
             {/* HERO */}
-            <section className="bg-muted" ref={heroRef}>
+            <section className="bg-bg" ref={heroRef}>
                 <div className="container flex flex-col lg:flex-row-reverse items-center justify-between gap-8 sm:py-24 mx-auto">
                     <Image
                         src={hero_image}
                         alt="Hero image"
                         width={isMobile ? 256 : 540}
+                        height={isMobile ? 256 : 540}
                         className="animate-fade-in-up"
-                        priority
+                        priority={true}
+                        loading="eager"
+                        fetchPriority="high"
                     />
                     <div className="relative z-10 px-2 sm:px-6 lg:px-8 py-2 sm:py-16 lg:py-24">
                         <div className="max-w-4xl">
