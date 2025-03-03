@@ -1,8 +1,9 @@
-// app/settings/page.tsx
+// app/(user)/[username]/settings/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     doc,
     runTransaction,
@@ -22,23 +23,31 @@ import {
 import {
     updateProfile 
 } from 'firebase/auth';
+import toast from 'react-hot-toast';
+
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
 export default function SettingsPage() {
     // get vars
     const { user, userData, loading } = useUser();
     const router = useRouter();
     // set vars
-    const [username, setUsername] = useState(userData?.username || '');
-    const [email] = useState(userData?.email || '');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [photoURL, setPhotoURL] = useState(userData?.photoURL || '');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [photoURL, setPhotoURL] = useState('');
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [saving, setSaving] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [message, setMessage] = useState('');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    
+    // Update form state when userData changes
+    useEffect(() => {
+        if (userData) {
+            setUsername(userData.username || '');
+            setEmail(userData.email || '');
+            setPhotoURL(userData.photoURL || '');
+        }
+    }, [userData]);
     // rendering loading
     if (loading) {
         return <div>Loading...</div>;
@@ -54,8 +63,6 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             // if no changes detected
-            console.log("if no changes detected")
-            console.log(userData?.username, username, photoFile);
             if (userData?.username === username && !photoFile) {
                 setMessage('Nenhuma alteração detectada.');
                 setSaving(false);
@@ -64,10 +71,8 @@ export default function SettingsPage() {
             let updatedPhotoURL = photoURL;
             const updatedData: { username?: string; photoURL?: string } = {};
             // begin a transaction
-            console.log("begin a transaction")
             await runTransaction(db, async (transaction) => {
                 // if username has changed
-                console.log("if username has changed")
                 if (userData?.username !== username) {
                     const newUsernameRef = doc(db, 'usernames', username);
                     const newUsernameDoc = await transaction.get(newUsernameRef);
@@ -84,8 +89,12 @@ export default function SettingsPage() {
                     updatedData.username = username;
                 }
                 // handle photo upload
-                console.log("handle photo upload")
                 if (photoFile) {
+                    // Check if we have access to storage (client-side only)
+                    if (typeof window === 'undefined' || !storage) {
+                        throw new Error('Upload de fotos só é possível no navegador.');
+                    }
+                    
                     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
                     if (!photoFile.type.startsWith('image/')) {
                         throw new Error('Por favor, selecione um arquivo de imagem válido.');
@@ -94,14 +103,9 @@ export default function SettingsPage() {
                         throw new Error('O arquivo é muito grande. O tamanho máximo é de 2MB.');
                     }
                     // upload photo to firebase storage
-                    console.log("upload photo to firebase storage")
-                    console.log(storage)
-                    console.log(user)
-                    console.log(user.uid)
                     const storageRef = ref(storage, `profile_photos/${user.uid}`);
                     const uploadTask = uploadBytesResumable(storageRef, photoFile);
                     // wait for the upload to complete
-                    console.log("wait for the upload to complete")
                     await new Promise<void>((resolve, reject) => {
                         uploadTask.on(
                             'state_changed',
@@ -114,37 +118,45 @@ export default function SettingsPage() {
                                 reject(error);
                             },
                             async () => {
-                                updatedPhotoURL = await getDownloadURL(uploadTask.snapshot.ref);
-                                updatedData.photoURL = updatedPhotoURL;
-                                resolve();
+                                try {
+                                    updatedPhotoURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                    updatedData.photoURL = updatedPhotoURL;
+                                    resolve();
+                                } catch (err) {
+                                    console.error('Error getting download URL:', err);
+                                    reject(err);
+                                }
                             }
                         );
                     });
                 }
                 // update account_info document
-                console.log("update account_info document")
                 if (Object.keys(updatedData).length > 0) {
                     const userDocRef = doc(db, 'account_info', user.uid);
                     transaction.update(userDocRef, updatedData);
                 }
             });
             // update Firebase auth profile
-            console.log("update Firebase Auth profile")
-            const profileUpdates: { displayName?: string; photoURL?: string } = {};
-            if (userData?.username !== username) {
-                profileUpdates.displayName = username;
-            }
-            if (updatedData.photoURL) {
-                profileUpdates.photoURL = updatedData.photoURL;
-            }
-            if (Object.keys(profileUpdates).length > 0) {
-                await updateProfile(user, profileUpdates);
+            if (user) {
+                const profileUpdates: { displayName?: string; photoURL?: string } = {};
+                if (userData?.username !== username) {
+                    profileUpdates.displayName = username;
+                }
+                if (updatedData.photoURL) {
+                    profileUpdates.photoURL = updatedData.photoURL;
+                }
+                if (Object.keys(profileUpdates).length > 0) {
+                    await updateProfile(user, profileUpdates);
+                }
+            } else {
+                throw new Error('Usuário não está autenticado');
             }
             // set success message
             setMessage('Perfil atualizado com sucesso!');
-        } catch (error) {
+            toast.success('Perfil atualizado com sucesso!');
+        } catch (error: unknown) {
             console.error('Error updating profile:', error);
-            alert(error || 'Ocorreu um erro ao atualizar o perfil.');
+            toast.error(error instanceof Error ? error.message : 'Ocorreu um erro ao atualizar o perfil.');
         } finally {
             setSaving(false);
             setUploadProgress(null);
@@ -153,6 +165,7 @@ export default function SettingsPage() {
 
     return (
         <div className="h-screen flex flex-col">
+             <UserProfileBar pathname='Configurações' />
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold mb-4">Configurações da Conta</h1>
                 <form
@@ -194,10 +207,23 @@ export default function SettingsPage() {
                             onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
                             className="file-input w-full"
                         />
-                        {/* {photoURL && (
-                            <img src={photoURL} alt="Foto de Perfil" className="mt-2 h-20 w-20 rounded-full" />
+                            <Image src={photoURL} alt="Foto de Perfil" width={80} height={80} className="mt-2 rounded-full object-cover" />
+                            {/* <img src={photoURL} alt="Foto de Perfil" className="mt-2 h-20 w-20 rounded-full object-cover" />
                         )} */}
+                        {uploadProgress !== null && (
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                <div 
+                                    className="bg-primary h-2.5 rounded-full" 
+                                    style={{ width: `${uploadProgress}%` }}
+                                ></div>
+                            </div>
+                        )}
                     </div>
+                    {message && (
+                        <div className="alert alert-success">
+                            <span>{message}</span>
+                        </div>
+                    )}
                     <button
                         type="submit"
                         className="btn btn-primary"

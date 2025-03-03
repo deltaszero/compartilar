@@ -1,6 +1,36 @@
 // types/shared.types.ts
 import { Timestamp } from 'firebase/firestore';
 
+// Parental Plan types
+export interface ParentalPlan {
+    id: string;
+    userId: string; // Creator ID
+    title: string;
+    description?: string;
+    children: string[]; // Array of child IDs
+    referenceHome: 'Mãe' | 'Pai' | 'Outro' | 'Alternado';
+    guardType: 'Unilateral' | 'Compartilhada';
+    // Alimony when employed
+    employedAlimony: {
+        inMoney: boolean;
+        moneyMethod?: 'Deposito' | 'Desconto';
+        obligations: boolean;
+        paymentServices: boolean;
+        reimbursement: boolean;
+    };
+    // Alimony when unemployed
+    unemployedAlimony: {
+        inMoney: boolean;
+        moneyMethod?: 'Deposito' | 'Desconto';
+        obligations: boolean;
+        paymentServices: boolean;
+        reimbursement: boolean;
+    };
+    status: 'draft' | 'active' | 'inactive' | 'archived';
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
 // Calendar-related types
 export interface CalendarEvent {
     id: string;

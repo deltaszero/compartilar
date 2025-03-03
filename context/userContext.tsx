@@ -16,6 +16,7 @@ interface UserData {
     phoneNumber?: string;
     birthDate?: string;
     kids?: Record<string, { id: string }>;
+    parentalPlans?: string[]; // Array of parental plan IDs
     createdAt?: typeof serverTimestamp;
     uid: string;
 }
@@ -24,13 +25,11 @@ interface UserContextType {
     user: User | null;
     userData: UserData | null;
     loading: boolean;
+    isInitialLoad: boolean;
+    setIsInitialLoad: (value: boolean) => void;
 }
 
-export const UserContext = createContext<UserContextType>({
-    user: null,
-    userData: null,
-    loading: true,
-});
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUser = () => {
     const context = useContext(UserContext);
@@ -45,6 +44,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [kidsData, setKidsData] = useState<Record<string, KidInfo>>({});
     const [loading, setLoading] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+    useEffect(() => {
+        // Handle initial load
+        const loadingTimer = setTimeout(() => {
+            setLoading(false);
+            setIsInitialLoad(false);
+        }, 2000); // Adjust timing based on your needs
+
+        return () => clearTimeout(loadingTimer);
+    }, []);
 
     useEffect(() => {
         let unsubscribeAccount: () => void;
@@ -67,16 +77,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
                     // Subscribe to account info
                     const accountRef = doc(db, 'account_info', currentUser.uid);
-                    unsubscribeAccount = onSnapshot(accountRef, 
+                    unsubscribeAccount = onSnapshot(accountRef,
                         async (doc) => {
                             if (!doc.exists()) {
-                                console.log('Account document not found');
                                 setLoading(false);
                                 return;
                             }
 
                             const accountData = doc.data() as UserData;
-                            
+
                             // Validate document ownership
                             if (accountData.uid !== currentUser.uid) {
                                 console.error('Document UID mismatch');
@@ -89,14 +98,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                 collection(db, 'children'),
                                 where('parentId', '==', currentUser.uid)
                             );
-                            
+
                             unsubscribeKids = onSnapshot(kidsQuery, (snapshot) => {
                                 const kids = snapshot.docs.reduce((acc, doc) => {
                                     const data = doc.data() as KidInfo;
                                     acc[doc.id] = data;
                                     return acc;
                                 }, {} as Record<string, KidInfo>);
-                                
+
                                 setKidsData(kids);
                             });
 
@@ -135,8 +144,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }), [user, userData, kidsData, loading]);
 
     return (
-        <UserContext.Provider value={contextValue}>
+        <UserContext.Provider value={{
+            ...contextValue,
+            loading, 
+            isInitialLoad, 
+            setIsInitialLoad,
+        }}>
             {children}
         </UserContext.Provider>
     );
 };
+
