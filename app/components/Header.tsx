@@ -56,7 +56,7 @@ const MobileNav = () => (
         </div>
       </Button>
     </SheetTrigger>
-    <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+    <SheetContent side="left" className="w-[250px] sm:w-[300px] z-[99999] ">
       <div className="flex flex-col gap-4 mt-8">
         <h1 className="text-2xl font-nunito font-black uppercase">CompartiLar</h1>
         <nav className="flex flex-col gap-2">
@@ -64,7 +64,7 @@ const MobileNav = () => (
             <Link 
               key={item.label} 
               href={item.href}
-              className="px-2 py-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+              className="py-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
             >
               {item.label}
             </Link>
@@ -172,9 +172,9 @@ const Header = () => {
         <header className="flex items-center justify-between bg-muted py-4 px-4 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[9999]">
             <div className="flex items-center">
                 <MobileNav />
-                <div className="hidden lg:block">
+                {/* <div className="hidden lg:block">
                     <h1 className="text-2xl font-nunito font-bold uppercase">CompartiLar</h1>
-                </div>
+                </div> */}
             </div>
 
             <div className="flex items-center gap-4">
