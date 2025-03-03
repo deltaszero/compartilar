@@ -36,6 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 # firebase
+.env
 services/firebase.js
 firebase-debug.log
 .firebase/**/*
@@ -43,3 +44,5 @@ app/lib/firebaseConfig.ts
 tree.txt
 .firestore-rules
 .storage-rules
+**/public/sw.js
+**/public/workbox-*.js

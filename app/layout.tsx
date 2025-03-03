@@ -62,6 +62,7 @@ export const metadata: Metadata = {
             "max-snippet": -1,
         },
     },
+    manifest: "/manifest.json",
     openGraph: {
         title:
             "CompartiLar - Facilite a coparentalidade organizando tudo em um só lugar!",
@@ -104,7 +105,7 @@ export default function RootLayout({
             <head>
                 <meta
                     name="viewport"
-                    content="width=device-width, initial-scale=1, maximum-scale=1"
+                    content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
                 />
                 <meta name="viewport" content="viewport-fit=cover" />
                 <Script

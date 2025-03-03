@@ -1,19 +1,30 @@
 {
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+    "hosting": {
+        "source": ".",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "frameworksBackend": {
+            "region": "us-central1"
+        }
+    },
+    "headers": [
+        {
+            "source": "/manifest.json",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                }
+            ]
+        }
     ],
-    "frameworksBackend": {
-      "region": "us-central1"
+        "storage": {
+            "rules": ".storage-rules"
+        },
+        "firestore": {
+            "rules": ".firestore-rules"
+        }
     }
-  },
-  "storage": {
-    "rules": ".storage-rules"
-  },
-  "firestore": {
-    "rules": ".firestore-rules"
-  }
-}

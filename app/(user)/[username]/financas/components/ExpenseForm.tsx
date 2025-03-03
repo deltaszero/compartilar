@@ -21,19 +21,27 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Receipt, ArrowRight, X } from "lucide-react";
 
-import { FinanceUserData } from './types';
+// import { FinanceUserData } from './types';
 
 interface CostGroup {
   id: string;
   members: string[];
 }
 
+export type UserData = {
+  uid: string;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  photoURL?: string;
+};
+
 interface ExpenseFormProps {
   isAddingExpense: boolean;
   setIsAddingExpense: (value: boolean) => void;
   selectedPeriod: '7d' | '30d' | '90d' | 'all';
   setSelectedPeriod: (value: '7d' | '30d' | '90d' | 'all') => void;
-  userData: any;
+  userData: UserData;
   friends: Friend[];
   selectedGroup: string;
   costGroups: CostGroup[];

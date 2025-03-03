@@ -3,8 +3,13 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 
+interface CostGroup {
+  id: string;
+  name: string;
+}
+
 interface NoGroupSelectedProps {
-  costGroups: any[];
+  costGroups: CostGroup[];
 }
 
 export const NoGroupSelected: React.FC<NoGroupSelectedProps> = ({ costGroups }) => {

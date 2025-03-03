@@ -121,7 +121,7 @@ const RelationshipBadge = ({ status }: { status: FriendshipStatus }) => {
     };
 
     return (
-        <Badge variant={getBadgeVariant() as "default" | "secondary" | "destructive" | "outline" | "info"} className="mt-2">
+        <Badge variant={getBadgeVariant() as "default" | "secondary" | "destructive" | "outline" } className="mt-2">
             {getRelationshipText()}
         </Badge>
     );

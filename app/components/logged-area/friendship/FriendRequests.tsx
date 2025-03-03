@@ -1,7 +1,7 @@
 // app/components/friendship/FriendRequests.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { collection, query, where, getDocs, updateDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { useUser } from '@/context/userContext';
@@ -13,14 +13,9 @@ export default function FriendRequests() {
     const [requests, setRequests] = useState<FriendshipRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { userData } = useUser();
-
-    useEffect(() => {
-        if (userData) {
-            loadFriendRequests();
-        }
-    }, [userData]);
-
-    const loadFriendRequests = async () => {
+    
+    // Define loadFriendRequests with useCallback to memoize it
+    const loadFriendRequests = useCallback(async () => {
         if (!userData) return;
 
         try {
@@ -44,7 +39,14 @@ export default function FriendRequests() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [userData]);
+
+    // Add useEffect to load friend requests when userData changes
+    useEffect(() => {
+        if (userData) {
+            loadFriendRequests();
+        }
+    }, [userData, loadFriendRequests]);
 
     const handleRequest = async (requestId: string, status: 'accepted' | 'declined') => {
         try {

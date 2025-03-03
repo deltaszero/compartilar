@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Expense, Friend, FinanceUserData } from './types';
+import { Expense, Friend } from './types'; // import { Expense, Friend, FinanceUserData } from './types';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,16 @@ import { Spinner } from "@/components/ui/spinner";
 import { Trash2, Calendar, User } from "lucide-react";
 
 
+export type UserData = {
+  uid: string;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  photoURL?: string;
+};
+
 interface ExpenseListProps {
-  userData: any;
+  userData: UserData;
   friends: Friend[];
   isLoadingExpenses: boolean;
   filteredExpenses: Expense[];

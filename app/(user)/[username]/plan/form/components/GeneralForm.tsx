@@ -374,7 +374,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({ planId: urlPlanId }) => {
                         ))}
                     </div>
                 ) : (
-                    <Alert variant="warning">
+                    <Alert variant="default">
                         <AlertDescription>
                             Nenhuma criança encontrada. Cadastre crianças primeiro.
                         </AlertDescription>
@@ -545,7 +545,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({ planId: urlPlanId }) => {
             )}
             
             {availableChildren.length === 0 && user && (
-                <Alert variant="warning" className="mt-4">
+                <Alert variant="default" className="mt-4">
                     <AlertDescription>
                         Você precisa cadastrar pelo menos um filho para criar um plano de parentalidade.
                     </AlertDescription>

@@ -77,7 +77,7 @@ const ParentalPlansPage: React.FC = () => {
                 </div>
             ) : plans.length === 0 ? (
                 <div className="text-center mt-8 space-y-4">
-                    <Alert variant="info" className="max-w-md mx-auto">
+                    <Alert variant="default" className="max-w-md mx-auto">
                         <AlertDescription>
                             Você ainda não possui planos de parentalidade.
                         </AlertDescription>

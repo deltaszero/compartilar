@@ -1,7 +1,7 @@
 // app/(user)/[username]/home/page.tsx
 "use client";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 // import { motion } from 'framer-motion';
 import dayjs, { Dayjs } from "dayjs";
@@ -12,7 +12,7 @@ import {
     getDocs,
     doc,
     runTransaction,
-    Timestamp,
+    // Timestamp,
     addDoc,
 } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
@@ -24,7 +24,8 @@ import { useUser } from "@context/userContext";
 // import CameraIcon from '@assets/icons/camera.svg';
 import EditIcon from "@assets/icons/edit.svg";
 import CurrentWeekPage from "@/app/components/logged-area/calendar/CurrentWeek";
-import CalendarPage from "@/app/components/logged-area/calendar/Calendar";
+// import CalendarPage from "@/app/components/logged-area/calendar/Calendar";
+import { Calendar } from "../calendario/components/Calendar";
 import Link from "next/link";
 // import NavLink from '@components/ui/NavLink';
 import FriendSearch from "@/app/components/logged-area/friendship/FriendSearch";
@@ -32,7 +33,7 @@ import FriendRequests from "@/app/components/logged-area/friendship/FriendReques
 import FriendList from "@/app/components/logged-area/friendship/FriendList";
 import LoadingPage from "@/app/components/LoadingPage";
 import toast from "react-hot-toast";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 
 // import background_img from "@assets/images/970e47d6-0592-4edb-adea-e73211796eac_1.png";
 import support_img from "@assets/images/support-icon.png";
@@ -600,6 +601,13 @@ interface InvitationData {
     status: 'active' | 'used' | 'expired';
 }
 
+interface UserDialogData {
+    uid: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+}
+
 const InvitationDialog = ({ 
     isOpen, 
     onClose, 
@@ -607,14 +615,14 @@ const InvitationDialog = ({
 }: { 
     isOpen: boolean; 
     onClose: () => void; 
-    userData: any 
+    userData: UserDialogData 
 }) => {
     const [invitationType, setInvitationType] = useState<string>("coparent");
     const [message, setMessage] = useState<string>("");
     const [generatedLink, setGeneratedLink] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
     const [isCopied, setIsCopied] = useState<boolean>(false);
-    const pathname = usePathname();
+    // const pathname = usePathname();
     
     // Reset states when dialog opens
     useEffect(() => {
@@ -790,88 +798,88 @@ export default function HomePage() {
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
 
     // Sample events - converting to proper CalendarEventWithChild format
-    const createTimestamp = (date: string) => {
-        return Timestamp.fromDate(new Date(date));
-    };
+    // const createTimestamp = (date: string) => {
+    //     return Timestamp.fromDate(new Date(date));
+    // };
 
-    const events = [
-        {
-            id: "1",
-            coParentingId: "sample1",
-            title: "Evento 1",
-            description: "Descrição do evento 1",
-            startTime: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            endTime: createTimestamp(dayjs().add(1, "hour").format("YYYY-MM-DD")),
-            category: "school" as const,
-            responsibleParentId: "parent1",
-            checkInRequired: false,
-            createdBy: "user1",
-            createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-        },
-        {
-            id: "2",
-            coParentingId: "sample2",
-            title: "Evento 2",
-            description: "Descrição do evento 2",
-            startTime: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            endTime: createTimestamp(dayjs().add(2, "hour").format("YYYY-MM-DD")),
-            category: "medical" as const,
-            responsibleParentId: "parent1",
-            checkInRequired: false,
-            createdBy: "user1",
-            createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-        },
-        {
-            id: "3",
-            coParentingId: "sample3",
-            title: "Evento 3",
-            description: "Descrição do evento 3",
-            startTime: createTimestamp(dayjs().add(1, "day").format("YYYY-MM-DD")),
-            endTime: createTimestamp(
-                dayjs().add(1, "day").add(1, "hour").format("YYYY-MM-DD")
-            ),
-            category: "activity" as const,
-            responsibleParentId: "parent2",
-            checkInRequired: true,
-            createdBy: "user1",
-            createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-        },
-        {
-            id: "4",
-            coParentingId: "sample4",
-            title: "Evento 4",
-            description: "Descrição do evento 4",
-            startTime: createTimestamp(dayjs().add(1, "day").format("YYYY-MM-DD")),
-            endTime: createTimestamp(
-                dayjs().add(1, "day").add(3, "hour").format("YYYY-MM-DD")
-            ),
-            category: "visitation" as const,
-            responsibleParentId: "parent2",
-            checkInRequired: true,
-            createdBy: "user2",
-            createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-        },
-        {
-            id: "5",
-            coParentingId: "sample5",
-            title: "Evento 5",
-            description: "Descrição do evento 5",
-            startTime: createTimestamp(dayjs().add(3, "day").format("YYYY-MM-DD")),
-            endTime: createTimestamp(
-                dayjs().add(3, "day").add(2, "hour").format("YYYY-MM-DD")
-            ),
-            category: "other" as const,
-            responsibleParentId: "parent1",
-            checkInRequired: false,
-            createdBy: "user2",
-            createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-            updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
-        },
-    ];
+    // const events = [
+    //     {
+    //         id: "1",
+    //         coParentingId: "sample1",
+    //         title: "Evento 1",
+    //         description: "Descrição do evento 1",
+    //         startTime: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         endTime: createTimestamp(dayjs().add(1, "hour").format("YYYY-MM-DD")),
+    //         category: "school" as const,
+    //         responsibleParentId: "parent1",
+    //         checkInRequired: false,
+    //         createdBy: "user1",
+    //         createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //     },
+    //     {
+    //         id: "2",
+    //         coParentingId: "sample2",
+    //         title: "Evento 2",
+    //         description: "Descrição do evento 2",
+    //         startTime: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         endTime: createTimestamp(dayjs().add(2, "hour").format("YYYY-MM-DD")),
+    //         category: "medical" as const,
+    //         responsibleParentId: "parent1",
+    //         checkInRequired: false,
+    //         createdBy: "user1",
+    //         createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //     },
+    //     {
+    //         id: "3",
+    //         coParentingId: "sample3",
+    //         title: "Evento 3",
+    //         description: "Descrição do evento 3",
+    //         startTime: createTimestamp(dayjs().add(1, "day").format("YYYY-MM-DD")),
+    //         endTime: createTimestamp(
+    //             dayjs().add(1, "day").add(1, "hour").format("YYYY-MM-DD")
+    //         ),
+    //         category: "activity" as const,
+    //         responsibleParentId: "parent2",
+    //         checkInRequired: true,
+    //         createdBy: "user1",
+    //         createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //     },
+    //     {
+    //         id: "4",
+    //         coParentingId: "sample4",
+    //         title: "Evento 4",
+    //         description: "Descrição do evento 4",
+    //         startTime: createTimestamp(dayjs().add(1, "day").format("YYYY-MM-DD")),
+    //         endTime: createTimestamp(
+    //             dayjs().add(1, "day").add(3, "hour").format("YYYY-MM-DD")
+    //         ),
+    //         category: "visitation" as const,
+    //         responsibleParentId: "parent2",
+    //         checkInRequired: true,
+    //         createdBy: "user2",
+    //         createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //     },
+    //     {
+    //         id: "5",
+    //         coParentingId: "sample5",
+    //         title: "Evento 5",
+    //         description: "Descrição do evento 5",
+    //         startTime: createTimestamp(dayjs().add(3, "day").format("YYYY-MM-DD")),
+    //         endTime: createTimestamp(
+    //             dayjs().add(3, "day").add(2, "hour").format("YYYY-MM-DD")
+    //         ),
+    //         category: "other" as const,
+    //         responsibleParentId: "parent1",
+    //         checkInRequired: false,
+    //         createdBy: "user2",
+    //         createdAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //         updatedAt: createTimestamp(dayjs().format("YYYY-MM-DD")),
+    //     },
+    // ];
 
     const handleDateSelect = (date: Dayjs) => {
         setSelectedDate(date);
@@ -945,7 +953,6 @@ export default function HomePage() {
                                 </div>
 
                                 <CurrentWeekPage
-                                    events={events}
                                     selectedDate={selectedDate}
                                     onDateSelect={handleDateSelect}
                                 />
@@ -972,7 +979,7 @@ export default function HomePage() {
                                     />
                                 </div>
                                 <div className="hidden sm:block bg-base-100 rounded-xl py-4">
-                                    <CalendarPage />
+                                    <Calendar />
                                 </div>
                             </div>
                         )}
@@ -1115,7 +1122,12 @@ export default function HomePage() {
                 <InvitationDialog 
                     isOpen={isInvitationDialogOpen} 
                     onClose={() => setIsInvitationDialogOpen(false)} 
-                    userData={userData} 
+                    userData={{
+                        uid: userData.uid,
+                        firstName: userData.firstName || '',
+                        lastName: userData.lastName || '',
+                        username: userData.username
+                    }} 
                 />
             </article>
         </div>

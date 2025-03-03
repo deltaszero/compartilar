@@ -1,15 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Balance, FinanceUserData } from './types';
+import { Balance } from './types'; // import { Balance, FinanceUserData } from './types';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+export type UserData = {
+  uid: string;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  photoURL?: string;
+};
+
 interface BalanceTableProps {
   balances: Balance[];
-  userData: any;
+  userData: UserData;
 }
 
 export const BalanceTable: React.FC<BalanceTableProps> = ({ balances, userData }) => {
