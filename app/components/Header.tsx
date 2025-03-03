@@ -169,12 +169,12 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-muted py-4 px-4 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[9999]">
+        <header className="flex items-center justify-between bg-muted py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[999]">
             <div className="flex items-center">
                 <MobileNav />
-                {/* <div className="hidden lg:block">
+                <div className="hidden lg:block">
                     <h1 className="text-2xl font-nunito font-bold uppercase">CompartiLar</h1>
-                </div> */}
+                </div>
             </div>
 
             <div className="flex items-center gap-4">

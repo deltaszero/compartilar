@@ -81,7 +81,7 @@ export default function Home() {
 
             {/* HERO */}
             <section className="bg-muted" ref={heroRef}>
-                <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-8 sm:py-24 mx-auto">
+                <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-8 px-[16px] sm:py-24 mx-auto">
                     <Image
                         src={hero_img}
                         alt="Hero image"
@@ -91,7 +91,7 @@ export default function Home() {
                     />
                     <div className="relative z-10 px-2 sm:px-6 lg:px-8 py-2 sm:py-16 lg:py-24">
                         <div className="max-w-4xl animate-fade-in">
-                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair font-bold mb-4 sm:mb-6 text-foreground">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair font-bold mb-4 sm:mb-6 text-foreground leading-none">
                                 Facilite a coparentalidade organizando tudo em um só lugar
                             </h1>
 

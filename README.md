@@ -13,6 +13,13 @@ npx shadcn@latest add alert avatar badge button card checkbox dropdown-menu form
 
 input-with-icon
 spinner
+
+- - -
+
+npx shadcn@latest add https://neobrutalism.dev/r/button.json
+
+
+
 ```
 
 ```error
