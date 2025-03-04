@@ -22,7 +22,8 @@ export function DayEvents({
   };
 
   return (
-    <div className="h-full border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist">
+    // <div className="h-full border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist">
+     <div className="h-full border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
       <div className="flex justify-between items-center mb-3 sm:mb-4">
         <h3 className="font-bold text-base sm:text-lg line-clamp-2">
           {selectedDate 
@@ -32,7 +33,7 @@ export function DayEvents({
         
         {selectedDate && (
           <Button 
-            onClick={() => onAddEvent(selectedDate)}
+            onClick={() => selectedDate && onAddEvent(selectedDate)}
             className="border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform flex items-center gap-1 h-8 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -55,8 +56,8 @@ export function DayEvents({
             Nenhum evento para esta data.
           </p>
           <Button 
-            variant="outline" 
-            onClick={() => onAddEvent(selectedDate)}
+            variant="default" 
+            onClick={() => selectedDate && onAddEvent(selectedDate)}
             className="mt-4 border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform text-xs sm:text-sm h-8 sm:h-10"
           >
             Criar um evento
@@ -65,12 +66,9 @@ export function DayEvents({
       )}
       
       {selectedDate && events.length > 0 && (
-        <div className="space-y-2 sm:space-y-3 mt-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
+        <div className="space-y-3 mt-2 max-h-[calc(100vh-250px)]">
           {events.map((event) => (
-            <div 
-              key={event.id}
-              className="border-2 border-black p-2 sm:p-3 bg-white hover:bg-gray-50 transition-transform hover:translate-y-1"
-            >
+            <div key={event.id} className="border-2 border-black p-3 sm:p-4 bg-white shadow-brutalist">
               <div className="flex justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 sm:gap-2">
@@ -120,7 +118,7 @@ export function DayEvents({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => onEditEvent(selectedDate, event)}
+                    onClick={() => selectedDate && onEditEvent(selectedDate, event)}
                     className="h-6 w-6 sm:h-7 sm:w-7 rounded border-2 border-black hover:bg-black hover:text-white transition-colors p-0"
                   >
                     <Edit className="h-2.5 w-2.5 sm:h-3 sm:w-3" />

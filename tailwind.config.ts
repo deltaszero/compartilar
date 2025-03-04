@@ -23,6 +23,17 @@ export default {
 			  
 			  secondaryBlack: '#212121', 
 			  secondaryMain: "#A3E636",
+			  
+			  mainStrongBlue: "#88aaee",
+			  mainWeakBlue: "#dfe5f2",
+			  mainStrongOrange : "#FD9745",
+			  mainWeakOrange : "#fff4e0",
+			  mainStrongYellow : "#FFDC58",
+			  mainWeakYellow : "#FEF2E8",
+			  mainStrongRed : "#ff6b6b",
+			  mainWeakRed : "#fcd7d7",
+			  mainStrongGreen : "#A3E636",
+			  mainWeakGreen : "#E0E7F1",
 			},
 			borderRadius: {
 			  base: '5px'

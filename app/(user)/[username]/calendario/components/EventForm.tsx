@@ -42,15 +42,17 @@ export function EventForm({
   // Form validation
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Reset form when event or selected date changes
+  // Reset form when dialog opens or closes
   useEffect(() => {
     if (isOpen) {
+      let newFormData;
+      
       if (event) {
         // Editing existing event
         const startDate = event.startTime.toDate();
         const endDate = event.endTime.toDate();
         
-        setFormData({
+        newFormData = {
           title: event.title,
           description: event.description || "",
           startDate: format(startDate, "yyyy-MM-dd"),
@@ -62,10 +64,10 @@ export function EventForm({
           childId: event.childId || childrenData[0]?.id || "",
           responsibleParentId: event.responsibleParentId,
           checkInRequired: event.checkInRequired
-        });
+        };
       } else {
         // Creating new event
-        setFormData({
+        newFormData = {
           title: "",
           description: "",
           startDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(now, "yyyy-MM-dd"),
@@ -77,12 +79,19 @@ export function EventForm({
           childId: childrenData[0]?.id || "",
           responsibleParentId: userId,
           checkInRequired: false
-        });
+        };
       }
+      
+      // Compare the objects to prevent unnecessary setFormData calls
+      if (JSON.stringify(formData) !== JSON.stringify(newFormData)) {
+        setFormData(newFormData);
+      }
+      
       setError(null);
       setErrors({});
     }
-  }, [isOpen, event, selectedDate, childrenData, userId, now, oneHourLater]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleChange = (field: keyof EventFormData, value: string | boolean) => {
     setFormData(prev => ({

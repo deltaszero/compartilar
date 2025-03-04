@@ -47,7 +47,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 <Sidebar />
             </div>
             {/* Content Area */}
-            <div className="w-screen xl:w-5/6">
+            <div className="w-screen xl:w-5/6 bg-bg">
                 <ContentArea>
                     {children}
                 </ContentArea>

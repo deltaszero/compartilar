@@ -257,7 +257,7 @@ const FriendSearch = ({ userData }: { userData: { username: string; photoURL?: s
             
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && (
-                <Card className="absolute top-full mt-1 w-full z-50 p-2 max-h-[300px] overflow-y-auto shadow-lg border-2">
+                <Card className="absolute top-full mt-1 w-full z-[999] p-2 max-h-[300px] overflow-y-auto shadow-lg border-2">
                     <div className="flex gap-2 mb-2 flex-wrap px-2">
                         <Badge 
                             variant={selectedRelationship === 'support' ? 'default' : 'neutral'}
@@ -345,8 +345,8 @@ const UserNavbar = ({ pathname, onBackClick, userData }: UserNavbarProps) => {
     
     return (
         <header className={cn(
-            "flex items-start justify-between bg-bg py-4",
-            "border-b sticky top-0 z-30 w-full gap-2"
+            "flex items-start justify-between bg-bg py-4 px-2",
+            "border-b sticky top-0 z-[999] w-full gap-2"
         )}>
             <div className="flex items-start min-w-[44px]">
                 <Button 
@@ -387,7 +387,7 @@ const UserNavbar = ({ pathname, onBackClick, userData }: UserNavbarProps) => {
 const UserNotFound = () => (
     <header className={cn(
         "flex items-center justify-between bg-bg py-3 px-4 md:px-6",
-        "border-b sticky top-0 z-30 w-full"
+        "border-b sticky top-0 z-[999] w-full"
     )}>
         <div className="flex items-center gap-3">
             <h1 className="text-xl md:text-2xl font-medium text-foreground">

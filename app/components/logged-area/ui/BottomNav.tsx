@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // importing assets
-import IconUser from '@assets/icons/bottom_bar_user.svg';
+import IconCalendar from '@assets/icons/bottom_bar_calendar.svg';
 import IconMaplocation from '@assets/icons/bottom_bar_maplocation.svg';
 import IconHouse from '@assets/icons/bottom_bar_house.svg';
 import IconMore from '@assets/icons/bottom_bar_more.svg';
@@ -35,14 +35,13 @@ const NavItem = ({
     // For the "Mais" item that opens modal
     if (label === 'Mais') {
         return (
-            <Button
+            <div
                 key={path}
-                variant="noShadow"
                 className={cn(
-                    "h-full flex flex-col items-center justify-center w-full",
-                    "border-0 border-t-2 rounded-none",
+                    "h-full flex flex-col items-center justify-center w-full cursor-pointer",
+                    "border-0 border-t-2",
                     isActive 
-                        ? "border-border bg-main" 
+                        ? "border-border bg-main shadow-shadow" 
                         : "border-transparent bg-bg hover:bg-main/20"
                 )}
                 onClick={onClick}
@@ -58,7 +57,7 @@ const NavItem = ({
                         {label}
                     </span>
                 </motion.div>
-            </Button>
+            </div>
         );
     }
     
@@ -127,9 +126,9 @@ const BottomNav = () => {
             icon: <IconHouse width={24} height={24} />
         },
         {
-            path: `/${userData.username}/perfil`,
-            label: 'Perfil',
-            icon: <IconUser width={24} height={24} />
+            path: `/${userData.username}/calendario`,
+            label: 'Calendário',
+            icon: <IconCalendar width={24} height={24} />
         },
         {
             path: `/${userData.username}/check-in`,
@@ -151,7 +150,7 @@ const BottomNav = () => {
     return (
         <>
             {/* Brutalist Bottom Navigation */}
-            <footer className="fixed bottom-0 left-0 right-0 h-16 border-t-2 border-border bg-bg z-[9998] flex items-stretch justify-between">
+            <footer className="fixed bottom-0 left-0 right-0 h-16 border-t-2 border-border bg-bg z-[9999] flex items-stretch justify-between">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
@@ -222,7 +221,7 @@ const BottomNav = () => {
                                 
                                 {/* Brutalist Close Button */}
                                 <Button
-                                    variant="default"
+                                    variant={"default"}
                                     className="w-full mt-8 font-heading"
                                     onClick={() => setIsModalOpen(false)}
                                 >

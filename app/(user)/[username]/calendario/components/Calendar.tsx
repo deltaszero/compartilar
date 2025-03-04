@@ -97,11 +97,13 @@ export default function Calendar({ initialMonth }: CalendarProps) {
     loadEvents();
   }, [userData, currentMonth, children, coParentingRelationships]);
   
-  // Generate calendar days
+  // Generate calendar days - prevent updates during event form operations
   useEffect(() => {
-    const days = generateCalendarDays(currentMonth, selectedDate, events);
-    setCalendarDays(days);
-  }, [currentMonth, selectedDate, events]);
+    if (!showEventForm) {
+      const days = generateCalendarDays(currentMonth, selectedDate, events);
+      setCalendarDays(days);
+    }
+  }, [currentMonth, selectedDate, events, showEventForm]);
   
   // Navigation functions
   const handlePrevMonth = () => {
@@ -127,9 +129,17 @@ export default function Calendar({ initialMonth }: CalendarProps) {
     setSelectedDate(date);
   };
   
-  // Event form handling
+  // Event form handling - memoize to prevent recreating function on each render
   const handleAddEvent = (date: Date) => {
-    setSelectedDate(date);
+    // Use a functional update to prevent dependency on current state
+    setSelectedDate(currentSelectedDate => {
+      // Only update if it's a different date
+      return (currentSelectedDate && isSameDay(currentSelectedDate, date)) 
+        ? currentSelectedDate 
+        : date;
+    });
+    
+    // These don't depend on current state and can be set directly
     setSelectedEvent(undefined);
     setShowEventForm(true);
   };
