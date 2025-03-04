@@ -172,7 +172,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
             path: `/${userData.username}/home`, label: 'CompartiLar', icon: <IconMeuLar width={28} height={28} />,
             subpages: [
                 { path: `/${userData.username}/perfil`, label: 'Perfil' },
-                { path: `/${userData.username}/rede`, label: 'Rede de Apoio' }
+                { path: `/${userData.username}/criancas`, label: 'Crianças' }
             ]
         },
         {

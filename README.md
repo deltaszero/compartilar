@@ -28,10 +28,12 @@ npx shadcn@latest add https://neobrutalism.dev/r/dialog.json ;
 npx shadcn@latest add https://neobrutalism.dev/r/toast.json
 npx shadcn@latest add https://neobrutalism.dev/r/calendar.json
 npx shadcn@latest add https://neobrutalism.dev/r/image-card.json
+npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
+
 
 ```
 
 
 ```
-please refactor /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/home/page.tsx in terms of /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/home/components components, maintaining the layout
+now please use /home/dusoudeth/Documentos/github/compartilar/components/ui/data-table.tsx in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/financas/components/ExpenseList.tsx 
 ```

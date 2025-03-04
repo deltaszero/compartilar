@@ -84,7 +84,7 @@ export default function HomePage() {
                                         <div className="flex flex-col gap-2 pb-2">
                                             <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
                                                 <div className="flex flex-col gap-0">
-                                                    <h2 className="text-xl text-warning font-black">
+                                                    <h2 className="text-3xl text-warning font-black">
                                                         Cuide dos seus pequenos
                                                     </h2>
                                                     <p className="text-xs">
@@ -134,7 +134,7 @@ export default function HomePage() {
                                         <div className="flex flex-col gap-2 pb-2">
                                             <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
                                                 <div className="flex flex-col gap-0">
-                                                    <h2 className="text-xl text-warning font-black">
+                                                    <h2 className="text-3xl text-warning font-black">
                                                         Planeje-se para a semana
                                                     </h2>
                                                     <p className="text-xs">
@@ -160,11 +160,11 @@ export default function HomePage() {
                                     <div className="flex flex-col gap-2 pb-2">
                                         <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
                                             <div className="flex flex-col gap-0">
-                                                <h2 className="text-xl text-warning font-black">
-                                                    Planeje-se para a semana
+                                                <h2 className="text-3xl text-warning font-black">
+                                                    Peça ajuda
                                                 </h2>
                                                 <p className="text-xs">
-                                                    Consulte dias de convivência e agende eventos de forma compartilhada.
+                                                    Entre em contato com pessoas queridas que estão com você em todos os momentos.
                                                 </p>
                                             </div>
                                         </div>
