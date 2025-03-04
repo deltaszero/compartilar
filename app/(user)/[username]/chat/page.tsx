@@ -35,8 +35,15 @@ const ChatItem = ({ name, message, isActive = false }: {
 export default function ChatPage() {
   // Empty state for the chat app
   return (
-    <div className="h-screen flex flex-col bg-bg">
+    <div className="h-screen flex flex-col bg-bg p-4 sm:p-6 mb-12 sm:mb-0">
       <UserProfileBar pathname='Conversas' />
+
+      <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Conversas</h1>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Converse com sua rede de apoio
+        </p>
+      </div>
       
       <div className="flex flex-col md:flex-row flex-1 p-4 gap-4">
         {/* Left sidebar - Conversation list */}
@@ -74,15 +81,15 @@ export default function ChatPage() {
               <p className="mt-2">Funcionalidades planejadas:</p>
               <ul className="list-disc pl-6 mt-2 space-y-1">
                 <li className="flex items-center gap-2">
-                  <MessageSquare size={16} />
+                  <MessageSquare size={16} className='text-main'/>
                   <span>Mensagens diretas</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Users size={16} />
+                  <Users size={16} className='text-main'/>
                   <span>Grupos de conversa</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Sparkles size={16} />
+                  <Sparkles size={16} className='text-main'/>
                   <span>Compartilhamento de arquivos</span>
                 </li>
               </ul>
