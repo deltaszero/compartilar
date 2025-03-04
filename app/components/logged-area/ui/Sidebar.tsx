@@ -14,7 +14,8 @@ import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
 import IconPlan from '@assets/icons/icon_meu_lar_plan.svg';
 import IconCalendar from '@assets/icons/icon_meu_lar_calendar.svg';
 import IconFinance from '@assets/icons/icon_meu_lar_finance.svg';
-import IconHandshake from '@assets/icons/icon_meu_lar_handshake.svg';
+// import IconHandshake from '@assets/icons/icon_meu_lar_handshake.svg';
+import IconMaplocation from '@assets/icons/bottom_bar_maplocation.svg';
 import IconChat from '@assets/icons/icon_meu_lar_chat.svg';
 import IconSettings from '@assets/icons/icon_meu_lar_settings.svg';
 
@@ -184,8 +185,9 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
         },
         { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
         { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
-        { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
+        // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
         { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={28} height={28} /> },
+        { path: `/${userData.username}/check-in`, label: 'Check-in', icon: <IconMaplocation width={28} height={28} /> },
         { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={28} height={28} /> },
     ] : [];
 

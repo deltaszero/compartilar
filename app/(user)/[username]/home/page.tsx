@@ -25,6 +25,12 @@ import KidsGridMobile from "./components/KidsGridMobile";
 import { CurrentWeek } from "./components/CurrentWeek";
 import { FriendList } from "./components/FriendList";
 import { InvitationDialog } from "./components/InvitationDialog";
+import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
+
+// Financial analytics
+import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { EXPENSE_CATEGORIES } from "../financas/components/constants";
 
 // Set locale for dayjs
 dayjs.locale("pt-br");
@@ -35,6 +41,11 @@ export default function HomePage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(dayjs());
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
+    
+    // Financial analytics state
+    const [expenses, setExpenses] = useState([]);
+    const [loadingExpenses, setLoadingExpenses] = useState(true);
+    const [children, setChildren] = useState([]);
 
     // Handle date selection for the weekly calendar
     const handleDateSelect = (date) => {
@@ -59,6 +70,80 @@ export default function HomePage() {
         }, 1500);
         return () => clearTimeout(timer);
     }, []);
+    
+    // Load financial data for analytics
+    useEffect(() => {
+        const loadFinancialData = async () => {
+            if (!userData || !userData.uid) return;
+            
+            setLoadingExpenses(true);
+            try {
+                // Load expenses for the last 30 days
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                // Find cost groups for the user
+                const groupsQuery = query(
+                    collection(db, "cost_groups"),
+                    where("members", "array-contains", userData.uid)
+                );
+                const groupsSnapshot = await getDocs(groupsQuery);
+                const groupIds = groupsSnapshot.docs.map(doc => doc.id);
+                
+                // If no groups found, early return
+                if (groupIds.length === 0) {
+                    setLoadingExpenses(false);
+                    return;
+                }
+                
+                // Query expenses from these groups - without using date filter to avoid requiring a composite index
+                let allExpenses = [];
+                for (const groupId of groupIds) {
+                    const expensesQuery = query(
+                        collection(db, "expenses"),
+                        where("groupId", "==", groupId)
+                    );
+                    
+                    const expensesSnapshot = await getDocs(expensesQuery);
+                    const groupExpenses = expensesSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }))
+                    .filter(expense => {
+                        // Filter by date client-side instead
+                        try {
+                            const expenseDate = expense.date.toDate();
+                            return expenseDate >= thirtyDaysAgo;
+                        } catch (error) {
+                            return false;
+                        }
+                    });
+                    
+                    allExpenses = [...allExpenses, ...groupExpenses];
+                }
+                
+                setExpenses(allExpenses);
+                
+                // Transform kids data from userData to the format needed for the charts
+                if (userData.kids) {
+                    const childrenData = Object.entries(userData.kids).map(([id, kidData]) => ({
+                        id,
+                        firstName: kidData.firstName || '',
+                        lastName: kidData.lastName || '',
+                        photoURL: kidData.photoURL,
+                        birthDate: kidData.birthDate || ''
+                    }));
+                    setChildren(childrenData);
+                }
+            } catch (error) {
+                console.error("Error loading financial data:", error);
+            } finally {
+                setLoadingExpenses(false);
+            }
+        };
+        
+        loadFinancialData();
+    }, [userData]);
 
     if (initialLoading || !userData) {
         return <LoadingPage />;
@@ -275,6 +360,30 @@ export default function HomePage() {
                             username: userData.username
                         }}
                     />
+                    
+                    {/* Financial Analytics Section */}
+                    <section className="w-full mx-auto p-4">
+                        <div className="hidden md:block">
+                            <div className="flex items-center justify-between px-4 rounded-md relative mx-auto h-[8em] mb-4 bg-mainStrongBlue border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                                <div className="flex flex-col gap-2 z-10 max-w-[66%]">
+                                    <h2 className="text-2xl sm:text-3xl font-bold">
+                                        Resumo Financeiro
+                                    </h2>
+                                    <p className="text-xs">
+                                        Acompanhe seus gastos e organize suas finanças pessoais.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="md:grid md:grid-cols-3 md:gap-4">
+                            <HomeFinanceAnalytics
+                                expenses={expenses}
+                                children={children}
+                                username={userData.username}
+                                isLoading={loadingExpenses}
+                            />
+                        </div>
+                    </section>
                 </article>
             </div>
             <Toaster />
