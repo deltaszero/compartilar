@@ -35,9 +35,9 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
     return (
       <Card className="p-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+          {/* <div className="relative w-16 h-16 rounded-full bg-muted flex items-center justify-center">
             <span className="text-2xl">👶</span>
-          </div>
+          </div> */}
           <div>
             <h3 className="font-medium mb-1">Nenhuma criança cadastrada</h3>
             <p className="text-sm text-muted-foreground">
@@ -51,7 +51,7 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-3 gap-4">
       {kidsArray.map((kid) => (
         <div key={kid.id}>
           <ChildCardMobile kid={kid} />

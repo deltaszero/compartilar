@@ -57,19 +57,19 @@ export const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="text-white font-medium text-xl">
+                  <h3 className="text-white font-black text-xl">
                     {kid.firstName}
                   </h3>
-                  <p className="text-white/80 text-xs">
+                  {/* <p className="text-white/80 text-xs">
                     {kid.relationship === 'biological' ? 'Biológico' : 
                      kid.relationship === 'adopted' ? 'Adotado' : 'Guardião'}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
           ) : (
             <div className="w-full h-full bg-primary flex flex-col items-center justify-center">
-              <div className="text-4xl text-primary-foreground font-medium">
+              <div className="text-4xl text-primary-foreground font-black">
                 {kid.firstName[0].toUpperCase()}
                 {kid.lastName[0].toUpperCase()}
               </div>

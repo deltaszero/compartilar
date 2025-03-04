@@ -150,7 +150,6 @@ export const FriendList = ({ userId }: { userId: string }) => {
       {otherFriends.length > 0 && (
         <div>
           <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">
-            <span className="mr-2">👤</span>
             Outros Contatos
           </h2>
           <div className="grid gap-2">

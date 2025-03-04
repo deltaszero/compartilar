@@ -12,7 +12,7 @@ const UserProfileCard = ({
 }) => (
   <div className="flex justify-between items-start p-4">
     <div className="flex flex-col items-start gap-0">
-      <div className="text-6xl font-semibold">
+      <div className="text-6xl font-black">
         Olá,
         <br />
         {capitalizeFirstLetter(userData.firstName || "")}!

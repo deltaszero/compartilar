@@ -55,12 +55,12 @@ interface SearchResult {
  */
 const NotificationBell = () => (
     <Button 
-        variant="neutral" 
+        variant="default" 
         size="icon"
         className="relative h-9 w-9 rounded-md"
     >
         <Bell className="h-5 w-5" />
-        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondaryMain text-[10px] font-medium text-primary-foreground ring-1 ring-background">
+        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-secondaryMain text-[10px] font-medium text-primary-foreground ring-1 ring-background">
             9+
         </span>
         <span className="sr-only">Notifications</span>

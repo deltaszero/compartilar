@@ -33,8 +33,9 @@ export function DayEvents({
         
         {selectedDate && (
           <Button 
+            variant="default"
             onClick={() => selectedDate && onAddEvent(selectedDate)}
-            className="border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform flex items-center gap-1 h-8 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+            className="bg-secondaryMain border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform flex items-center gap-1 h-8 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>Adicionar</span>
@@ -58,7 +59,7 @@ export function DayEvents({
           <Button 
             variant="default" 
             onClick={() => selectedDate && onAddEvent(selectedDate)}
-            className="mt-4 border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform text-xs sm:text-sm h-8 sm:h-10"
+            className="bg-secondaryMain mt-4 border-2 border-black shadow-brutalist-sm hover:translate-y-1 transition-transform text-xs sm:text-sm h-8 sm:h-10"
           >
             Criar um evento
           </Button>
@@ -77,14 +78,14 @@ export function DayEvents({
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-1 mt-1">
-                    <Badge variant="outline" className="bg-white border-black text-[10px] sm:text-xs">
+                    <Badge variant="default" className="bg-white border-black text-[10px] sm:text-xs">
                       {format(event.startTime.toDate(), 'HH:mm')}
                       {' - '}
                       {format(event.endTime.toDate(), 'HH:mm')}
                     </Badge>
                     
                     {event.location?.address && (
-                      <Badge variant="outline" className="bg-white border-black text-[10px] sm:text-xs mt-1 sm:mt-0">
+                      <Badge variant="default" className="bg-white border-black text-[10px] sm:text-xs mt-1 sm:mt-0">
                         {event.location.address}
                       </Badge>
                     )}

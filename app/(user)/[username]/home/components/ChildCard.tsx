@@ -7,7 +7,10 @@ import { db, storage } from "@/app/lib/firebaseConfig";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { 
+  Card, 
+  CardContent
+} from "@/components/ui/card";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, runTransaction } from "firebase/firestore";
 import EditIcon from "@/app/assets/icons/edit.svg";
@@ -152,11 +155,10 @@ export const ChildCard = ({ kid }: { kid: KidInfo }) => {
   };
 
   return (
-    <div className="flex items-center">
-      {/* CARD */}
-      <div className="flex bg-card text-card-foreground shadow-xl w-full rounded-xl overflow-hidden">
+    <Card className="w-full overflow-hidden bg-white border-2 border-black rounded-none overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]">
+      <div className="flex">
         {/* AVATAR */}
-        <div className="bg-primary relative">
+        <div className="relative border-r-2 border-black bg-main">
           <div
             className="flex items-center justify-center cursor-pointer w-[128px] h-[128px]"
             onClick={handlePhotoClick}
@@ -170,10 +172,12 @@ export const ChildCard = ({ kid }: { kid: KidInfo }) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-2xl text-primary-foreground w-full h-full flex items-center justify-center">
-                {kid.firstName[0].toUpperCase()}
-                {kid.lastName[0].toUpperCase()}
-              </span>
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-2xl font-black text-black">
+                  {kid.firstName[0].toUpperCase()}
+                  {kid.lastName[0].toUpperCase()}
+                </span>
+              </div>
             )}
 
             <input
@@ -184,51 +188,54 @@ export const ChildCard = ({ kid }: { kid: KidInfo }) => {
               onChange={handlePhotoChange}
             />
 
-            <button className="absolute bottom-1 left-1 p-1.5 bg-accent text-accent-foreground rounded-full">
+            {/* <button className="absolute bottom-2 left-2 p-1.5 bg-yellow-300 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
               <EditIcon width={12} height={12} />
-            </button>
+            </button> */}
+            <Button 
+              variant="default" 
+              size="sm"
+              className="absolute bottom-1.5 left-1.5 p-1.5 rounded-full bg-secondaryMain"
+              // className="font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none hover:translate-y-[-2px] hover:shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+            >
+              <EditIcon width={12} height={12} />
+            </Button>
 
             {isUploading && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-none"></div>
               </div>
             )}
           </div>
 
           {uploadProgress !== null && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-200 border-t border-black">
               <div
-                className="h-full bg-primary"
+                className="h-full bg-yellow-400"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
           )}
         </div>
+
         {/* BODY */}
-        <div className="flex flex-col p-4">
+        <CardContent className="flex flex-col p-4 w-full">
           {/* CARD TITLE */}
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-bold tracking-tight">
             {kid.firstName} {kid.lastName}
           </h2>
-          <div className="flex flex-row gap-1 text-wrap py-1">
-            <Badge variant="secondary">
-              {kid.gender === 'male' ? 'Masculino' : 
-               kid.gender === 'female' ? 'Feminino' : 'Outro'}
-            </Badge>
-            <Badge variant="outline">
-              {kid.relationship === 'biological' ? 'Biológico' : 
-               kid.relationship === 'adopted' ? 'Adotado' : 'Guardião'}
-            </Badge>
-          </div>
 
           {/* CARD ACTIONS */}
           <div className="flex justify-end mt-auto">
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="default" 
+              size="sm"
+              // className="font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-none hover:translate-y-[-2px] hover:shadow-[2px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+            >
               Detalhes
             </Button>
           </div>
-        </div>
+        </CardContent>
       </div>
-    </div>
+    </Card>
   );
 };

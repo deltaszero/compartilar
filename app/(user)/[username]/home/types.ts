@@ -44,4 +44,5 @@ export interface WeekDay {
   dayNumber: number;
   isToday: boolean;
   isSelected: boolean;
+  eventCount?: number;
 }
