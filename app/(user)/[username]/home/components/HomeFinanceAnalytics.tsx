@@ -126,7 +126,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   const CategoryPieChartCard = () => (
     <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold">Por Categoria</h3>
+        <h3 className="text-lg font-bold">Gasto por Categoria</h3>
         <PieChartIcon className="h-5 w-5" />
       </div>
         {categoryExpenses.length > 0 ? (
@@ -162,7 +162,17 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
                     return null;
                   }}
                 />
-                <Legend verticalAlign="bottom" height={20} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={20}
+                  formatter={(value) => (
+                    <span style={{ color: '#000000' }}>{value}</span>
+                  )}
+                  iconType="circle"
+                  wrapperStyle={{
+                    paddingTop: '10px'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -184,7 +194,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   const ChildExpensesChartCard = () => (
     <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold">Por Criança</h3>
+        <h3 className="text-lg font-bold">Gasto por Criança</h3>
         <BarChart2Icon className="h-5 w-5" />
       </div>
       {hasChildExpenses && childExpenses.length > 0 ? (
@@ -238,7 +248,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   const DailyExpensesChartCard = () => (
     <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold">Por Dia</h3>
+        <h3 className="text-lg font-bold">Gasto por Dia</h3>
         <BarChart2Icon className="h-5 w-5" />
       </div>
       {dateBarChartData.length > 0 ? (
