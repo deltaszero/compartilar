@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/context/userContext'
 import LoadingPage from '@/app/components/LoadingPage'
 
-export default function LoginRedirect() {
+function LoginRedirectContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/chat'
@@ -34,5 +34,13 @@ export default function LoginRedirect() {
 
   return (
     <LoadingPage />
+  )
+}
+
+export default function LoginRedirect() {
+  return (
+    <Suspense fallback={<LoadingPage />}>
+      <LoginRedirectContent />
+    </Suspense>
   )
 }
