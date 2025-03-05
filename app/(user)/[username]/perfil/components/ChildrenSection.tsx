@@ -84,7 +84,7 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
                             <p className="text-sm text-muted-foreground">{getAgeText(child.birthDate)}</p>
                         </div>
                         {child.gender && (
-                            <Badge variant="outline" className="ml-auto">
+                            <Badge variant="default" className="ml-auto">
                                 {getGenderText(child.gender)}
                             </Badge>
                         )}
@@ -161,7 +161,7 @@ export const ChildrenGrid = ({ userId, isOwnProfile }: { userId: string, isOwnPr
             <CardHeader className="flex flex-row items-center justify-between">
                 <h3 className="text-xl font-semibold">Crianças</h3>
                 {isOwnProfile && (
-                    <Button variant="outline" size="sm" className="rounded-full">
+                    <Button variant="default" size="sm" className="rounded-full">
                         <span className="mr-1">+</span> Adicionar
                     </Button>
                 )}
@@ -179,7 +179,7 @@ export const ChildrenGrid = ({ userId, isOwnProfile }: { userId: string, isOwnPr
             </CardContent>
             {children.length > 0 && isOwnProfile && (
                 <CardFooter className="flex justify-center border-t border-border pt-4">
-                    <Button variant="outline" className="rounded-full">
+                    <Button variant="default" className="rounded-full">
                         Gerenciar Crianças
                     </Button>
                 </CardFooter>

@@ -138,6 +138,9 @@ export default function ChildDetailPage() {
 
     setUploadProgress(0);
     try {
+      if (!storage) {
+        throw new Error("Storage is not initialized");
+      }
       const storageRef = ref(storage, `children_photos/${childData.id}/${Date.now()}_${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -361,7 +364,7 @@ export default function ChildDetailPage() {
                       onChange={handlePhotoChange}
                     />
                     <Button
-                      variant="secondary"
+                      variant="default"
                       size="icon"
                       className="absolute bottom-4 right-4 rounded-full"
                       onClick={() => fileInputRef.current?.click()}
@@ -456,8 +459,8 @@ export default function ChildDetailPage() {
                     </h1>
                     
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <Badge variant="outline">{getGenderText(childData.gender)}</Badge>
-                      <Badge variant="outline">{getRelationshipText(childData.relationship)}</Badge>
+                      <Badge variant="default">{getGenderText(childData.gender)}</Badge>
+                      <Badge variant="default">{getRelationshipText(childData.relationship)}</Badge>
                     </div>
                     
                     <div className="mt-6 space-y-2">
@@ -477,7 +480,7 @@ export default function ChildDetailPage() {
                   {isOwner && !isEditing && (
                     <Button 
                       onClick={() => setIsEditing(true)}
-                      variant="outline"
+                      variant="default"
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Editar
@@ -487,7 +490,7 @@ export default function ChildDetailPage() {
                   {isEditing && (
                     <>
                       <Button 
-                        variant="outline"
+                        variant="default"
                         onClick={() => {
                           setIsEditing(false);
                           setEditedData(childData);

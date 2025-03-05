@@ -171,7 +171,7 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
             <Button
               key={index}
               onClick={() => handleDaySelect(day)}
-              variant="outline"
+              variant="default"
               className={`
                 h-auto flex flex-col items-center py-2 px-1 rounded-none
                 border ${day.isSelected ? 'border-2' : 'border'} border-black
@@ -185,7 +185,7 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
               `}
             >
               {/* Event dot indicator */}
-              {day.eventCount > 0 && (
+              {(day.eventCount ?? 0) > 0 && (
                 <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-black"></div>
               )}
               

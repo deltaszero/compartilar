@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { Notification, NotificationType } from '@/types/shared.types';
-import { collection, getDocs, query, where, limit, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';// import { collection, getDocs, query, where, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { NotificationItem } from './NotificationItem';
 import {
@@ -192,7 +192,7 @@ export const NotificationBell = () => {
                         <h3 className="font-bold text-sm">Notificações</h3>
                         {unreadCount > 0 && (
                             <Button 
-                                variant="ghost" 
+                                variant="default" 
                                 size="sm" 
                                 className="text-xs h-7"
                                 onClick={handleMarkAllAsRead}

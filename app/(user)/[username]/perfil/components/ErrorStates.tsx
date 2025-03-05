@@ -23,7 +23,7 @@ export const AccessDenied = () => (
             <p className="text-muted-foreground">
                 Você precisa ser amigo ou familiar para visualizar este perfil.
             </p>
-            <Button variant="outline" className="mt-4">
+            <Button variant="default" className="mt-4">
                 Voltar para Home
             </Button>
         </div>

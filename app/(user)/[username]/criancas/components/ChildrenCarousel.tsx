@@ -45,7 +45,7 @@ export const ChildrenCarousel = ({ children, isLoading }: ChildrenCarouselProps)
         <h3 className="text-xl font-semibold text-muted-foreground mb-2">Nenhuma criança cadastrada</h3>
         <p className="text-sm text-muted-foreground mb-4">Adicione crianças ao seu perfil para visualizá-las aqui.</p>
         <Link href={`/${username}/perfil`}>
-          <Button variant="outline">Ir para o Perfil</Button>
+          <Button variant="default">Ir para o Perfil</Button>
         </Link>
       </div>
     );
@@ -121,13 +121,13 @@ export const ChildrenCarousel = ({ children, isLoading }: ChildrenCarouselProps)
                           <h2 className="text-2xl font-bold drop-shadow-md">
                             {child.firstName} {child.lastName}
                           </h2>
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge variant="default" className="mt-1">
                             {calculateAge(child.birthDate)}
                           </Badge>
                         </div>
                         
                         <Link href={`/${username}/criancas/${child.id}`}>
-                          <Button variant="secondary" size="sm" className="shadow-md">
+                          <Button variant="default" size="sm" className="shadow-md">
                             Ver Detalhes
                           </Button>
                         </Link>

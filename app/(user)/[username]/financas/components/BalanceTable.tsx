@@ -68,9 +68,9 @@ export const BalanceTable: React.FC<BalanceTableProps> = ({ balances, userData }
                         {balance.balance > 0 ? (
                           <Badge className="bg-green-500 hover:bg-green-600">A receber</Badge>
                         ) : balance.balance < 0 ? (
-                          <Badge variant="destructive">A pagar</Badge>
+                          <Badge variant="default">A pagar</Badge>
                         ) : (
-                          <Badge variant="outline">Neutro</Badge>
+                          <Badge variant="default">Neutro</Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -107,9 +107,9 @@ export const BalanceTable: React.FC<BalanceTableProps> = ({ balances, userData }
                     {balance.balance > 0 ? (
                       <Badge className="bg-green-500 hover:bg-green-600 text-[10px] h-5 px-1.5">A receber</Badge>
                     ) : balance.balance < 0 ? (
-                      <Badge variant="destructive" className="text-[10px] h-5 px-1.5">A pagar</Badge>
+                      <Badge variant="default" className="text-[10px] h-5 px-1.5">A pagar</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5">Neutro</Badge>
+                      <Badge variant="default" className="text-[10px] h-5 px-1.5">Neutro</Badge>
                     )}
                   </div>
                 </div>

@@ -164,7 +164,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
       accessorKey: "category",
       header: "Categoria",
       cell: ({ row }) => {
-        return <Badge variant="outline">{row.getValue("category")}</Badge>;
+        return <Badge variant="default">{row.getValue("category")}</Badge>;
       },
     },
     {
@@ -266,7 +266,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           <div className="text-right">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="default" size="icon" className="h-8 w-8">
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Abrir menu</span>
                 </Button>
@@ -451,13 +451,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     <div className="space-y-1">
                       <div className="font-medium">{row.original.description}</div>
                       <div className="flex space-x-2 text-sm">
-                        <Badge variant="outline" className="h-5">{row.original.category}</Badge>
+                        <Badge variant="default" className="h-5">{row.original.category}</Badge>
                         <span className="text-muted-foreground">{formatDate(row.original.date)}</span>
                       </div>
                     </div>
                     <div className="flex -space-x-1">
                       <Button 
-                        variant="ghost" 
+                        variant="default" 
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => handleViewExpense(row.original)}
@@ -466,7 +466,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                       <Button 
-                        variant="ghost" 
+                        variant="default" 
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => handleEditExpense(row.original)}
@@ -475,7 +475,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button 
-                        variant="ghost" 
+                        variant="default" 
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => handleDeleteExpense(row.original.id)}

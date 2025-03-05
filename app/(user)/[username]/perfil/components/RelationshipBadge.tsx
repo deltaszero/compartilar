@@ -6,9 +6,9 @@ export const RelationshipBadge = ({ status }: { status: FriendshipStatus }) => {
     const getBadgeVariant = () => {
         switch (status) {
             case 'coparent':
-                return 'secondary';
+                return "default";
             case 'support':
-                return 'outline';
+                return "default";
             case 'other':
                 return 'default';
             default:
@@ -31,7 +31,7 @@ export const RelationshipBadge = ({ status }: { status: FriendshipStatus }) => {
 
     return (
         <Badge 
-            variant={getBadgeVariant() as "default" | "secondary" | "destructive" | "outline"} 
+            variant={getBadgeVariant() as "default" | "neutral" } 
             className="px-4 py-1 text-base rounded-full shadow-sm"
         >
             {getRelationshipText()}

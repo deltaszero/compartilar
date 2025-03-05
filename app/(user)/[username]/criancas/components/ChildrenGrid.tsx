@@ -144,7 +144,7 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
                 
                 {child.gender && (
                   <Badge 
-                    variant="outline" 
+                    variant="default" 
                     className="absolute top-2 right-2 bg-background/80"
                   >
                     {getGenderText(child.gender)}
@@ -174,7 +174,7 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
             
             <CardFooter className="border-t border-border p-4 bg-muted/10">
               <Link href={`/${username}/criancas/${child.id}`} className="w-full">
-                <Button variant="outline" className="w-full">
+                <Button variant="default" className="w-full">
                   {isOwnChildren ? "Editar informações" : "Ver detalhes"}
                 </Button>
               </Link>

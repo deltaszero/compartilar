@@ -84,7 +84,7 @@ export function EventForm({
       
       // Compare the objects to prevent unnecessary setFormData calls
       if (JSON.stringify(formData) !== JSON.stringify(newFormData)) {
-        setFormData(newFormData);
+        setFormData(newFormData as EventFormData);
       }
       
       setError(null);
@@ -267,7 +267,7 @@ export function EventForm({
               <Label htmlFor="category" className="font-bold">Categoria</Label>
               <Select 
                 value={formData.category} 
-                onValueChange={(value) => handleChange("category", value as any)}
+                onValueChange={(value: 'school' | 'medical' | 'activity' | 'visitation' | 'other') => handleChange("category", value)}
               >
                 <SelectTrigger className="border-2 border-black">
                   <SelectValue placeholder="Selecione a categoria" />
@@ -327,7 +327,7 @@ export function EventForm({
           <DialogFooter className="gap-2 mt-2">
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={onClose}
               className="border-2 border-black"
             >

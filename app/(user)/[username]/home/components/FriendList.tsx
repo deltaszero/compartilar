@@ -215,10 +215,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     </p>
                   )}
                   {request.relationshipType && (
-                    <Badge variant={
-                      request.relationshipType === 'coparent' ? 'secondary' :
-                        request.relationshipType === 'support' ? 'default' : 'outline'
-                    } className="mt-1">
+                    <Badge variant="default" className="mt-1">
                       {request.relationshipType === 'coparent' ? 'Co-Parent' :
                         request.relationshipType === 'support' ? 'Apoio' : 'Outro'}
                     </Badge>
@@ -237,7 +234,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                   ) : 'Aceitar'}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={() => handleRequest(request.id, 'declined')}
                   disabled={isProcessingRequest[request.id]}
@@ -296,8 +293,8 @@ export const FriendList = ({ userId }: { userId: string }) => {
             </h3>
             {friend.relationshipType && (
               <Badge variant={
-                friend.relationshipType === 'coparent' ? 'secondary' :
-                  friend.relationshipType === 'support' ? 'default' : 'outline'
+                friend.relationshipType === 'coparent' ? "default" :
+                  friend.relationshipType === 'support' ? 'default' : "default"
               }>
                 {friend.relationshipType === 'coparent' ? 'Co-Parent' :
                   friend.relationshipType === 'support' ? 'Apoio' : 'Outro'}

@@ -105,7 +105,7 @@ export const InvitationDialog = ({ isOpen, onClose, userData }: InvitationDialog
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Convide alguém para o CompartiLar</h2>
             <Button 
-              variant="ghost" 
+              variant="default" 
               size="icon" 
               onClick={onClose}
               className="h-8 w-8"
@@ -182,7 +182,7 @@ export const InvitationDialog = ({ isOpen, onClose, userData }: InvitationDialog
                 </Button>
                 
                 <Button
-                  variant="outline"
+                  variant="default"
                   className="flex-1"
                   onClick={onClose}
                 >

@@ -309,7 +309,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         </div>
                         
                         {splitMethod === 'equal' ? (
-                          <Badge variant="secondary">
+                          <Badge variant="default">
                             {(100 / expenseMembers.length).toFixed(0)}%
                           </Badge>
                         ) : splitMethod === 'percentage' ? (
@@ -352,13 +352,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               
               <DialogFooter className="mt-6 flex-col sm:flex-row gap-3 sm:gap-2 sticky bottom-0 pt-2 bg-background">
                 <DialogClose asChild className="block sm:hidden w-full">
-                  <Button type="button" variant="outline" className="w-full">
+                  <Button type="button" variant="default" className="w-full">
                     <X className="h-4 w-4 mr-2" />
                     Fechar
                   </Button>
                 </DialogClose>
                 <DialogClose asChild className="hidden sm:block">
-                  <Button type="button" variant="outline">Cancelar</Button>
+                  <Button type="button" variant="default">Cancelar</Button>
                 </DialogClose>
                 <Button type="submit" className="w-full sm:w-auto">
                   {isEditing ? (

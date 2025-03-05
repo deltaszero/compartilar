@@ -70,6 +70,9 @@ export const AvatarSection = ({
         try {
             // Create a reference with a timestamp to avoid caching issues
             const timestamp = new Date().getTime();
+            if (!storage) {
+                throw new Error("Storage is not initialized");
+            }
             const storageRef = ref(storage, `profile_photos/${timestamp}_${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
             
@@ -267,7 +270,7 @@ export const UserProfileCard = ({
                             @{displayData?.username}
                         </p>
                         {!isOwnProfile && (
-                            <Badge variant="secondary" className="mt-3 px-4 py-1 text-sm">
+                            <Badge variant="default" className="mt-3 px-4 py-1 text-sm">
                                 Perfil Visitante
                             </Badge>
                         )}
@@ -277,7 +280,7 @@ export const UserProfileCard = ({
                 {isOwnProfile && !isEditing && (
                     <Button 
                         className="mt-4 gap-2 rounded-full px-6 font-medium" 
-                        variant="outline"
+                        variant="default"
                         onClick={onToggleEdit}
                     >
                         <EditIcon className="w-4 h-4" />
@@ -289,7 +292,7 @@ export const UserProfileCard = ({
             {isEditing && (
                 <CardFooter className="flex justify-between pb-6">
                     <Button 
-                        variant="outline" 
+                        variant="default" 
                         onClick={onToggleEdit}
                         disabled={isSaving}
                     >

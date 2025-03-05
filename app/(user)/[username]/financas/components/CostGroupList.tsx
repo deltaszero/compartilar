@@ -53,7 +53,7 @@ export const CostGroupList: React.FC<CostGroupListProps> = ({
         <div className="flex justify-between items-center">
           <CardTitle>Grupos de Despesas</CardTitle>
           <Button 
-            variant={isAddingGroup ? "outline" : "default"}
+            variant={isAddingGroup ? "default" : "default"}
             size="sm"
             className="h-9"
             onClick={() => setIsAddingGroup(!isAddingGroup)}
@@ -119,7 +119,7 @@ export const CostGroupList: React.FC<CostGroupListProps> = ({
                       <span>{`${friend.firstName} ${friend.lastName}`}</span>
                       <Button 
                         type="button"
-                        variant="ghost"
+                        variant="default"
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => setNewGroupMembers(
@@ -164,7 +164,7 @@ export const CostGroupList: React.FC<CostGroupListProps> = ({
                   <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-base">{group.name}</h3>
                     <Button 
-                      variant="ghost"
+                      variant="default"
                       size="icon"
                       className="h-8 w-8"
                       onClick={(e) => {

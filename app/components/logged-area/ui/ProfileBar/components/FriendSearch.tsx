@@ -15,7 +15,9 @@ interface FriendSearchProps {
     userData: { 
         username: string; 
         photoURL?: string; 
-        uid?: string; 
+        uid?: string;
+        firstName?: string;
+        lastName?: string;
     };
 }
 
@@ -202,7 +204,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     />
                     {searchTerm && (
                         <Button 
-                            variant="ghost"
+                            variant="default"
                             size="icon" 
                             className="absolute right-0 top-0 h-9 w-9"
                             onClick={clearSearch}

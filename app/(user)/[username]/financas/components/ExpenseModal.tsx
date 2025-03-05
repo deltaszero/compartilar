@@ -77,7 +77,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             {expense.description}
             {expense.childrenIds && expense.childrenIds.length > 0 && (
               <span className="ml-2 align-middle inline-block">
-                <Badge variant="outline" className="bg-primary/10">
+                <Badge variant="default" className="bg-primary/10">
                   <User className="h-3 w-3 mr-1" />
                   Infantil
                 </Badge>
@@ -105,7 +105,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               {/* Status de crianças */}
               {expense.childrenIds && expense.childrenIds.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-dashed flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="default" className="text-xs">
                     Despesa infantil
                   </Badge>
                 </div>
@@ -118,7 +118,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 <span>Categoria</span>
               </div>
               <p>
-                <Badge variant="outline" className="font-normal">
+                <Badge variant="default" className="font-normal">
                   {expense.category}
                 </Badge>
               </p>
@@ -181,7 +181,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 <SplitSquareVertical className="h-4 w-4" />
                 <span>Método de divisão</span>
               </div>
-              <Badge variant="secondary" className="capitalize">
+              <Badge variant="default" className="capitalize">
                 {expense.members[0].splitType === 'equal' ? 'Divisão igual' : 
                   expense.members[0].splitType === 'percentage' ? 'Porcentagem' : 'Valor fixo'}
               </Badge>
@@ -311,7 +311,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               ID: {expense.id.substring(0, 8)}...
             </div>
             <DialogClose asChild>
-              <Button variant="secondary">Fechar</Button>
+              <Button variant="default">Fechar</Button>
             </DialogClose>
           </div>
         </DialogFooter>
