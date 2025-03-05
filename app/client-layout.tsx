@@ -1,12 +1,12 @@
-'use client';
+// 'use client';
 
-import React from 'react';
-import { UserProvider } from '@/context/userContext';
+// import React from 'react';
+// import { UserProvider } from '@/context/userContext';
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <UserProvider>
-      {children}
-    </UserProvider>
-  );
-}
+// export default function ClientLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <UserProvider>
+//       {children}
+//     </UserProvider>
+//   );
+// }

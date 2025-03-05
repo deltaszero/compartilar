@@ -296,7 +296,7 @@ export default function HomePage() {
                                     <div className="p-4">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-lg font-bold tracking-tight">Amigos e Família</h3>
-                                            <Button
+                                            {/* <Button
                                                 onClick={() => setIsInvitationDialogOpen(true)}
                                                 className="bg-secondaryMain"
                                                 // className="gap-1 rounded-none border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
@@ -306,7 +306,7 @@ export default function HomePage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                                 </svg>
                                                 Convidar
-                                            </Button>
+                                            </Button> */}
                                         </div>
                                         <FriendList userId={userData.uid} />
                                     </div>
@@ -326,7 +326,7 @@ export default function HomePage() {
                         </div>
 
                         {/* BROWSER CALENDAR SECTION */}
-                        <section className=" w-full mx-auto p-4">
+                        <section className=" w-2/3 mx-auto p-4">
                             {isMobile ? (
                                 <div className="h-12" />
                             ) : (
