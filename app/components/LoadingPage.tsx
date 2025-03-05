@@ -1,7 +1,7 @@
 // /components/ui/LoadingPage.tsx
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import puzzle_piece from "@assets/animations/puzzle-piece.gif";
+import puzzle_piece from "@assets/animations/puzzle-piece-purple-2.gif";
 
 const LoadingPage: React.FC = () => {
     const [, setIsMobile] = useState(false);
@@ -22,7 +22,7 @@ const LoadingPage: React.FC = () => {
         <div
             className="
                 fixed inset-0 z-[9999] flex items-center justify-center 
-                bg-white backdrop-blur-sm transition-all duration-300
+                bg-bg backdrop-blur-sm transition-all duration-300
             "
             aria-label="Initial Platform Loading"
             role="status"

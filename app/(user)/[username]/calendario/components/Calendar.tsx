@@ -29,7 +29,7 @@ import {
 export default function Calendar({ initialMonth }: CalendarProps) {
   const { userData } = useUser();
   const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()); // Initialize with today's date
   const [children, setChildren] = useState<any[]>([]);
   const [coParentingRelationships, setCoParentingRelationships] = useState<string[]>([]);
   const [events, setEvents] = useState<CalendarEventWithChild[]>([]);

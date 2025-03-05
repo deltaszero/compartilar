@@ -342,7 +342,7 @@ export default function HomePage() {
                                         /> */}
                                     </div>
                                     <div className="hidden sm:block bg-base-100 rounded-xl py-4">
-                                        <Calendar />
+                                        <Calendar initialMonth={new Date()} />
                                     </div>
                                 </div>
                             )}
