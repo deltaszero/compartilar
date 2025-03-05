@@ -270,7 +270,7 @@ export default function HomePage() {
                                         {/* Banner/Header */}
                                         <div className="flex items-center justify-between px-4 rounded-md relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
                                             <div className="flex flex-col gap-2 z-10 max-w-[66%]">
-                                                <h2 className="text-2xl sm:text-3xl font-bold">
+                                                <h2 className="text-2xl sm:text-3xl font-black">
                                                     Rede de Apoio
                                                 </h2>
                                                 <p className="text-xs">
@@ -291,7 +291,7 @@ export default function HomePage() {
                                     </div>
                                 )}
                                 {/* Content Area */}
-                                <div className="bg-white border-2 border-black rounded-none overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]">
+                                <div className="bg-white overflow-hidden border-2 border-black shadow-brutalist">
                                     {/* Friend List - always visible */}
                                     <div className="p-4">
                                         <div className="flex justify-between items-center mb-4">

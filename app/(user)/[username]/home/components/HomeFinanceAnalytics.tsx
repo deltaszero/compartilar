@@ -5,7 +5,6 @@ import {
   PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EXPENSE_CATEGORIES } from "../../financas/components/constants";
 import Link from "next/link";
@@ -61,6 +60,32 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   // Sort child expenses by value (descending)
   childExpenses.sort((a, b) => b.value - a.value);
 
+  // Prepare chart data - expenses by date
+  const dateExpenses: Record<string, number> = {};
+  
+  if (hasExpenses) {
+    expenses.forEach(expense => {
+      try {
+        const date = expense.date.toDate().toISOString().slice(0, 10);
+        dateExpenses[date] = (dateExpenses[date] || 0) + expense.amount;
+      } catch (e) {
+        console.log(e);
+        console.error("Invalid date in expense:", expense.id);
+      }
+    });
+  }
+  
+  const sortedDates = Object.keys(dateExpenses).sort();
+  
+  const dateBarChartData = sortedDates.map(date => {
+    const [_year, month, day] = date.split('-');
+    console.log(_year);
+    return {
+      date: `${day}/${month}`,
+      amount: dateExpenses[date]
+    };
+  }).slice(-7); // Show only the last 7 days with data
+  
   // Calculate total expense amount
   const totalAmount = hasExpenses 
     ? expenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -75,46 +100,35 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
 
   // Create reusable card components for the 3-column layout
   const TotalExpenseCard = () => (
-    <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-      <CardHeader className="bg-mainStrongBlue border-b-4 border-black">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg uppercase font-extrabold tracking-tight">Despesas</CardTitle>
-          <BanknoteIcon className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <p className="text-3xl font-black">R$ {totalAmount.toFixed(2)}</p>
-        <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
-      </CardContent>
-    </Card>
+    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-bold">Despesas</h3>
+        <BanknoteIcon className="h-5 w-5" />
+      </div>
+      <p className="text-3xl font-black">R$ {totalAmount.toFixed(2)}</p>
+      <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
+    </div>
   );
 
   const ChildExpenseCard = () => (
-    <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-      <CardHeader className="bg-yellow-300 border-b-4 border-black">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg uppercase font-extrabold tracking-tight">Despesas Infantis</CardTitle>
-          <User className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <p className="text-3xl font-black">R$ {totalChildExpenses.toFixed(2)}</p>
-        <p className="text-sm text-muted-foreground">
-          {totalAmount > 0 ? `${Math.round((totalChildExpenses / totalAmount) * 100)}% do total` : '0% do total'}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-bold">Despesas Infantis</h3>
+        <User className="h-5 w-5" />
+      </div>
+      <p className="text-3xl font-black">R$ {totalChildExpenses.toFixed(2)}</p>
+      <p className="text-sm text-muted-foreground">
+        {totalAmount > 0 ? `${Math.round((totalChildExpenses / totalAmount) * 100)}% do total` : '0% do total'}
+      </p>
+    </div>
   );
 
   const CategoryPieChartCard = () => (
-    <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-      <CardHeader className="bg-blue-300 border-b-4 border-black">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg uppercase font-extrabold tracking-tight">Por Categoria</CardTitle>
-          <PieChartIcon className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
+    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-bold">Por Categoria</h3>
+        <PieChartIcon className="h-5 w-5" />
+      </div>
         {categoryExpenses.length > 0 ? (
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +153,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="border-4 border-black bg-white p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
+                        <div className="border border-black bg-white p-2 shadow-sm">
                           <p className="font-bold">{payload[0].name}</p>
                           <p className="font-mono">R$ {Number(payload[0].value).toFixed(2)}</p>
                         </div>
@@ -159,109 +173,152 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
         )}
         <div className="mt-4 text-center">
           <Link href={`/${username}/financas`}>
-            <Button size="sm" variant="outline" className="w-full gap-1 border-2 border-black">
+            <Button size="sm" variant="default" className="gap-1">
               Ver detalhes <ArrowRightIcon className="h-3 w-3" />
             </Button>
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
   );
 
   const ChildExpensesChartCard = () => (
-    <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)] col-span-3 md:col-span-1">
-      <CardHeader className="bg-pink-300 border-b-4 border-black">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg uppercase font-extrabold tracking-tight">Por Criança</CardTitle>
-          <BarChart2Icon className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        {hasChildExpenses && childExpenses.length > 0 ? (
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={childExpenses}
-                margin={{
-                  top: 5,
-                  right: 20,
-                  left: 20,
-                  bottom: 5,
+    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-bold">Por Criança</h3>
+        <BarChart2Icon className="h-5 w-5" />
+      </div>
+      {hasChildExpenses && childExpenses.length > 0 ? (
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={childExpenses}
+              margin={{
+                top: 5,
+                right: 20,
+                left: 20,
+                bottom: 5,
+              }}
+              layout="vertical"
+            >
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#000000" strokeWidth={1} />
+              <XAxis type="number" stroke="#000000" strokeWidth={2} />
+              <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} stroke="#000000" strokeWidth={2} />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="border border-black bg-white p-2 shadow-sm">
+                        <p className="font-bold">{payload[0].payload.name}</p>
+                        <p className="font-mono">R$ {Number(payload[0].value).toFixed(2)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
-                layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#000000" strokeWidth={1} />
-                <XAxis type="number" stroke="#000000" strokeWidth={2} />
-                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} stroke="#000000" strokeWidth={2} />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="border-4 border-black bg-white p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                          <p className="font-bold">{payload[0].payload.name}</p>
-                          <p className="font-mono">R$ {Number(payload[0].value).toFixed(2)}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="value" name="Valor Gasto" fill="#FF6384" stroke="#000000" strokeWidth={2} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-48 flex items-center justify-center">
-            <p className="text-muted-foreground text-center">Sem despesas infantis</p>
-          </div>
-        )}
-        <div className="mt-4 text-center">
-          <Link href={`/${username}/financas`}>
-            <Button size="sm" variant="outline" className="w-full gap-1 border-2 border-black">
-              Ver detalhes <ArrowRightIcon className="h-3 w-3" />
-            </Button>
-          </Link>
+              />
+              <Bar dataKey="value" name="Valor Gasto" fill="#FF6384" stroke="#000000" strokeWidth={2} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <div className="h-48 flex items-center justify-center">
+          <p className="text-muted-foreground text-center">Sem despesas infantis</p>
+        </div>
+      )}
+      <div className="mt-4 text-center">
+        <Link href={`/${username}/financas`}>
+          <Button size="sm" variant="default" className="gap-1">
+            Ver detalhes <ArrowRightIcon className="h-3 w-3" />
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+  
+  const DailyExpensesChartCard = () => (
+    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-bold">Por Dia</h3>
+        <BarChart2Icon className="h-5 w-5" />
+      </div>
+      {dateBarChartData.length > 0 ? (
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={dateBarChartData}
+              margin={{
+                top: 5,
+                right: 10,
+                left: 10,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#000000" strokeWidth={1} />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="#000000" strokeWidth={2} />
+              <YAxis width={40} tick={{ fontSize: 10 }} stroke="#000000" strokeWidth={2} />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="border border-black bg-white p-2 shadow-sm">
+                        <p className="font-bold">{payload[0].payload.date}</p>
+                        <p className="font-mono">R$ {Number(payload[0].value).toFixed(2)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar dataKey="amount" name="Despesas Diárias" fill="#4BC0C0" stroke="#000000" strokeWidth={2} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="h-48 flex items-center justify-center">
+          <p className="text-muted-foreground text-center">Sem dados diários suficientes</p>
+        </div>
+      )}
+      <div className="mt-4 text-center">
+        <Link href={`/${username}/financas`}>
+          <Button size="sm" variant="default" className="gap-1">
+            Ver detalhes <ArrowRightIcon className="h-3 w-3" />
+          </Button>
+        </Link>
+      </div>
+    </div>
   );
 
   if (isLoading) {
     // Loading state - show skeleton cards in 3-column layout
     return (
       <>
-        <div className="col-span-3 md:col-span-1">
-          <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-            <CardHeader className="bg-mainStrongBlue border-b-4 border-black">
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="p-4">
-              <Skeleton className="h-8 w-full mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardContent>
-          </Card>
+        <div className="col-span-4 md:col-span-1">
+          <div className="bg-white p-4 h-full">
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-8 w-full mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         </div>
-        <div className="col-span-3 md:col-span-1">
-          <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-            <CardHeader className="bg-yellow-300 border-b-4 border-black">
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="p-4">
-              <Skeleton className="h-8 w-full mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardContent>
-          </Card>
+        <div className="col-span-4 md:col-span-1">
+          <div className="bg-white p-4 h-full">
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-8 w-full mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         </div>
-        <div className="col-span-3 md:col-span-1">
-          <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-            <CardHeader className="bg-blue-300 border-b-4 border-black">
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="p-4">
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-8 w-full mt-4" />
-            </CardContent>
-          </Card>
+        <div className="col-span-4 md:col-span-1">
+          <div className="bg-white p-4 h-full">
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-40 w-full mb-2" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+        </div>
+        <div className="col-span-4 md:col-span-1">
+          <div className="bg-white p-4 h-full">
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-40 w-full mb-2" />
+            <Skeleton className="h-8 w-full" />
+          </div>
         </div>
       </>
     );
@@ -270,27 +327,23 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   if (!hasExpenses) {
     // No expenses state - show empty state card that spans 3 columns
     return (
-      <div className="col-span-3">
-        <Card className="border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.8)]">
-          <CardHeader className="bg-mainStrongBlue border-b-4 border-black">
-            <CardTitle className="uppercase font-extrabold tracking-wide">RESUMO FINANCEIRO</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="p-6 text-center">
-              <BanknoteIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-bold mb-2">Sem despesas registradas</h3>
-              <p className="text-muted-foreground mb-6">
-                Comece a registrar suas despesas para visualizar gráficos e análises aqui.
-              </p>
-              <Link href={`/${username}/financas`}>
-                <Button className="gap-2 bg-mainStrongBlue">
-                  Ir para Finanças
-                  <ArrowRightIcon className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="col-span-4">
+        <div className="bg-white p-4 h-full">
+          <h3 className="text-lg font-bold mb-2">Resumo Financeiro</h3>
+          <div className="p-6 text-center">
+            <BanknoteIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-bold mb-2">Sem despesas registradas</h3>
+            <p className="text-muted-foreground mb-6">
+              Comece a registrar suas despesas para visualizar gráficos e análises aqui.
+            </p>
+            <Link href={`/${username}/financas`}>
+              <Button className="gap-2 bg-mainStrongBlue">
+                Ir para Finanças
+                <ArrowRightIcon className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -298,17 +351,22 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   // Full content state - show all cards in 3-column layout
   return (
     <>
-      <div className="col-span-3 md:col-span-1">
-        <TotalExpenseCard />
+      <div className="col-span-4 md:col-span-1 mb-4">
+        <div className='flex flex-col gap-4 sm:gap-[4em]'>
+          <TotalExpenseCard />
+          <ChildExpenseCard />
+        </div>
       </div>
-      <div className="col-span-3 md:col-span-1">
-        <ChildExpenseCard />
-      </div>
-      <div className="col-span-3 md:col-span-1">
+      <div className="col-span-4 md:col-span-1 mb-4">
         <CategoryPieChartCard />
       </div>
+      <div className="col-span-4 md:col-span-1 mb-4">
+        {dateBarChartData.length > 0 && <DailyExpensesChartCard />}
+      </div>
+      
+      {/* Second row */}
       {hasChildExpenses && childExpenses.length > 0 && (
-        <div className="col-span-3 mt-4">
+        <div className="col-span-4 md:col-span-1 mb-4">
           <ChildExpensesChartCard />
         </div>
       )}
