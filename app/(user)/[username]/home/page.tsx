@@ -29,7 +29,7 @@ import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
 
 // Financial analytics
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
+import { db } from "@/app/lib/firebaseConfig";
 import { EXPENSE_CATEGORIES } from "../financas/components/constants";
 
 // Set locale for dayjs

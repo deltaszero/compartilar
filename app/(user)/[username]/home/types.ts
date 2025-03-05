@@ -15,8 +15,8 @@ export interface KidInfo {
   firstName: string;
   lastName: string;
   birthDate: string;
-  gender: "male" | "female" | "other" | null;
-  relationship: "biological" | "adopted" | "guardian" | null;
+  gender?: "male" | "female" | "other" | null;
+  relationship?: "biological" | "adopted" | "guardian" | null;
   photoURL?: string | null;
 }
 

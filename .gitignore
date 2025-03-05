@@ -50,3 +50,4 @@ tree.txt
 **/public/sw.js
 **/public/workbox-*.js
 .firebase/**/*
+storage.rules
