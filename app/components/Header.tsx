@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/app/lib/utils';
+import { useUser } from '@/context/userContext';
 
 /**
  * navItems is an array of objects containing the label and href of each navigation item.
@@ -43,7 +44,7 @@ const MobileNav = () => (
         </div>
       </Button>
     </SheetTrigger>
-    <SheetContent side="left" className="w-[250px] sm:w-[300px] z-[99999]">
+    <SheetContent side="left" className="w-[250px] sm:w-[300px] z-[999]">
       <SheetTitle className="text-2xl font-bold uppercase">CompartiLar</SheetTitle>
       <div className="flex flex-col gap-4 mt-8">
         <nav className="flex flex-col gap-2">
@@ -74,7 +75,7 @@ const DesktopNav = () => (
         className={cn(
           "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+          "px-3 py-2 hover:bg-accent hover:text-accent-foreground z-[99]"
         )}
       >
         {item.label}
@@ -90,7 +91,7 @@ const UserMenu = ({ userData, onSignOut }: {
     userData: { username: string; photoURL?: string },
     onSignOut: () => void
 }) => (
-  <div className="flex items-center gap-2 z-50">
+  <div className="flex items-center gap-2 relative">
     {/* username */}
     <Link href={`/${userData.username}/home`} className="hidden sm:block text-lg">
       {userData.username}
@@ -110,7 +111,7 @@ const UserMenu = ({ userData, onSignOut }: {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-52 z-[1000]" forceMount>
         <DropdownMenuItem asChild>
           <Link href={`/${userData.username}/home`}>Perfil</Link>
         </DropdownMenuItem>
@@ -129,7 +130,7 @@ const UserMenu = ({ userData, onSignOut }: {
  * LoginButton is a component that renders the login button.
  */
 const LoginButton = () => (
-  <Button asChild variant="default">
+  <Button asChild variant="default" className="bg-mainStrongGreen">
     <Link href="/login" className="font-bold gap-2 flex items-center">
       <span>Entrar</span>
       <LogIn className="h-4 w-4 ml-2" />
@@ -142,16 +143,12 @@ const LoginButton = () => (
  */
 const Header = () => {
     const router = useRouter();
-    // Dummy user state for demonstration
-    const [user, setUser] = React.useState(null);
-    const [userData, setUserData] = React.useState(null);
-    const [loading,] = React.useState(false);
+    const { user, userData, loading } = useUser();
 
     const handleSignOut = async () => {
         try {
-            // Simulate signout
-            setUser(null);
-            setUserData(null);
+            // Here you would use auth.signOut() or similar
+            // This is just a placeholder until integrated with the real auth system
             router.push('/');
         } catch (error) {
             console.error('Error signing out:', error);
@@ -159,7 +156,7 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[999]">
+        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[99]">
             <div className="flex items-center">
                 <MobileNav />
                 <div className="hidden lg:block">

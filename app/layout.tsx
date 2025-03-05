@@ -7,6 +7,7 @@ import {
     Nunito,
 } from "next/font/google";
 import "./globals.css";
+import ClientLayout from "./client-layout";
 
 const inter = Inter({ subsets: ["latin"] });
 const raleway = Raleway({
@@ -38,9 +39,11 @@ export default function RootLayout({
             className={`${raleway.variable} ${playfair.variable} ${nunito.variable} scroll-smooth antialiased`}
         >
             <body className={`${inter.className}`}>
-                <main>
-                    {children}
-                </main>
+                <ClientLayout>
+                    <main>
+                        {children}
+                    </main>
+                </ClientLayout>
             </body>
         </html>
     );

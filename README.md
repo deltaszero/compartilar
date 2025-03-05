@@ -35,5 +35,5 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 
 
 ```
-please make "FEATURES SECTION" in /home/dusoudeth/Documentos/github/compartilar/app/page.tsx be a bit more neo-brutalist, not that exagerated please
+when I'm logged my /home/dusoudeth/Documentos/github/compartilar/app/components/Header.tsx component does not show my profile picture
 ```

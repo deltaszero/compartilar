@@ -104,14 +104,15 @@ export default function Home() {
 
                             <div className="flex flex-row gap-4 mb-[5em]">
                                 <Button
-                                    variant="neutral"
-                                    className="text-base sm:text-lg md:text-xl"
+                                    variant="default"
+                                    className="bg-main text-base sm:text-lg md:text-xl"
                                     onClick={handleLearnMoreClick}
                                 >
                                     Saiba mais
                                 </Button>
                                 <Button
-                                    className="text-base sm:text-lg md:text-xl flex items-center"
+                                    variant="default"
+                                    className="bg-mainStrongGreen text-base sm:text-lg md:text-xl flex items-center"
                                     onClick={handleGetStartedClick}
                                 >
                                     <span>Comece agora</span>
