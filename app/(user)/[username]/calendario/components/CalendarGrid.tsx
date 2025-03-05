@@ -59,7 +59,7 @@ export function CalendarGrid({ days, onSelectDate, onDoubleClick }: CalendarGrid
 
               {day.events.length > 2 && (
                 <Badge 
-                  variant="outline" 
+                  variant="default" 
                   className="text-[8px] sm:text-[10px] border-2 border-black bg-white shadow-brutalist-sm px-1 transition-transform hover:translate-y-0.5"
                 >
                   +{day.events.length - 2} more

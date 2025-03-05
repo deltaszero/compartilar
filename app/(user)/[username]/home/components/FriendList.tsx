@@ -44,7 +44,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FriendshipRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessingRequest, setIsProcessingRequest] = useState<{[key: string]: boolean}>({});
+  const [isProcessingRequest, setIsProcessingRequest] = useState<{ [key: string]: boolean }>({});
   const { userData } = useUser();
   const { toast } = useToast();
 
@@ -65,7 +65,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         });
 
         setFriends(friendsData);
-        
+
         // Fetch pending friend requests
         const requestsRef = collection(db, 'friendship_requests');
         const requestsQuery = query(
@@ -73,17 +73,17 @@ export const FriendList = ({ userId }: { userId: string }) => {
           where('receiverId', '==', userId),
           where('status', '==', 'pending')
         );
-        
+
         const requestsSnapshot = await getDocs(requestsQuery);
         const requestsData: FriendshipRequest[] = [];
-        
+
         requestsSnapshot.forEach((doc) => {
           requestsData.push({
             id: doc.id,
             ...doc.data() as Omit<FriendshipRequest, 'id'>
           });
         });
-        
+
         setPendingRequests(requestsData);
       } catch (err) {
         console.error('Error fetching friend data:', err);
@@ -101,27 +101,27 @@ export const FriendList = ({ userId }: { userId: string }) => {
       fetchData();
     }
   }, [userId, toast]);
-  
+
   const handleRequest = async (requestId: string, status: 'accepted' | 'declined') => {
     if (!userData) return;
-    
+
     setIsProcessingRequest(prev => ({ ...prev, [requestId]: true }));
-    
+
     try {
       const requestRef = doc(db, 'friendship_requests', requestId);
       const timestamp = Timestamp.now();
-      
+
       // Update the request status
       await updateDoc(requestRef, {
         status,
         updatedAt: timestamp
       });
-      
+
       // If accepted, add to both users' friends lists
       if (status === 'accepted') {
         const request = pendingRequests.find(req => req.id === requestId);
         if (!request) return;
-        
+
         // Add sender to current user's friends
         await setDoc(doc(db, 'friends', userData.uid, 'friendsList', request.senderId), {
           username: request.senderUsername,
@@ -132,7 +132,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           relationshipType: request.relationshipType || 'support',
           ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
         });
-        
+
         // Add current user to sender's friends
         await setDoc(doc(db, 'friends', request.senderId, 'friendsList', userData.uid), {
           username: userData.username,
@@ -143,7 +143,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           relationshipType: request.relationshipType || 'support',
           ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
         });
-        
+
         // Add to friends list immediately in UI
         setFriends(prev => [...prev, {
           id: request.senderId,
@@ -154,7 +154,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           relationshipType: request.relationshipType,
           addedAt: timestamp
         }]);
-        
+
         toast({
           title: "Solicitação aceita",
           description: `Você e ${request.senderUsername} agora são amigos!`
@@ -165,7 +165,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           description: "A solicitação de amizade foi recusada"
         });
       }
-      
+
       // Remove from pending requests
       setPendingRequests(prev => prev.filter(req => req.id !== requestId));
     } catch (error) {
@@ -183,11 +183,11 @@ export const FriendList = ({ userId }: { userId: string }) => {
   if (isLoading) {
     return <LoadingSpinner />;
   }
-  
+
   // Render the pending requests section
   const renderPendingRequests = () => {
     if (pendingRequests.length === 0) return null;
-    
+
     return (
       <div className="mb-6 border-2 border-black bg-secondary/10 p-4 rounded-lg">
         <h2 className="text-base sm:text-lg font-semibold mb-3 flex items-center">
@@ -217,10 +217,10 @@ export const FriendList = ({ userId }: { userId: string }) => {
                   {request.relationshipType && (
                     <Badge variant={
                       request.relationshipType === 'coparent' ? 'secondary' :
-                      request.relationshipType === 'support' ? 'default' : 'outline'
+                        request.relationshipType === 'support' ? 'default' : 'outline'
                     } className="mt-1">
                       {request.relationshipType === 'coparent' ? 'Co-Parent' :
-                      request.relationshipType === 'support' ? 'Apoio' : 'Outro'}
+                        request.relationshipType === 'support' ? 'Apoio' : 'Outro'}
                     </Badge>
                   )}
                 </div>
@@ -255,7 +255,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
   if (friends.length === 0 && pendingRequests.length === 0) {
     return (
       <div className="text-center py-6 flex flex-col items-center gap-2 text-gray-500">
-        <span className="text-4xl">👥</span>
+        {/* <span className="text-4xl">👥</span> */}
         <p>Você ainda não tem amigos adicionados</p>
       </div>
     );
@@ -297,10 +297,10 @@ export const FriendList = ({ userId }: { userId: string }) => {
             {friend.relationshipType && (
               <Badge variant={
                 friend.relationshipType === 'coparent' ? 'secondary' :
-                friend.relationshipType === 'support' ? 'default' : 'outline'
+                  friend.relationshipType === 'support' ? 'default' : 'outline'
               }>
                 {friend.relationshipType === 'coparent' ? 'Co-Parent' :
-                 friend.relationshipType === 'support' ? 'Apoio' : 'Outro'}
+                  friend.relationshipType === 'support' ? 'Apoio' : 'Outro'}
               </Badge>
             )}
           </div>
@@ -316,7 +316,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
     <div className="space-y-4">
       {/* Pending Requests Section */}
       {renderPendingRequests()}
-      
+
       {/* Confirmed Friends Sections */}
       {coparentFriends.length > 0 && (
         <div>
@@ -329,7 +329,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           </div>
         </div>
       )}
-      
+
       {supportFriends.length > 0 && (
         <div>
           <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">
@@ -341,7 +341,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           </div>
         </div>
       )}
-      
+
       {otherFriends.length > 0 && (
         <div>
           <h2 className="text-base sm:text-lg font-semibold mb-2 flex items-center">

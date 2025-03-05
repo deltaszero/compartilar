@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EXPENSE_CATEGORIES } from "../../financas/components/constants";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { BanknoteIcon, PieChartIcon, ArrowRightIcon, BarChart2Icon, User } from 'lucide-react';
+import { PieChartIcon, ArrowRightIcon, BarChart2Icon } from 'lucide-react';// import { BanknoteIcon, PieChartIcon, ArrowRightIcon, BarChart2Icon, User } from 'lucide-react';
 
 import { Expense, Child } from "../../financas/components/types";
 
@@ -86,42 +86,42 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
     };
   }).slice(-7); // Show only the last 7 days with data
   
-  // Calculate total expense amount
-  const totalAmount = hasExpenses 
-    ? expenses.reduce((sum, expense) => sum + expense.amount, 0)
-    : 0;
+  // // Calculate total expense amount
+  // const totalAmount = hasExpenses 
+  //   ? expenses.reduce((sum, expense) => sum + expense.amount, 0)
+  //   : 0;
 
-  // Calculate total child-related expenses
-  const totalChildExpenses = hasExpenses
-    ? expenses
-        .filter(expense => expense.childrenIds && expense.childrenIds.length > 0)
-        .reduce((sum, expense) => sum + expense.amount, 0)
-    : 0;
+  // // Calculate total child-related expenses
+  // const totalChildExpenses = hasExpenses
+  //   ? expenses
+  //       .filter(expense => expense.childrenIds && expense.childrenIds.length > 0)
+  //       .reduce((sum, expense) => sum + expense.amount, 0)
+  //   : 0;
 
-  // Create reusable card components for the 3-column layout
-  const TotalExpenseCard = () => (
-    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold">Despesas</h3>
-        <BanknoteIcon className="h-5 w-5" />
-      </div>
-      <p className="text-3xl font-black">R$ {totalAmount.toFixed(2)}</p>
-      <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
-    </div>
-  );
+  // // Create reusable card components for the 3-column layout
+  // const TotalExpenseCard = () => (
+  //   <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+  //     <div className="flex justify-between items-center mb-2">
+  //       <h3 className="text-lg font-bold">Despesas</h3>
+  //       <BanknoteIcon className="h-5 w-5" />
+  //     </div>
+  //     <p className="text-3xl font-black">R$ {totalAmount.toFixed(2)}</p>
+  //     <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
+  //   </div>
+  // );
 
-  const ChildExpenseCard = () => (
-    <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-bold">Despesas Infantis</h3>
-        <User className="h-5 w-5" />
-      </div>
-      <p className="text-3xl font-black">R$ {totalChildExpenses.toFixed(2)}</p>
-      <p className="text-sm text-muted-foreground">
-        {totalAmount > 0 ? `${Math.round((totalChildExpenses / totalAmount) * 100)}% do total` : '0% do total'}
-      </p>
-    </div>
-  );
+  // const ChildExpenseCard = () => (
+  //   <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
+  //     <div className="flex justify-between items-center mb-2">
+  //       <h3 className="text-lg font-bold">Despesas Infantis</h3>
+  //       <User className="h-5 w-5" />
+  //     </div>
+  //     <p className="text-3xl font-black">R$ {totalChildExpenses.toFixed(2)}</p>
+  //     <p className="text-sm text-muted-foreground">
+  //       {totalAmount > 0 ? `${Math.round((totalChildExpenses / totalAmount) * 100)}% do total` : '0% do total'}
+  //     </p>
+  //   </div>
+  // );
 
   const CategoryPieChartCard = () => (
     <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
@@ -337,17 +337,17 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   if (!hasExpenses) {
     // No expenses state - show empty state card that spans 3 columns
     return (
-      <div className="col-span-4">
-        <div className="bg-white p-4 h-full">
+      <div className="col-span-4 pb-[5em]">
+        <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
           <h3 className="text-lg font-bold mb-2">Resumo Financeiro</h3>
           <div className="p-6 text-center">
-            <BanknoteIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            {/* <BanknoteIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" /> */}
             <h3 className="text-lg font-bold mb-2">Sem despesas registradas</h3>
             <p className="text-muted-foreground mb-6">
               Comece a registrar suas despesas para visualizar gráficos e análises aqui.
             </p>
             <Link href={`/${username}/financas`}>
-              <Button className="gap-2 bg-mainStrongBlue">
+              <Button className="gap-2 bg-main">
                 Ir para Finanças
                 <ArrowRightIcon className="h-4 w-4" />
               </Button>
@@ -361,12 +361,12 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   // Full content state - show all cards in 3-column layout
   return (
     <>
-      <div className="col-span-4 md:col-span-1 mb-4">
+      {/* <div className="col-span-4 md:col-span-1 mb-4">
         <div className='flex flex-col gap-4 sm:gap-[4em]'>
           <TotalExpenseCard />
           <ChildExpenseCard />
         </div>
-      </div>
+      </div> */}
       <div className="col-span-4 md:col-span-1 mb-4">
         <CategoryPieChartCard />
       </div>

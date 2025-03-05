@@ -117,7 +117,7 @@ export function DayEvents({
                 
                 <div className="flex flex-col gap-1 ml-2">
                   <Button 
-                    variant="ghost" 
+                    variant="neutral" 
                     size="icon" 
                     onClick={() => selectedDate && onEditEvent(selectedDate, event)}
                     className="h-6 w-6 sm:h-7 sm:w-7 rounded border-2 border-black hover:bg-black hover:text-white transition-colors p-0"
@@ -125,7 +125,7 @@ export function DayEvents({
                     <Edit className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   </Button>
                   <Button 
-                    variant="ghost" 
+                    variant="neutral" 
                     size="icon" 
                     onClick={() => onDeleteEvent(event.id)}
                     className="h-6 w-6 sm:h-7 sm:w-7 rounded border-2 border-red-800 hover:bg-red-800 hover:text-white transition-colors p-0"

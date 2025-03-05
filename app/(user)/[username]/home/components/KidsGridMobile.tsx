@@ -33,7 +33,7 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
 
   if (!kidsArray.length) {
     return (
-      <Card className="p-6 text-center">
+      <Card className="bg-bw rounded-none p-6 text-center">
         <div className="flex flex-col items-center gap-4">
           {/* <div className="relative w-16 h-16 rounded-full bg-muted flex items-center justify-center">
             <span className="text-2xl">👶</span>
@@ -44,7 +44,7 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
               Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
             </p>
           </div>
-          <Button className="mt-2">Adicionar criança</Button>
+          <Button className="mt-2 bg-secondaryMain" variant="default">Adicionar criança</Button>
         </div>
       </Card>
     );

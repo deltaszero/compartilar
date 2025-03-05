@@ -164,13 +164,13 @@ export default function HomePage() {
         <div>
             <UserProfileBar pathname="Home" />
             <div className="flex flex-col sm:mb-0 sm:p-6 sm:gap-6">
-                <div className="flex flex-col relative sm:rounded-3xl">
+                <div className="flex flex-col relative sm:rounded-none">
                     <section className="flex flex-col ">
                         <UserProfileCard userData={userData} />
                     </section>
                 </div>
 
-                <article className="flex flex-col sm:rounded-3xl z-[10]">
+                <article className="flex flex-col sm:rounded-none z-[10]">
                     <div className="flex flex-col gap-0 sm:gap-4 sm:flex-row">
                         <div className="flex flex-col">
                             {/* KIDS SECTION */}
@@ -194,7 +194,7 @@ export default function HomePage() {
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex items-center justify-between px-2 rounded-md bg-warning relative mx-auto h-[8em] bg-mainStrongOrange border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                                        <div className="flex items-center justify-between px-2 rounded-none bg-warning relative mx-auto h-[8em] bg-mainStrongOrange border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                             <div className="flex flex-col gap-2">
                                                 <h2 className="text-3xl font-bold z-10 max-w-[66%]">
                                                     Petiz
@@ -268,7 +268,7 @@ export default function HomePage() {
                                 ) : (
                                     <div>
                                         {/* Banner/Header */}
-                                        <div className="flex items-center justify-between px-4 rounded-md relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                                        <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                             <div className="flex flex-col gap-2 z-10 max-w-[66%]">
                                                 <h2 className="text-2xl sm:text-3xl font-black">
                                                     Rede de Apoio
@@ -314,11 +314,10 @@ export default function HomePage() {
                                     {/* Mobile view */}
                                     {isMobile && (
                                         <div className="flex justify-center pb-4">
-                                            <Link
-                                                href={`/${userData.username}/rede`}
-                                                className="inline-flex items-center justify-center rounded-none text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border-2 border-black bg-white text-black hover:bg-black hover:text-white h-10 py-2 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                            >
-                                                Ver página completa da rede
+                                            <Link href={`/${userData.username}/rede`}>
+                                                <Button variant="default" className="shadow-brutalist">
+                                                    Ver Rede Completa
+                                                </Button>
                                             </Link>
                                         </div>
                                     )}
@@ -332,7 +331,7 @@ export default function HomePage() {
                                 <div className="h-12" />
                             ) : (
                                 <div>
-                                    <div className="flex items-center justify-between px-2 rounded-md relative mx-auto h-[8em] bg-mainStrongRed border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                                    <div className="flex items-center justify-between px-2 rounded-none relative mx-auto h-[8em] bg-mainStrongRed border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                         <div className="flex flex-col gap-2 ">
                                             <h2 className="text-3xl font-bold z-10 max-w-[66%]">
                                                 Calendário
@@ -373,9 +372,9 @@ export default function HomePage() {
                     />
                     
                     {/* Financial Analytics Section */}
-                    <section className="w-full mx-auto p-4">
+                    <section className="w-full mx-auto p-4 pb-[5em]">
                         <div className="hidden md:block">
-                            <div className="flex items-center justify-between px-4 rounded-md relative mx-auto h-[8em] mb-4 bg-mainStrongBlue border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                            <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongBlue border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                 <div className="flex flex-col gap-2 z-10 max-w-[66%]">
                                     <h2 className="text-2xl sm:text-3xl font-bold">
                                         Resumo Financeiro

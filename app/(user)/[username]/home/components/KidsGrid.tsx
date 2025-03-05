@@ -4,6 +4,8 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/app/lib/firebaseConfig";
 import { KidInfo } from "../types";
 import { ChildCard } from "./ChildCard";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
   const q = query(
@@ -50,7 +52,24 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
       </div>
     );
 
-  if (!kidsArray.length) return null;
+  if (!kidsArray.length) {
+    return (
+      <Card className="bg-bw rounded-none p-6 text-center">
+        <div className="flex flex-col items-center gap-4">
+          {/* <div className="relative w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <span className="text-2xl">👶</span>
+          </div> */}
+          <div>
+            <h3 className="font-medium mb-1">Nenhuma criança cadastrada</h3>
+            <p className="text-sm text-muted-foreground">
+              Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
+            </p>
+          </div>
+          <Button className="mt-2 bg-secondaryMain" variant="default">Adicionar criança</Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

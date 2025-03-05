@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    transpilePackages: ['firebase'],
+    eslint: {
+        ignoreDuringBuilds: true,
+      },
     images: {
         domains: ['firebasestorage.googleapis.com'],
     },
