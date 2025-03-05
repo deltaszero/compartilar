@@ -327,7 +327,7 @@ export default function HomePage() {
                         </div>
 
                         {/* BROWSER CALENDAR SECTION */}
-                        <section className=" mx-auto p-4">
+                        <section className=" w-full mx-auto p-4">
                             {isMobile ? (
                                 <div className="h-12" />
                             ) : (

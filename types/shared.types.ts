@@ -1,6 +1,85 @@
 // types/shared.types.ts
 import { Timestamp } from 'firebase/firestore';
 
+// Notification system types
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  status: 'unread' | 'read' | 'archived';
+  createdAt: Timestamp;
+  metadata?: NotificationMetadata;
+  actionUrl?: string;
+}
+
+export type NotificationType = 
+  | 'friend_request' 
+  | 'event_reminder' 
+  | 'message' 
+  | 'expense' 
+  | 'task' 
+  | 'decision'
+  | 'system';
+
+export type NotificationMetadata = 
+  | FriendRequestMetadata
+  | EventReminderMetadata
+  | MessageMetadata
+  | ExpenseMetadata
+  | TaskMetadata
+  | DecisionMetadata
+  | SystemMetadata;
+
+export interface FriendRequestMetadata {
+  senderId: string;
+  senderUsername: string;
+  senderPhotoURL?: string;
+  requestId: string;
+  relationshipType: string;
+}
+
+export interface EventReminderMetadata {
+  eventId: string;
+  eventTitle: string;
+  startTime: Timestamp;
+  category: string;
+  childId?: string;
+}
+
+export interface MessageMetadata {
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  messagePreview: string;
+}
+
+export interface ExpenseMetadata {
+  expenseId: string;
+  amount: number;
+  category: string;
+  paidBy: string;
+}
+
+export interface TaskMetadata {
+  taskId: string;
+  dueDate: Timestamp;
+  priority: string;
+  assignedTo: string;
+}
+
+export interface DecisionMetadata {
+  decisionId: string;
+  category: string;
+  dueDate?: Timestamp;
+}
+
+export interface SystemMetadata {
+  category: 'update' | 'security' | 'account' | 'other';
+  severity: 'info' | 'warning' | 'critical';
+}
+
 // Parental Plan types
 export interface ParentalPlan {
     id: string;
