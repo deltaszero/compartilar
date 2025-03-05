@@ -35,5 +35,5 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 
 
 ```
-now please use /home/dusoudeth/Documentos/github/compartilar/components/ui/data-table.tsx in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/financas/components/ExpenseList.tsx 
+please make "FEATURES SECTION" in /home/dusoudeth/Documentos/github/compartilar/app/page.tsx be a bit more neo-brutalist, not that exagerated please
 ```

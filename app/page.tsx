@@ -6,9 +6,10 @@ import { ArrowRight } from "lucide-react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Button } from "@/components/ui/button";
-
+import { cn } from "@/lib/utils";
 // assets
 import hero_image from "@assets/images/landing_compartilar-hero-01.png";
+import feature_image_01 from "@assets/images/landing_compartilar-anthropic-img-01.png";
 
 
 // Features data
@@ -17,7 +18,8 @@ const features = [
         id: "plano-parental",
         title: "Plano Parental",
         description:
-            "Crie e gerencie um plano de parentalidade completo para organizar as responsabilidades."
+            "Crie e gerencie um plano de parentalidade completo para organizar as responsabilidades.",
+        img: feature_image_01,
     },
     {
         id: "organize",
@@ -102,7 +104,7 @@ export default function Home() {
 
                             <div className="flex flex-row gap-4 mb-[5em]">
                                 <Button
-                                    variant="neutral"                                
+                                    variant="neutral"
                                     className="text-base sm:text-lg md:text-xl"
                                     onClick={handleLearnMoreClick}
                                 >
@@ -124,24 +126,41 @@ export default function Home() {
             {/* FEATURES SECTION */}
             <div
                 ref={featuresRef}
-                className="flex flex-row bg-muted justify-center items-center text-center py-12 font-bold text-4xl"
-            >
-                Principais funcionalidades
+                className={cn(
+                    "flex flex-row bg-bg justify-center items-center text-center font-bold text-4xl",
+                    "py-12 px-4 sm:px-0"
+                )}>
+                <span className={cn(
+                    "bg-black text-white inline-block shadow-[5px_5px_0px_0px_rgba(0,0,0,0.3)]",
+                    "px-6 py-3"
+                )}>
+                    Principais funcionalidades
+                </span>
             </div>
-            <div className="flex flex-col justify-center gap-6 py-12 bg-muted sm:flex-row container mx-auto">
+            <div className="flex flex-col px-4 sm:px-0 bg-bg justify-center gap-8 py-12 bg-muted sm:flex-row mx-auto">
                 {features.map((feature) => (
                     <div
                         key={feature.id}
                         id={feature.id}
-                        className="w-full sm:w-1/5 hover:scale-105 transition-transform duration-300 cursor-pointer border border-gray-300 rounded-lg p-4"
+                        className="w-full sm:w-1/5 hover:scale-105 transition-transform duration-300 cursor-pointer bg-white border-2 border-black rounded-none p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                         onClick={() => handleFeatureClick(feature.id)}
                     >
                         <div className="flex flex-col items-center pt-6">
-                            <div className="w-[256px] h-[156px] bg-gray-200 rounded-lg mb-4"></div>
-                            <h3 className="font-bold text-2xl mb-2 text-center">
+                            {feature.img ? (
+                                <Image
+                                    src={feature.img}
+                                    alt={feature.title}
+                                    width={256}
+                                    height={156}
+                                    className="object-cover mb-4"
+                                />
+                            ) : (
+                                <div className="w-[256px] h-[156px] bg-gray-200 border border-black mb-4"></div>
+                            )}
+                            <h3 className="font-bold text-2xl mb-2 text-center border-b-2 border-black pb-2">
                                 {feature.title}
                             </h3>
-                            <p className="font-light text-xl text-center text-muted-foreground">
+                            <p className="font-light text-xl text-center text-black">
                                 {feature.description}
                             </p>
                         </div>
