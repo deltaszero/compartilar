@@ -1,7 +1,7 @@
 // app/(user)/[username]/home/page.tsx
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
@@ -28,9 +28,10 @@ import { InvitationDialog } from "./components/InvitationDialog";
 import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
 
 // Financial analytics
-import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";// import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/app/lib/firebaseConfig";
-import { EXPENSE_CATEGORIES } from "../financas/components/constants";
+import { Expense, Child } from "@/app/(user)/[username]/financas/components/types";
+// import { EXPENSE_CATEGORIES } from "../financas/components/constants";
 
 // Set locale for dayjs
 dayjs.locale("pt-br");
@@ -43,12 +44,12 @@ export default function HomePage() {
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
     
     // Financial analytics state
-    const [expenses, setExpenses] = useState([]);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loadingExpenses, setLoadingExpenses] = useState(true);
-    const [children, setChildren] = useState([]);
+    const [children, setChildren] = useState<Child[]>([]);
 
     // Handle date selection for the weekly calendar
-    const handleDateSelect = (date) => {
+    const handleDateSelect = (date: dayjs.Dayjs) => {
         setSelectedDate(date);
     };
 
@@ -97,7 +98,7 @@ export default function HomePage() {
                 }
                 
                 // Query expenses from these groups - without using date filter to avoid requiring a composite index
-                let allExpenses = [];
+                let allExpenses: Expense[] = [];
                 for (const groupId of groupIds) {
                     const expensesQuery = query(
                         collection(db, "expenses"),
@@ -108,13 +109,15 @@ export default function HomePage() {
                     const groupExpenses = expensesSnapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
-                    }))
+                    } as Expense))
                     .filter(expense => {
                         // Filter by date client-side instead
                         try {
                             const expenseDate = expense.date.toDate();
                             return expenseDate >= thirtyDaysAgo;
-                        } catch (error) {
+                        } catch (e) {
+                            console.log(e);
+                            console.error("Invalid date format in expense:", expense.id);
                             return false;
                         }
                     });
@@ -126,13 +129,21 @@ export default function HomePage() {
                 
                 // Transform kids data from userData to the format needed for the charts
                 if (userData.kids) {
-                    const childrenData = Object.entries(userData.kids).map(([id, kidData]) => ({
+                    interface KidData {
+                        id?: string;
+                        firstName?: string;
+                        lastName?: string;
+                        photoURL?: string;
+                        birthDate?: string;
+                    }
+                    
+                    const childrenData = Object.entries(userData.kids as Record<string, KidData>).map(([id, kidData]) => ({
                         id,
-                        firstName: kidData.firstName || '',
-                        lastName: kidData.lastName || '',
-                        photoURL: kidData.photoURL,
-                        birthDate: kidData.birthDate || ''
-                    }));
+                        firstName: kidData?.firstName || '',
+                        lastName: kidData?.lastName || '',
+                        photoURL: kidData?.photoURL,
+                        birthDate: kidData?.birthDate || ''
+                    } as Child));
                     setChildren(childrenData);
                 }
             } catch (error) {
@@ -378,7 +389,7 @@ export default function HomePage() {
                         <div className="md:grid md:grid-cols-3 md:gap-4">
                             <HomeFinanceAnalytics
                                 expenses={expenses}
-                                children={children}
+                                childrenData={children}
                                 username={userData.username}
                                 isLoading={loadingExpenses}
                             />

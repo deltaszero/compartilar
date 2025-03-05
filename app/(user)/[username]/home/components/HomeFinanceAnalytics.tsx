@@ -12,16 +12,18 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BanknoteIcon, PieChartIcon, ArrowRightIcon, BarChart2Icon, User } from 'lucide-react';
 
+import { Expense, Child } from "../../financas/components/types";
+
 interface HomeFinanceAnalyticsProps {
-  expenses: any[];
-  children?: any[];
+  expenses: Expense[];
+  childrenData?: Child[];
   username: string;
   isLoading: boolean;
 }
 
 export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({ 
   expenses, 
-  children = [],
+  childrenData = [],
   username,
   isLoading
 }) => {
@@ -43,8 +45,8 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
                  '#FF9F40', '#22CFCF', '#FF6B6B', '#7C7CFF'];
   
   // Prepare chart data - expenses by children
-  const childrenMap = children && children.length > 0 
-    ? new Map(children.map(child => [child.id, `${child.firstName} ${child.lastName}`]))
+  const childrenMap = childrenData && childrenData.length > 0 
+    ? new Map(childrenData.map(child => [child.id, `${child.firstName} ${child.lastName}`]))
     : new Map();
   
   const childExpenses = Array.from(childrenMap.entries()).map(([childId, childName]) => {
