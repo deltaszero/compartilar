@@ -1,0 +1,17 @@
+{
+    "name": "CompartiLar",
+    "short_name": "CompartiLar",
+    "description": "Facilite a coparentalidade organizando tudo em um só lugar!",
+    "start_url": "/",
+    "display": "standalone",
+    "display_override": ["window-controls-overlay"],
+    "orientation": "portrait",
+    "background_color": "#ffffff",
+    "theme_color": "#a388ee", 
+    "scope": "/",
+    "id": "/",
+    "lang": "pt-BR",
+    "dir": "ltr",
+    "categories": ["family", "productivity", "lifestyle"],
+    "prefer_related_applications": false
+}

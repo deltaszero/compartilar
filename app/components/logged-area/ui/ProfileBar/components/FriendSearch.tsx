@@ -204,7 +204,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     />
                     {searchTerm && (
                         <Button 
-                            variant="default"
+                            variant={null}
                             size="icon" 
                             className="absolute right-0 top-0 h-9 w-9"
                             onClick={clearSearch}
@@ -231,11 +231,16 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
             {/* Search Results Section */}
             {showResults && (
                 <div 
-                    className="absolute top-full left-0 right-0 mt-1 z-[999] bg-white border-2 border-black rounded-md max-h-[400px] overflow-auto"
-                    style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
+                    className="absolute top-full left-0 md:left-auto md:right-0 mt-4 z-[999] w-screen md:w-full max-w-screen-sm bg-white border-2 border-black rounded-md overflow-auto"
+                    style={{ 
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        left: '50%',
+                        transform: 'translateX(-45%)',
+                        maxWidth: 'calc(100vw - 2rem)'
+                    }}
                 >
                     {/* Relationship Selection */}
-                    <div className="p-3 border-b border-gray-200 bg-gray-50">
+                    {/* <div className="p-3 border-b border-gray-200 bg-gray-50">
                         <p className="text-xs font-medium mb-2">Tipo de relação:</p>
                         <div className="flex flex-wrap gap-2">
                             <Badge 
@@ -260,7 +265,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                                 Outro
                             </Badge>
                         </div>
-                    </div>
+                    </div> */}
                     
                     {/* Results List */}
                     {searchResults.length > 0 ? (

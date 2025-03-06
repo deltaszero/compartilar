@@ -37,9 +37,9 @@ const navItems = [
 const MobileNav = () => (
   <Sheet>
     <SheetTrigger asChild>
-      <Button variant={null} className="lg:hidden px-2">
+      <Button variant={null} className="lg:hidden px-0 ">
         <div className="flex flex-row items-center gap-2">
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6" />
           <h1 className="text-2xl font-bold uppercase">CompartiLar</h1>
         </div>
       </Button>

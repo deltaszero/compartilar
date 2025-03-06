@@ -196,7 +196,7 @@ export default function HomePage() {
                                     <>
                                         <div className="flex items-center justify-between px-2 rounded-none bg-warning relative mx-auto h-[8em] bg-mainStrongOrange border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                             <div className="flex flex-col gap-2">
-                                                <h2 className="text-3xl font-bold z-10 max-w-[66%]">
+                                                <h2 className="text-3xl font-black z-10 max-w-[66%]">
                                                     Petiz
                                                 </h2>
                                                 <p className="text-xs">
@@ -333,7 +333,7 @@ export default function HomePage() {
                                 <div>
                                     <div className="flex items-center justify-between px-2 rounded-none relative mx-auto h-[8em] bg-mainStrongRed border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                         <div className="flex flex-col gap-2 ">
-                                            <h2 className="text-3xl font-bold z-10 max-w-[66%]">
+                                            <h2 className="text-3xl font-black z-10 max-w-[66%]">
                                                 Calendário
                                             </h2>
                                             <p className="text-xs">
@@ -380,7 +380,7 @@ export default function HomePage() {
                                         Resumo Financeiro
                                     </h2>
                                     <p className="text-xs">
-                                        Acompanhe seus gastos e organize suas finanças pessoais.
+                                        Acompanhe os valores investidos nos seus pequenos.
                                     </p>
                                 </div>
                             </div>
