@@ -190,7 +190,7 @@ export default function AddChildPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="relationship">Relação</Label>
                 <Select
                   value={childData.relationship}
@@ -205,7 +205,7 @@ export default function AddChildPage() {
                     <SelectItem value="guardian">Sob guarda</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
             
             <div className="space-y-2">
@@ -223,9 +223,11 @@ export default function AddChildPage() {
           
           <CardFooter className="flex justify-end gap-2 border-t p-6">
             <Link href={`/${username}/criancas`}>
-              <Button variant="outline" disabled={isSaving}>Cancelar</Button>
+              <Button variant="default" className='bg-mainStrongRed' disabled={isSaving}>Cancelar</Button>
             </Link>
             <Button 
+              variant="default"
+              className='bg-secondaryMain'
               onClick={saveChild}
               disabled={isSaving}
             >

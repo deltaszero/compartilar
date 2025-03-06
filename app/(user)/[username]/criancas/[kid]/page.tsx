@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useUser } from '@/context/userContext';
 import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, checkFriendshipStatus } from '@/lib/firebaseConfig';
-import { storage } from '@/lib/firebaseConfig'; 
+import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
@@ -171,15 +171,15 @@ export default function ChildDetailPage() {
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          
+
           // Update edited data with new photo URL
           setEditedData(prev => ({
             ...prev,
             photoURL: downloadURL
           }));
-          
+
           setUploadProgress(null);
-          
+
           toast({
             title: 'Foto enviada',
             description: 'A foto foi carregada com sucesso!'
@@ -217,7 +217,7 @@ export default function ChildDetailPage() {
   // Save changes
   const saveChanges = async () => {
     if (!childData?.id) return;
-    
+
     setIsSaving(true);
     try {
       const childRef = doc(db, 'children', childData.id);
@@ -225,10 +225,10 @@ export default function ChildDetailPage() {
         ...editedData,
         updatedAt: new Date()
       });
-      
+
       setChildData(editedData as KidInfo);
       setIsEditing(false);
-      
+
       toast({
         title: 'Dados salvos',
         description: 'As informações foram atualizadas com sucesso!'
@@ -244,16 +244,16 @@ export default function ChildDetailPage() {
       setIsSaving(false);
     }
   };
-  
+
   // Delete child
   const deleteChild = async () => {
     if (!childData?.id || !isOwner) return;
-    
+
     setIsDeleting(true);
     try {
       // Get reference to the child document
       const childRef = doc(db, 'children', childData.id);
-      
+
       // Delete the photo from storage if it exists
       if (childData.photoURL) {
         try {
@@ -265,15 +265,15 @@ export default function ChildDetailPage() {
           console.error('Error deleting photo, continuing with child deletion:', photoError);
         }
       }
-      
+
       // Delete the child document from Firestore
       await deleteDoc(childRef);
-      
+
       toast({
         title: 'Criança removida',
         description: 'Os dados foram excluídos com sucesso!'
       });
-      
+
       // Navigate back to the children list
       router.push(`/${username}/criancas`);
     } catch (error) {
@@ -302,20 +302,20 @@ export default function ChildDetailPage() {
     try {
       const birthDate = new Date(birthDateStr);
       const today = new Date();
-      
+
       let years = today.getFullYear() - birthDate.getFullYear();
       const months = today.getMonth() - birthDate.getMonth();
-      
+
       if (months < 0 || (months === 0 && today.getDate() < birthDate.getDate())) {
         years--;
       }
-      
+
       if (years < 1) {
         // Calculate months for babies
         const monthAge = months + (months < 0 ? 12 : 0);
         return `${monthAge} ${monthAge === 1 ? 'mês' : 'meses'}`;
       }
-      
+
       return `${years} ${years === 1 ? 'ano' : 'anos'}`;
     } catch (e) {
       return "Idade não disponível";
@@ -323,28 +323,28 @@ export default function ChildDetailPage() {
   };
 
   // Get relationship text
-  const getRelationshipText = (relationship: string | null) => {
-    if (!relationship) return "Relação não especificada";
-    
-    switch (relationship) {
-      case "biological": return "Filho(a) Biológico(a)";
-      case "adopted": return "Filho(a) Adotivo(a)";
-      case "guardian": return "Sob Guarda";
-      default: return "Relação não especificada";
-    }
-  };
+  // const getRelationshipText = (relationship: string | null) => {
+  //   if (!relationship) return "Relação não especificada";
+
+  //   switch (relationship) {
+  //     case "biological": return "Filho(a) Biológico(a)";
+  //     case "adopted": return "Filho(a) Adotivo(a)";
+  //     case "guardian": return "Sob Guarda";
+  //     default: return "Relação não especificada";
+  //   }
+  // };
 
   // Get gender text
-  const getGenderText = (gender: string | null) => {
-    if (!gender) return "Não especificado";
-    
-    switch (gender) {
-      case "male": return "Menino";
-      case "female": return "Menina";
-      case "other": return "Outro";
-      default: return "Não especificado";
-    }
-  };
+  // const getGenderText = (gender: string | null) => {
+  //   if (!gender) return "Não especificado";
+
+  //   switch (gender) {
+  //     case "male": return "Menino";
+  //     case "female": return "Menina";
+  //     case "other": return "Outro";
+  //     default: return "Não especificado";
+  //   }
+  // };
 
   if (isLoading || loading) {
     return <LoadingPage />;
@@ -370,19 +370,19 @@ export default function ChildDetailPage() {
   const photoToDisplay = previewPhoto || editedData.photoURL || childData.photoURL;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="flex flex-col min-h-screen ">
       <UserProfileBar pathname={`${isEditing ? 'Editando' : ''} ${childData.firstName}`} />
-      
+
       <div className="flex-1 w-full max-w-4xl mx-auto p-4 pb-20">
         {/* Back button */}
-        <Link 
+        <Link
           href={`/${username}/criancas`}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Voltar para crianças
         </Link>
-        
+
         {/* Header with photo and basic info */}
         <div className="mb-8">
           <Card className="overflow-hidden">
@@ -404,7 +404,7 @@ export default function ChildDetailPage() {
                     </span>
                   </div>
                 )}
-                
+
                 {/* Photo upload controls for edit mode */}
                 {isEditing && (
                   <>
@@ -418,12 +418,12 @@ export default function ChildDetailPage() {
                     <Button
                       variant="default"
                       size="icon"
-                      className="absolute bottom-4 right-4 rounded-full"
+                      className="absolute bottom-4 right-4 rounded-full bg-secondaryMain"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Camera className="h-4 w-4" />
                     </Button>
-                    
+
                     {uploadProgress !== null && (
                       <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs text-center">
                         Enviando... {Math.round(uploadProgress)}%
@@ -432,7 +432,7 @@ export default function ChildDetailPage() {
                   </>
                 )}
               </div>
-              
+
               {/* Basic info section */}
               <div className="p-6 md:flex-1">
                 {isEditing ? (
@@ -457,7 +457,7 @@ export default function ChildDetailPage() {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="birthDate">Data de Nascimento</Label>
                       <Input
@@ -468,7 +468,7 @@ export default function ChildDetailPage() {
                         onChange={handleInputChange}
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="gender">Gênero</Label>
@@ -486,7 +486,7 @@ export default function ChildDetailPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label htmlFor="relationship">Relação</Label>
                         <Select
                           value={editedData.relationship || ''}
@@ -501,7 +501,7 @@ export default function ChildDetailPage() {
                             <SelectItem value="guardian">Sob guarda</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 ) : (
@@ -509,58 +509,60 @@ export default function ChildDetailPage() {
                     <h1 className="text-3xl font-bold">
                       {childData.firstName} {childData.lastName}
                     </h1>
-                    
-                    <div className="mt-2 flex flex-wrap gap-2">
+
+                    {/* <div className="mt-2 flex flex-wrap gap-2">
                       <Badge variant="default">{getGenderText(childData.gender)}</Badge>
                       <Badge variant="default">{getRelationshipText(childData.relationship)}</Badge>
-                    </div>
-                    
+                    </div> */}
+
                     <div className="mt-6 space-y-2">
                       <div className="flex items-center text-sm">
                         <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>Nascimento: {formatDate(childData.birthDate)}</span>
+                        <span>Nascimento: {formatDate(childData.birthDate)}</span> &nbsp; <span className="text-gray-600">({calculateAge(childData.birthDate)})</span>
                       </div>
-                      <div className="text-sm">
+                      {/* <div className="text-sm">
                         Idade: {calculateAge(childData.birthDate)}
-                      </div>
+                      </div> */}
                     </div>
                   </>
                 )}
-                
+
                 {/* Action buttons */}
                 <div className="mt-6 flex justify-between items-center">
                   {/* Delete button - only visible when not editing */}
                   {isOwner && !isEditing && (
-                    <Button 
+                    <Button
                       onClick={() => setShowDeleteDialog(true)}
-                      variant="destructive"
+                      variant="default"
                       size="sm"
-                      className="gap-1"
+                      className="gap-1 bg-mainStrongRed"
                     >
                       <Trash className="h-4 w-4" />
                       <span className="hidden sm:inline">Excluir</span>
                     </Button>
                   )}
-                  
+
                   {/* Spacer when in edit mode */}
                   {isEditing && <div></div>}
-                  
+
                   {/* Edit/Save buttons */}
                   <div className="flex gap-2">
                     {isOwner && !isEditing && (
-                      <Button 
+                      <Button
                         onClick={() => setIsEditing(true)}
                         variant="default"
+                        className='bg-secondaryMain'
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Editar
                       </Button>
                     )}
-                    
+
                     {isEditing && (
                       <>
-                        <Button 
-                          variant="outline"
+                        <Button
+                          variant="default"
+                          className='bg-mainStrongRed'
                           onClick={() => {
                             setIsEditing(false);
                             setEditedData(childData);
@@ -570,9 +572,11 @@ export default function ChildDetailPage() {
                         >
                           Cancelar
                         </Button>
-                        <Button 
+                        <Button
                           onClick={saveChanges}
                           disabled={isSaving}
+                          variant="default"
+                          className="bg-secondaryMain"
                         >
                           <Save className="h-4 w-4 mr-2" />
                           {isSaving ? 'Salvando...' : 'Salvar'}
@@ -581,7 +585,7 @@ export default function ChildDetailPage() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Delete Confirmation Dialog */}
                 <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                   <DialogContent className="sm:max-w-md">
@@ -603,14 +607,14 @@ export default function ChildDetailPage() {
                     </div>
                     <DialogFooter className="flex justify-between sm:justify-between">
                       <Button
-                        variant="outline"
+                        variant="default"
                         onClick={() => setShowDeleteDialog(false)}
                         disabled={isDeleting}
                       >
                         Cancelar
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="default"
                         onClick={deleteChild}
                         disabled={isDeleting}
                         className="gap-2"
@@ -634,7 +638,7 @@ export default function ChildDetailPage() {
             </div>
           </Card>
         </div>
-        
+
         {/* Additional information tabs */}
         <Tabs defaultValue="notes" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -642,7 +646,7 @@ export default function ChildDetailPage() {
             <TabsTrigger value="medical">Saúde</TabsTrigger>
             <TabsTrigger value="education">Educação</TabsTrigger>
           </TabsList>
-          
+
           {/* Notes tab */}
           <TabsContent value="notes">
             <Card>
@@ -653,7 +657,7 @@ export default function ChildDetailPage() {
                 {isEditing ? (
                   <div className="space-y-2">
                     <Label htmlFor="notes">Observações</Label>
-                    <Textarea 
+                    <Textarea
                       id="notes"
                       name="notes"
                       placeholder="Adicione anotações e observações relevantes..."
@@ -676,7 +680,7 @@ export default function ChildDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Medical tab */}
           <TabsContent value="medical">
             <Card>
@@ -687,7 +691,7 @@ export default function ChildDetailPage() {
                 <p className="text-muted-foreground mb-4">
                   As informações médicas são utilizadas em casos de emergência e para garantir os cuidados necessários.
                 </p>
-                
+
                 {/* Medical info would be implemented here with edit functionality */}
                 <div className="text-center py-4">
                   <p className="text-muted-foreground">
@@ -697,7 +701,7 @@ export default function ChildDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Education tab */}
           <TabsContent value="education">
             <Card>
@@ -708,7 +712,7 @@ export default function ChildDetailPage() {
                 <p className="text-muted-foreground mb-4">
                   Registre informações sobre a escola, série e contatos educacionais.
                 </p>
-                
+
                 {/* Education info would be implemented here with edit functionality */}
                 <div className="text-center py-4">
                   <p className="text-muted-foreground">
