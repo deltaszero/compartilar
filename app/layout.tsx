@@ -75,6 +75,8 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+    
     return (
         <html
             data-theme="light"
@@ -87,22 +89,31 @@ export default function RootLayout({
                     content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
                 />
                 <meta name="viewport" content="viewport-fit=cover" />
-                <Script
-                    src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}`}
-                    strategy="afterInteractive"
-                />
-                <Script id="ga-script" strategy="afterInteractive">
-                    {`
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){window.dataLayer.push(arguments);}
-                        gtag('js', new Date());
-                        gtag('config', '${process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}');
-                    `}
-                </Script>
+                {GA_MEASUREMENT_ID && (
+                    <>
+                        <Script
+                            src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+                            strategy="afterInteractive"
+                        />
+                        <Script id="ga-script" strategy="afterInteractive">
+                            {`
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){window.dataLayer.push(arguments);}
+                                gtag('js', new Date());
+                                gtag('config', '${GA_MEASUREMENT_ID}', {
+                                    page_path: window.location.pathname,
+                                    send_page_view: true
+                                });
+                                console.log('Google Analytics initialized with ID: ${GA_MEASUREMENT_ID}');
+                            `}
+                        </Script>
+                    </>
+                )}
             </head>
             <body className={`${inter.className}`}>
                 <UserProvider>
                     <main>
+                        {/* Only include Analytics component here, not in individual pages */}
                         <Analytics />
                         {children}
                     </main>
