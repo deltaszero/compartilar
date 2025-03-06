@@ -75,20 +75,25 @@ export default function UserProfilePage() {
 
                 // Check friendship status
                 const status = await checkFriendshipStatus(user.uid, otherUserData.uid);
+                console.log(`Friendship status for ${username}: ${status}`);
                 setFriendshipStatus(status);
 
-                if (status === 'none') {
-                    // No friendship, show access denied
-                    toast({
-                        variant: "destructive",
-                        title: "Acesso Negado",
-                        description: "Você precisa ser amigo para visualizar este perfil"
-                    });
-                    setIsLoading(false);
-                    return;
-                }
-
+                // We'll allow viewing profiles even if not friends, but with limited information
+                // This provides a more user-friendly experience
                 setProfileData(otherUserData);
+                
+                // Notify user about their relationship status if they're not friends
+                if (status === 'none') {
+                    toast({
+                        title: "Visualização limitada",
+                        description: "Você está visualizando informações públicas deste perfil"
+                    });
+                } else if (status === 'pending') {
+                    toast({
+                        title: "Solicitação pendente",
+                        description: "Você tem uma solicitação de amizade pendente com este usuário"
+                    });
+                }
             } catch (error) {
                 console.error('Error checking access:', error);
                 toast({
@@ -167,7 +172,7 @@ export default function UserProfilePage() {
     // Loading and error states
     if (isLoading) return <LoadingPage />;
     if (userNotFound) return <UserNotFound />;
-    if (friendshipStatus === 'none') return <AccessDenied />;
+    // We now allow viewing profiles even with 'none' status (limited view)
     if (!profileData) return <LoadingPage />;
 
     const isOwnProfile = friendshipStatus === 'self';
@@ -180,12 +185,12 @@ export default function UserProfilePage() {
 
                 {/* PROFILE CONTENT */}
                 <div className="w-full p-4 max-w-3xl mx-auto mt-4 pb-20">
-                    <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                    {/* <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Conversas</h1>
                         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                             Converse com sua rede de apoio
                         </p>
-                    </div>
+                    </div> */}
 
                     <UserProfileCard
                         userData={profileData}
@@ -232,6 +237,7 @@ export default function UserProfilePage() {
                                 <ChildrenGrid
                                     userId={profileData.uid || ''}
                                     isOwnProfile={isOwnProfile}
+                                    friendshipStatus={friendshipStatus}
                                 />
                             </TabsContent>
 

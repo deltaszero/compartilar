@@ -2,9 +2,9 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useMemo, useContext } from 'react';
-import { auth, db } from '@/app/lib/firebaseConfig';
-import { onAuthStateChanged, User, setPersistence, browserSessionPersistence } from 'firebase/auth';
-import { collection, doc, onSnapshot, query, serverTimestamp, where } from 'firebase/firestore';
+import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener } from '@/app/lib/firebaseConfig';
+import { onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork } from 'firebase/firestore';
 import { KidInfo } from '@/types/signup.types';
 
 interface UserData {
@@ -57,12 +57,40 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        let unsubscribeAccount: () => void;
-        let unsubscribeKids: () => void;
+        let unsubscribeAccount: (() => void) | undefined;
+        let unsubscribeKids: (() => void) | undefined;
+
+        // Helper function to clean up Firestore listeners
+        const cleanupListeners = async () => {
+            // Use our central management system to clean up listeners
+            markFirestoreListenersInactive();
+            
+            // Reset local references
+            if (unsubscribeAccount) {
+                unsubscribeAccount = undefined;
+            }
+            if (unsubscribeKids) {
+                unsubscribeKids = undefined;
+            }
+            
+            // Temporarily disable Firestore network to force close any hanging connections
+            try {
+                await disableNetwork(db);
+                // Small delay to ensure disconnection completes
+                await new Promise(resolve => setTimeout(resolve, 50));
+                await enableNetwork(db);
+            } catch (error) {
+                console.log("Error toggling Firestore network:", error);
+                // Non-critical error, continue
+            }
+        };
 
         const initializeAuth = async () => {
-            await setPersistence(auth, browserSessionPersistence);
+            await setPersistence(auth, browserLocalPersistence);
             return onAuthStateChanged(auth, async (currentUser) => {
+                // Always clean up previous listeners when auth state changes
+                await cleanupListeners();
+                
                 setUser(currentUser);
                 if (!currentUser) {
                     setUserData(null);
@@ -74,51 +102,68 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 try {
                     // Force token refresh to ensure latest claims
                     await currentUser.getIdToken(true);
+                    
+                    // Mark listeners as active before subscribing
+                    markFirestoreListenersActive();
 
-                    // Subscribe to account info
+                    // Subscribe to account info using our safe listener manager
                     const accountRef = doc(db, 'account_info', currentUser.uid);
-                    unsubscribeAccount = onSnapshot(accountRef,
-                        async (doc) => {
-                            if (!doc.exists()) {
-                                setLoading(false);
-                                return;
-                            }
-
-                            const accountData = doc.data() as UserData;
-
-                            // Validate document ownership
-                            if (accountData.uid !== currentUser.uid) {
-                                console.error('Document UID mismatch');
-                                setLoading(false);
-                                return;
-                            }
-
-                            // Subscribe to children data
-                            const kidsQuery = query(
-                                collection(db, 'children'),
-                                where('parentId', '==', currentUser.uid)
+                    
+                    // Create account listener
+                    unsubscribeAccount = addFirestoreListener(
+                        `account_${currentUser.uid}`, 
+                        () => {
+                            return onSnapshot(
+                                accountRef, 
+                                async (doc) => {
+                                    if (!doc.exists()) {
+                                        setLoading(false);
+                                        return;
+                                    }
+        
+                                    const accountData = doc.data() as UserData;
+        
+                                    // Validate document ownership
+                                    if (accountData.uid !== currentUser.uid) {
+                                        console.error('Document UID mismatch');
+                                        setLoading(false);
+                                        return;
+                                    }
+        
+                                    // Subscribe to children data
+                                    const kidsQuery = query(
+                                        collection(db, 'children'),
+                                        where('parentId', '==', currentUser.uid)
+                                    );
+        
+                                    // Use safe listener management for kids data too
+                                    unsubscribeKids = addFirestoreListener(
+                                        `kids_${currentUser.uid}`,
+                                        () => {
+                                            return onSnapshot(kidsQuery, (snapshot) => {
+                                                const kids = snapshot.docs.reduce((acc, doc) => {
+                                                    const data = doc.data() as KidInfo;
+                                                    acc[doc.id] = data;
+                                                    return acc;
+                                                }, {} as Record<string, KidInfo>);
+        
+                                                setKidsData(kids);
+                                            });
+                                        }
+                                    );
+        
+                                    // Merge account data with kids list
+                                    setUserData({
+                                        ...accountData,
+                                        kids: accountData.kids || {}
+                                    });
+                                    setLoading(false);
+                                },
+                                (error) => {
+                                    console.error('Account info error:', error);
+                                    setLoading(false);
+                                }
                             );
-
-                            unsubscribeKids = onSnapshot(kidsQuery, (snapshot) => {
-                                const kids = snapshot.docs.reduce((acc, doc) => {
-                                    const data = doc.data() as KidInfo;
-                                    acc[doc.id] = data;
-                                    return acc;
-                                }, {} as Record<string, KidInfo>);
-
-                                setKidsData(kids);
-                            });
-
-                            // Merge account data with kids list
-                            setUserData({
-                                ...accountData,
-                                kids: accountData.kids || {}
-                            });
-                            setLoading(false);
-                        },
-                        (error) => {
-                            console.error('Account info error:', error);
-                            setLoading(false);
                         }
                     );
                 } catch (error) {
@@ -132,8 +177,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
         return () => {
             unsubscribeAuth.then(fn => fn());
-            unsubscribeAccount?.();
-            unsubscribeKids?.();
+            cleanupListeners();
         };
     }, []);
 

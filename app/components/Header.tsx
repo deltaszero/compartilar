@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, LogIn, Camera } from 'lucide-react';
+import { Menu, LogIn, Camera, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -20,6 +20,10 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/app/lib/utils';
 import { useUser } from '@/context/userContext';
+import { signOut } from 'firebase/auth';
+import { auth, markFirestoreListenersInactive, db } from '@/lib/firebaseConfig';
+import { disableNetwork, enableNetwork } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * navItems is an array of objects containing the label and href of each navigation item.
@@ -118,7 +122,8 @@ const UserMenu = ({ userData, onSignOut }: {
         <DropdownMenuItem asChild>
           <Link href={`/${userData.username}/settings`}>Configurações</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onSignOut}>
+        <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
           Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -144,14 +149,53 @@ const LoginButton = () => (
 const Header = () => {
     const router = useRouter();
     const { user, userData, loading } = useUser();
+    const { toast } = useToast();
 
     const handleSignOut = async () => {
         try {
-            // Here you would use auth.signOut() or similar
-            // This is just a placeholder until integrated with the real auth system
+            // First, mark all listeners as inactive
+            markFirestoreListenersInactive();
+            
+            try {
+                // Force disconnect Firestore
+                await disableNetwork(db);
+            } catch (e) {
+                console.log("Error disabling network:", e);
+                // Non-critical, continue
+            }
+            
+            // Navigate away from protected routes
             router.push('/');
+            
+            // Sign out with a small delay
+            setTimeout(async () => {
+                try {
+                    await signOut(auth);
+                    
+                    // Re-enable network after sign out
+                    await enableNetwork(db);
+                    
+                    toast({
+                        title: "Logout realizado",
+                        description: "Você foi desconectado com sucesso",
+                    });
+                } catch (innerError) {
+                    console.error('Error in sign out process:', innerError);
+                    // Re-enable network even on error
+                    try {
+                        await enableNetwork(db);
+                    } catch (networkError) {
+                        console.log("Error re-enabling network:", networkError);
+                    }
+                }
+            }, 100);
         } catch (error) {
             console.error('Error signing out:', error);
+            toast({
+                variant: "destructive",
+                title: "Erro ao sair",
+                description: "Ocorreu um erro ao tentar sair. Tente novamente.",
+            });
         }
     };
 

@@ -60,7 +60,7 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 gap-4">
       {kidsArray.map((kid) => (
         <div key={kid.id}>
           <ChildCardMobile kid={kid} />

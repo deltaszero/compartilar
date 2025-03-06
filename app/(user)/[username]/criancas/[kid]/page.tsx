@@ -255,7 +255,7 @@ export default function ChildDetailPage() {
       const childRef = doc(db, 'children', childData.id);
 
       // Delete the photo from storage if it exists
-      if (childData.photoURL) {
+      if (childData.photoURL && storage) {
         try {
           // Extract the storage path from the URL
           const photoPath = decodeURIComponent(childData.photoURL.split('/o/')[1].split('?')[0]);

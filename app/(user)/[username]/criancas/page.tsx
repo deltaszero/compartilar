@@ -127,6 +127,7 @@ export default function ChildrenPage() {
                     <ChildrenCarousel
                         children={children}
                         isLoading={isLoading}
+                        isOwnChildren={isOwnChildren}
                     />
 
                     {/* Children Grid */}

@@ -10,6 +10,7 @@ import { collection, getDocs, query, where, limit, addDoc, serverTimestamp } fro
 import { db } from '@/app/lib/firebaseConfig';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchResult } from '../types';
+import { useWindowSize } from '@/hooks/useWindowSize';
 
 interface FriendSearchProps {
     userData: { 
@@ -26,6 +27,7 @@ interface FriendSearchProps {
  */
 export const FriendSearch = ({ userData }: FriendSearchProps) => {
     const { toast } = useToast();
+    const { width } = useWindowSize();
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -244,11 +246,11 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
             {/* Search Results Section */}
             {showResults && (
                 <div 
-                    className="absolute top-full left-0 md:left-auto md:right-0 mt-2 z-[999] w-screen md:w-full max-w-screen-sm bg-white border-2 border-black rounded-md overflow-auto"
+                    className="absolute top-full mt-2 z-[999] w-screen md:w-full max-w-screen-sm bg-white border-2 border-black rounded-md overflow-auto"
                     style={{ 
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                         left: '50%',
-                        transform: 'translateX(-45%)',
+                        transform: width && width < 768 ? 'translateX(-45%)' : 'translateX(-50%)',
                         maxWidth: 'calc(100vw - 2rem)'
                     }}
                 >
