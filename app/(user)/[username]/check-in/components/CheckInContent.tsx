@@ -178,7 +178,7 @@ export default function CheckInContent() {
                                 <p>Para compartilhar sua localização, você precisa permitir o acesso nas configurações do seu dispositivo.</p>
                                 {/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && (
                                     <Button 
-                                        variant="link" 
+                                        variant="default" 
                                         className="p-0 h-auto text-sm mt-2"
                                         onClick={() => {
                                             window.open('https://support.google.com/chrome/answer/142065', '_blank');
@@ -265,7 +265,7 @@ export default function CheckInContent() {
                                 Copiar Link
                             </Button>
                             <Button 
-                                variant="outline"
+                                variant="default"
                                 size="sm"
                                 asChild
                             >

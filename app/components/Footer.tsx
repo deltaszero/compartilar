@@ -58,7 +58,7 @@ const Footer = () => (
                 ))}
             </nav>
             
-            <hr className="md:hidden w-full border-primary-foreground/20 my-4" />
+            {/* <hr className="md:hidden w-full border-primary-foreground/20 my-4" /> */}
             
             <aside className="flex items-center gap-4">
                 <DSZeroLogo width={60} height={60} className="flex-shrink-0 text-white" />

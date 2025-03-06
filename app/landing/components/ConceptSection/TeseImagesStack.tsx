@@ -7,7 +7,7 @@ import { TeseImagesStackProps } from "./types";
 
 export default function TeseImagesStack({ openImageModal }: TeseImagesStackProps) {
   return (
-    <div className="lg:w-1/2 mt-10 lg:mt-0">
+    <div className="w-full lg:w-1/2 mt-10 lg:mt-0">
       <div className="flex justify-center">
         <div className="relative h-[400px] w-[300px] sm:h-[500px] sm:w-[380px] md:h-[550px] md:w-[420px] lg:h-[600px] lg:w-[450px]">
           {/* Third page - bottom of the stack */}

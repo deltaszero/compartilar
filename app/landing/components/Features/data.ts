@@ -2,10 +2,10 @@ import feature_image_01 from "@assets/images/landing_compartilar-anthropic-img-0
 
 export const features = [
   {
-    id: "plano-parental",
-    title: "Plano Parental",
+    id: "descomplique",
+    title: "Descomplique",
     description:
-      "Crie e gerencie um plano de parentalidade completo para organizar as responsabilidades.",
+      "através da criação e gerenciamento de planos de parentalidade individualizados para cada filho.",
     img: feature_image_01,
   },
   {
@@ -24,6 +24,6 @@ export const features = [
     id: "despreocupe-se",
     title: "Despreocupe-se",
     description:
-      "Nunca mais se preocupe com informações perdidas ou comunicação confusa."
+      "que a gente lembra você de tudo o que precisa ser feito para garantir o bem-estar dos seus filhos."
   },
 ];

@@ -48,17 +48,22 @@ function MapController({ lat, lng }: { lat: number, lng: number }) {
   
   // Handle centering the map on coordinate changes
   useEffect(() => {
-    if (!map || !map._loaded) return;
+    if (!map) return;
     
     try {
       // Add a small delay to ensure the map is ready
       const timer = setTimeout(() => {
-        map.setView([lat, lng], 15, { animate: false });
-      }, 200);
+        // Just try to set the view directly in a try-catch block
+        try {
+          map.setView([lat, lng], 15, { animate: false });
+        } catch (err) {
+          console.error('Map not ready yet:', err);
+        }
+      }, 300);
       
       return () => clearTimeout(timer);
     } catch (error) {
-      console.error('Error setting map view:', error);
+      console.error('Error handling map view:', error);
     }
   }, [lat, lng, map]);
   

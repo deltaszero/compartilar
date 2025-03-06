@@ -162,7 +162,7 @@ export function LocationHistory() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="font-medium"
@@ -227,14 +227,14 @@ export function LocationHistory() {
         
         return (
           <div className="text-xs">
-            <Badge variant="outline" className="mr-1">
+            <Badge variant="default" className="mr-1">
               {deviceInfo.platform}
             </Badge>
-            <Badge variant="outline" className="mr-1">
+            <Badge variant="default" className="mr-1">
               {deviceInfo.browser}
             </Badge>
             {deviceInfo.mobile && (
-              <Badge variant="outline">
+              <Badge variant="default">
                 Mobile
               </Badge>
             )}
@@ -251,7 +251,7 @@ export function LocationHistory() {
           <div className="text-right">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="default" size="icon" className="h-8 w-8">
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Abrir menu</span>
                 </Button>
@@ -337,7 +337,7 @@ export function LocationHistory() {
       <div className="bg-destructive/10 text-destructive rounded-md p-4 my-4">
         <p>{error}</p>
         <Button 
-          variant="outline" 
+          variant="default" 
           className="mt-2" 
           onClick={() => window.location.reload()}
         >
@@ -381,10 +381,10 @@ export function LocationHistory() {
               {/* Date filter */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="ml-auto">
+                  <Button variant="default" className="ml-auto">
                     <Filter className="mr-2 h-4 w-4" />
                     Filtro de Data
-                    {dateFilter.active && <Badge className="ml-2" variant="secondary">Ativo</Badge>}
+                    {dateFilter.active && <Badge className="ml-2" variant="default">Ativo</Badge>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
@@ -419,7 +419,7 @@ export function LocationHistory() {
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <Button variant="outline" onClick={clearDateFilters}>
+                      <Button variant="default" onClick={clearDateFilters}>
                         Limpar
                       </Button>
                       <Button onClick={applyDateFilters}>
@@ -433,7 +433,7 @@ export function LocationHistory() {
               {/* Column visibility dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="ml-auto">
+                  <Button variant="default" className="ml-auto">
                     Colunas <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -520,7 +520,7 @@ export function LocationHistory() {
                 </div>
                 <div className="space-x-2">
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
@@ -528,7 +528,7 @@ export function LocationHistory() {
                     Anterior
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
@@ -581,7 +581,7 @@ export function LocationHistory() {
                       </Button>
                       
                       <Button 
-                        variant="destructive" 
+                        variant="default" 
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => setDeleteDialog({
@@ -600,7 +600,7 @@ export function LocationHistory() {
               {table.getRowModel().rows?.length > 5 && (
                 <div className="flex items-center justify-between pt-4">
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
@@ -611,7 +611,7 @@ export function LocationHistory() {
                     Página {table.getState().pagination.pageIndex + 1}
                   </div>
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
@@ -636,13 +636,13 @@ export function LocationHistory() {
           </DialogHeader>
           <DialogFooter>
             <Button 
-              variant="outline" 
+              variant="default" 
               onClick={() => setDeleteDialog({open: false, locationId: null})}
             >
               Cancelar
             </Button>
             <Button 
-              variant="destructive" 
+              variant="default" 
               onClick={() => {
                 if (deleteDialog.locationId) {
                   handleDeleteLocation(deleteDialog.locationId);

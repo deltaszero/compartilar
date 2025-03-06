@@ -50,6 +50,14 @@ export default function LandingPage() {
             feature_id: featureId,
             section: 'features'
         });
+        
+        // Navigate to the corresponding section
+        const sectionElement = document.getElementById(featureId);
+        if (sectionElement) {
+            sectionElement.scrollIntoView({ behavior: "smooth" });
+        } else {
+            console.log(`Section with ID ${featureId} not found`);
+        }
     };
 
     const openImageModal = (image: any, alt: string) => {

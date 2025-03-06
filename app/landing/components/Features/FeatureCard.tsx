@@ -2,12 +2,17 @@ import Image from "next/image";
 import { FeatureCardProps } from "./types";
 
 export default function FeatureCard({ feature, onClick, isMobile }: FeatureCardProps) {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClick(feature.id);
+  };
+
   return (
     <div
       key={feature.id}
-      id={feature.id}
       className="hover:scale-105 transition-transform duration-300 cursor-pointer bg-white border-2 border-black rounded-none p-3 sm:p-5 shadow-brutalist"
-      onClick={() => onClick(feature.id)}
+      onClick={handleClick}
     >
       <div className="flex flex-col items-center pt-0 sm:pt-6">
         {feature.img ? (
@@ -21,11 +26,11 @@ export default function FeatureCard({ feature, onClick, isMobile }: FeatureCardP
         ) : (
           <div className="w-full h-[100px] sm:h-[256px] bg-gray-200 border border-black mb-2 sm:mb-4"></div>
         )}
-        <h3 className="font-bold text-sm sm:text-2xl mb-1 sm:mb-2 text-center border-b-2 border-black pb-1 sm:pb-2">
+        <h3 className="font-bold text-sm sm:text-2xl mb-1 sm:mb-2 text-center pb-1 sm:pb-0">
           {feature.title}
         </h3>
         <p className="font-light text-xs sm:text-xl text-center text-black">
-          {feature.description}
+            {feature.description}
         </p>
       </div>
     </div>
