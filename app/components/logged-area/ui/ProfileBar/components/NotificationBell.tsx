@@ -186,7 +186,7 @@ export const NotificationBell = () => {
                 
                 <DropdownMenuContent
                     align="end"
-                    className="w-80 p-0 border-2 border-black rounded-md shadow-lg z-[1000] overflow-hidden"
+                    className="w-80 p-0 mt-2 border-2 border-black rounded-md shadow-lg z-[1000] overflow-hidden"
                 >
                     <div className="flex items-center justify-between p-3 border-b">
                         <h3 className="font-bold text-sm">Notificações</h3>
@@ -221,7 +221,7 @@ export const NotificationBell = () => {
                     <div className="p-2 border-t text-center">
                         <Link 
                             href={`/${userData?.username}/home`}
-                            className="text-xs text-blue-500 hover:underline"
+                            className="text-xs hover:underline"
                         >
                             Ver todas as notificações
                         </Link>

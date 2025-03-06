@@ -42,7 +42,7 @@ export default function HomePage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(dayjs());
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
-    
+
     // Financial analytics state
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loadingExpenses, setLoadingExpenses] = useState(true);
@@ -71,18 +71,18 @@ export default function HomePage() {
         }, 1500);
         return () => clearTimeout(timer);
     }, []);
-    
+
     // Load financial data for analytics
     useEffect(() => {
         const loadFinancialData = async () => {
             if (!userData || !userData.uid) return;
-            
+
             setLoadingExpenses(true);
             try {
                 // Load expenses for the last 30 days
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
+
                 // Find cost groups for the user
                 const groupsQuery = query(
                     collection(db, "cost_groups"),
@@ -90,13 +90,13 @@ export default function HomePage() {
                 );
                 const groupsSnapshot = await getDocs(groupsQuery);
                 const groupIds = groupsSnapshot.docs.map(doc => doc.id);
-                
+
                 // If no groups found, early return
                 if (groupIds.length === 0) {
                     setLoadingExpenses(false);
                     return;
                 }
-                
+
                 // Query expenses from these groups - without using date filter to avoid requiring a composite index
                 let allExpenses: Expense[] = [];
                 for (const groupId of groupIds) {
@@ -104,29 +104,29 @@ export default function HomePage() {
                         collection(db, "expenses"),
                         where("groupId", "==", groupId)
                     );
-                    
+
                     const expensesSnapshot = await getDocs(expensesQuery);
                     const groupExpenses = expensesSnapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
                     } as Expense))
-                    .filter(expense => {
-                        // Filter by date client-side instead
-                        try {
-                            const expenseDate = expense.date.toDate();
-                            return expenseDate >= thirtyDaysAgo;
-                        } catch (e) {
-                            console.log(e);
-                            console.error("Invalid date format in expense:", expense.id);
-                            return false;
-                        }
-                    });
-                    
+                        .filter(expense => {
+                            // Filter by date client-side instead
+                            try {
+                                const expenseDate = expense.date.toDate();
+                                return expenseDate >= thirtyDaysAgo;
+                            } catch (e) {
+                                console.log(e);
+                                console.error("Invalid date format in expense:", expense.id);
+                                return false;
+                            }
+                        });
+
                     allExpenses = [...allExpenses, ...groupExpenses];
                 }
-                
+
                 setExpenses(allExpenses);
-                
+
                 // Transform kids data from userData to the format needed for the charts
                 if (userData.kids) {
                     interface KidData {
@@ -136,7 +136,7 @@ export default function HomePage() {
                         photoURL?: string;
                         birthDate?: string;
                     }
-                    
+
                     const childrenData = Object.entries(userData.kids as Record<string, KidData>).map(([id, kidData]) => ({
                         id,
                         firstName: kidData?.firstName || '',
@@ -152,7 +152,7 @@ export default function HomePage() {
                 setLoadingExpenses(false);
             }
         };
-        
+
         loadFinancialData();
     }, [userData]);
 
@@ -313,13 +313,14 @@ export default function HomePage() {
 
                                     {/* Mobile view */}
                                     {isMobile && (
-                                        <div className="flex justify-center pb-4">
-                                            <Link href={`/${userData.username}/rede`}>
-                                                <Button variant="default" className="shadow-brutalist">
-                                                    Ver Rede Completa
-                                                </Button>
-                                            </Link>
-                                        </div>
+                                        // <div className="flex justify-center pb-4">
+                                        //     <Link href={`/${userData.username}/rede`}>
+                                        //         <Button variant="default" className="shadow-brutalist">
+                                        //             Ver Rede Completa
+                                        //         </Button>
+                                        //     </Link>
+                                        // </div>
+                                        <div className="h-0"/>
                                     )}
                                 </div>
                             </section>
@@ -328,7 +329,7 @@ export default function HomePage() {
                         {/* BROWSER CALENDAR SECTION */}
                         <section className=" w-2/3 mx-auto p-4">
                             {isMobile ? (
-                                <div className="h-12" />
+                                <div className="h-0" />
                             ) : (
                                 <div>
                                     <div className="flex items-center justify-between px-2 rounded-none relative mx-auto h-[8em] bg-mainStrongRed border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
@@ -370,21 +371,36 @@ export default function HomePage() {
                             username: userData.username
                         }}
                     />
-                    
+
                     {/* Financial Analytics Section */}
                     <section className="w-full mx-auto p-4 pb-[5em]">
-                        <div className="hidden md:block">
-                            <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongBlue border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
-                                <div className="flex flex-col gap-2 z-10 max-w-[66%]">
-                                    <h2 className="text-2xl sm:text-3xl font-bold">
-                                        Resumo Financeiro
-                                    </h2>
-                                    <p className="text-xs">
-                                        Acompanhe os valores investidos nos seus pequenos.
-                                    </p>
+                        {isMobile ? (
+                            <div className="flex flex-col gap-2 pb-2">
+                                <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
+                                    <div className="flex flex-col gap-0">
+                                        <h2 className="text-3xl text-warning font-black">
+                                            Acompanhe
+                                        </h2>
+                                        <p className="text-xs">
+                                            Registre e visualize os valores investidos nos seus pequenos em tabelas e gráficos interativos.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="hidden md:block">
+                                <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongBlue border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
+                                    <div className="flex flex-col gap-2 z-10 max-w-[66%]">
+                                        <h2 className="text-2xl sm:text-3xl font-bold">
+                                            Resumo Financeiro
+                                        </h2>
+                                        <p className="text-xs">
+                                            Acompanhe os valores investidos nos seus pequenos.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <div className="md:grid md:grid-cols-3 md:gap-4">
                             <HomeFinanceAnalytics
                                 expenses={expenses}

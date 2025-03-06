@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { WeekDay } from "../types";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react"; // import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
 import { useUser } from "@/context/userContext";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import { isSameDay } from "date-fns";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -166,14 +166,14 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
         </div>
 
         {/* Week Days */}
-        <div className="grid grid-cols-7 gap-1 mb-4">
+        <div className="grid grid-cols-7 gap-2 mb-4">
           {weekDays.map((day, index) => (
             <Button
               key={index}
               onClick={() => handleDaySelect(day)}
               variant="default"
               className={`
-                h-auto flex flex-col items-center py-2 px-1 rounded-none
+                h-auto flex flex-col items-center py-2 px-1 rounded-md
                 border ${day.isSelected ? 'border-2' : 'border'} border-black
                 ${day.isToday 
                   ? '' // ? 'bg-yellow-300' 
