@@ -43,7 +43,7 @@ export const UserMenu = ({ userData, onSignOut }: UserMenuProps) => (
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="end" className="w-52 z-[1000]" forceMount>
                 <DropdownMenuItem asChild>
                     <Link href={`/${userData.username}/home`} className="flex items-center gap-2">
                         <Home className="h-4 w-4" />
@@ -56,7 +56,7 @@ export const UserMenu = ({ userData, onSignOut }: UserMenuProps) => (
                         <span>Configurações</span>
                     </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSignOut} className="flex items-center gap-2">
+                <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 hover:text-red-500 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     <span>Sair</span>
                 </DropdownMenuItem>

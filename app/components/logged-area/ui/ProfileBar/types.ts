@@ -12,6 +12,7 @@ export interface SignupFormData {
 export interface UserNavbarProps {
     pathname: string;
     onBackClick?: () => void;
+    onSignOut?: () => void;
     userData: {
         username: string;
         photoURL?: string;
