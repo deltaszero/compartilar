@@ -37,12 +37,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             {/* Right Content */}
             <div className="flex flex-col bg-bg py-4">
                 <div className="flex flex-col items-center justify-center">
-                    <Link href="/" className="w-10 h-10 text-primary hover:text-primary/80 transition-colors">
+                    <Link href="/">
                         <CompartilarLogo width={60} height={60} className="flex-shrink-0 text-main" />
                     </Link>
                 </div>
                 <section className="flex-1 flex flex-col justify-center items-center">
-                    <div className='flex flex-col gap-4 mb-[6em] max-w-xs sm:max-w-md'>
+                    <div className='flex flex-col gap-4 my-[2em] max-w-xs sm:max-w-md'>
                         <div className='font-playfair font-black text-4xl sm:text-6xl'>
                             <p>Coparentalidade</p>
                             <p>sintonizada</p>
