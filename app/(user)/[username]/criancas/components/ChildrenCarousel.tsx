@@ -93,7 +93,7 @@ export const ChildrenCarousel = ({ children, isLoading }: ChildrenCarouselProps)
               <Card className="border-none shadow-none bg-transparent">
                 <CardContent className="p-0">
                   {/* Full-width photo with overlay content */}
-                  <div className="relative w-full h-[300px]">
+                  <div className="relative w-full h-[300px] sm:h-[500px]">
                     {/* Background image or gradient */}
                     {child.photoURL ? (
                       <Image
@@ -142,8 +142,8 @@ export const ChildrenCarousel = ({ children, isLoading }: ChildrenCarouselProps)
         
         {children.length > 1 && (
           <>
-            <CarouselPrevious className="left-4 bg-background/90 hover:bg-background" />
-            <CarouselNext className="right-4 bg-background/90 hover:bg-background" />
+            <CarouselPrevious className="left-4 bg-bw hover:bg-background" />
+            <CarouselNext className="right-4 bg-bw hover:bg-background" />
             
             {/* Dots indicator */}
             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
@@ -152,7 +152,7 @@ export const ChildrenCarousel = ({ children, isLoading }: ChildrenCarouselProps)
                   key={index}
                   onClick={() => api?.scrollTo(index)}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    index === current ? 'bg-primary' : 'bg-white/70 hover:bg-white'
+                    index === current ? 'bg-main' : 'bg-white/70 hover:bg-white'
                   }`}
                   aria-label={`Ir para criança ${index + 1}`}
                 />
