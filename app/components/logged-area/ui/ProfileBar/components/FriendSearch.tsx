@@ -42,46 +42,32 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
         
         try {
             console.log("Loading users for search:", searchTerm);
-            
-            // For now, just get friend requests and convert them to notification format
+            const searchTermLower = searchTerm.toLowerCase().trim();
             const usersRef = collection(db, 'account_info');
-            const searchQuery = query(
-                usersRef,
-                where('username', '==', searchTerm.toLowerCase().trim()),
-                limit(10)
-            );
-            
-            const querySnapshot = await getDocs(searchQuery);
             const results: SearchResult[] = [];
+            const processedUids = new Set<string>(); // Track unique users
             
-            querySnapshot.forEach(doc => {
+            // Get all users to filter client-side (for better partial matching)
+            const allUsersQuery = query(usersRef, limit(100));
+            const allUsersSnapshot = await getDocs(allUsersQuery);
+            
+            allUsersSnapshot.forEach(doc => {
                 // Skip current user
                 if (doc.id !== userData?.uid) {
                     const user = doc.data();
-                    results.push({
-                        uid: doc.id,
-                        username: user.username || '',
-                        firstName: user.firstName || '',
-                        lastName: user.lastName || '',
-                        photoURL: user.photoURL || '',
-                        email: user.email || ''
-                    });
-                }
-            });
-            
-            // If no results from username, try email
-            if (results.length === 0 && searchTerm.includes('@')) {
-                const emailQuery = query(
-                    usersRef, 
-                    where('email', '==', searchTerm.toLowerCase().trim()),
-                    limit(10)
-                );
-                
-                const emailResults = await getDocs(emailQuery);
-                
-                emailResults.forEach(doc => {
-                    if (doc.id !== userData?.uid) {
-                        const user = doc.data();
+                    
+                    // Check if any field matches the search term
+                    const username = (user.username || '').toLowerCase();
+                    const firstName = (user.firstName || '').toLowerCase();
+                    const lastName = (user.lastName || '').toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    
+                    if (
+                        username.includes(searchTermLower) ||
+                        firstName.includes(searchTermLower) ||
+                        lastName.includes(searchTermLower) ||
+                        email.includes(searchTermLower)
+                    ) {
                         results.push({
                             uid: doc.id,
                             username: user.username || '',
@@ -91,21 +77,48 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                             email: user.email || ''
                         });
                     }
-                });
-            }
+                }
+            });
             
-            console.log("Search results:", results);
+            // Sort results by relevance
+            // Exact username matches first, then partial username matches, then name matches, then email matches
+            results.sort((a, b) => {
+                const aUsername = a.username.toLowerCase();
+                const bUsername = b.username.toLowerCase();
+                const aFullName = `${a.firstName} ${a.lastName}`.toLowerCase();
+                const bFullName = `${b.firstName} ${b.lastName}`.toLowerCase();
+                
+                // Exact username matches first
+                if (aUsername === searchTermLower && bUsername !== searchTermLower) return -1;
+                if (bUsername === searchTermLower && aUsername !== searchTermLower) return 1;
+                
+                // Then username starts with search term
+                if (aUsername.startsWith(searchTermLower) && !bUsername.startsWith(searchTermLower)) return -1;
+                if (bUsername.startsWith(searchTermLower) && !aUsername.startsWith(searchTermLower)) return 1;
+                
+                // Then full name starts with search term
+                if (aFullName.startsWith(searchTermLower) && !bFullName.startsWith(searchTermLower)) return -1;
+                if (bFullName.startsWith(searchTermLower) && !aFullName.startsWith(searchTermLower)) return 1;
+                
+                // Alphabetical by username as fallback
+                return aUsername.localeCompare(bUsername);
+            });
+            
+            // Limit results
+            const limitedResults = results.slice(0, 10);
+            
+            console.log("Search results:", limitedResults);
             
             // Set results and update UI state
-            setSearchResults(results);
+            setSearchResults(limitedResults);
             setIsSearching(false);
             
             // Show message if no results
-            if (results.length === 0) {
+            if (limitedResults.length === 0) {
                 toast({
                     variant: "destructive", 
                     title: "Nenhum resultado",
-                    description: "Tente inserir um nome de usuário exato ou email"
+                    description: "Tente outro termo de busca"
                 });
             }
             
@@ -321,7 +334,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     ) : (
                         <div className="p-8 text-center">
                             <p className="text-gray-500">Nenhum usuário encontrado</p>
-                            <p className="text-sm text-gray-400 mt-1">Tente buscar pelo nome de usuário exato ou email</p>
+                            <p className="text-sm text-gray-400 mt-1">Tente buscar pelo nome, sobrenome, usuário ou email</p>
                         </div>
                     )}
                 </div>
