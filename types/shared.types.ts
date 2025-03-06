@@ -1,6 +1,28 @@
 // types/shared.types.ts
 import { Timestamp } from 'firebase/firestore';
 
+// Geolocation check-in types
+export interface GeoLocation {
+  id: string;
+  userId: string;
+  username: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  };
+  timestamp: Timestamp;
+  address?: string;
+  deviceInfo?: {
+    browser: string;
+    platform: string;
+    mobile: boolean;
+  };
+  sharedWith?: string[]; // Array of user IDs this location is shared with
+  eventId?: string; // Optional reference to a calendar event
+  note?: string; // Optional user note
+}
+
 // Notification system types
 export interface Notification {
   id: string;

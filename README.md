@@ -32,15 +32,13 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 ```
 
 ```error
-/home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/home/page.tsx
-    4:8   error  'Image' is defined but never used                                                           @typescript-eslint/no-unused-vars
-   31:45  error  'Timestamp' is defined but never used                                                       @typescript-eslint/no-unused-vars
-   33:10  error  'EXPENSE_CATEGORIES' is defined but never used                                              @typescript-eslint/no-unused-vars
-  117:34  error  'error' is defined but never used                                                           @typescript-eslint/no-unused-vars
-  381:33  error  Do not pass children as props. Instead, nest children between the opening and closing tags  react/no-children-prop
-```
+now please leaving in account 
++ /home/dusoudeth/Documentos/github/compartilar/types
++ /home/dusoudeth/Documentos/github/compartilar/.firestore-rules
++ /home/dusoudeth/Documentos/github/compartilar/context/userContext.tsx
++ /home/dusoudeth/Documentos/github/compartilar/lib/firebaseConfig.ts
 
+create a geolocation collection, each document should be the user check-in history
 
-```
-when I'm logged my /home/dusoudeth/Documentos/github/compartilar/app/components/Header.tsx component does not show my profile picture
+also, change /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/check-in/page.tsx in order to add a "save" button after "obter localização" is pressed (in other words, activate geolocation is free, but it will only be saved in the button is pressed)
 ```

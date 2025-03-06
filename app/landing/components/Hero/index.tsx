@@ -10,7 +10,7 @@ const Hero = forwardRef<HTMLDivElement, Omit<HeroProps, 'heroRef'>>((props, ref)
   
   return (
     <section className="bg-bg" ref={ref}>
-      <div className="container flex flex-col lg:flex-row-reverse items-center justify-between gap-8 sm:py-24 mx-auto h-screen">
+      <div className="container flex flex-col lg:flex-row-reverse items-center justify-between gap-8 sm:py-24 mx-auto sm:mb-[8em]">
         <Image
           src={hero_image}
           alt="Hero image"
