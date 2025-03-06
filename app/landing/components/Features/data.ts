@@ -5,20 +5,20 @@ export const features = [
     id: "descomplique",
     title: "Descomplique",
     description:
-      "através da criação e gerenciamento de planos de parentalidade individualizados para cada filho.",
+      "a convivência através da criação e do gerenciamento de planos de parentalidade individualizados para cada filho.",
     img: feature_image_01,
   },
   {
     id: "organize",
     title: "Organize",
     description:
-      "Mantenha todas as informações importantes dos seus filhos organizadas e acessíveis."
+      "e centralize em um só lugar as informações que mais importam quando seus filhos vivem em mais de um lar."
   },
   {
     id: "proteja",
     title: "Proteja",
     description:
-      "Seus dados são protegidos com a mais alta segurança, permitindo compartilhamento controlado."
+      "as informações dos seus filhos e garanta que elas sejam acessadas apenas por quem você autorizar."
   },
   {
     id: "despreocupe-se",
