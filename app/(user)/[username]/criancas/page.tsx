@@ -7,7 +7,7 @@ import { db, checkFriendshipStatus } from '@/lib/firebaseConfig';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { toast } from '@/hooks/use-toast';
-import ChildrenCarousel from './components/ChildrenCarousel';
+// import ChildrenCarousel from './components/ChildrenCarousel';
 import ChildrenGrid from './components/ChildrenGrid';
 import { KidInfo } from './types';
 
@@ -123,10 +123,10 @@ export default function ChildrenPage() {
           </div>
 
           {/* Carousel */}
-          <ChildrenCarousel
+          {/* <ChildrenCarousel
             children={children}
             isLoading={isLoading}
-          />
+          /> */}
 
           {/* Children Grid */}
           <ChildrenGrid

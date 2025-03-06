@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/app/lib/firebaseConfig";
 import { KidInfo } from "../types";
@@ -30,6 +31,8 @@ export const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
 const KidsGrid = ({ parentId }: { parentId: string }) => {
   const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { username } = useParams<{ username: string }>();
 
   useEffect(() => {
     const loadChildren = async () => {
@@ -65,7 +68,13 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
               Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
             </p>
           </div>
-          <Button className="mt-2 bg-secondaryMain" variant="default">Adicionar criança</Button>
+          <Button 
+            className="mt-2 bg-secondaryMain" 
+            variant="default"
+            onClick={() => router.push(`/${username}/criancas/novo`)}
+          >
+            Adicionar criança
+          </Button>
         </div>
       </Card>
     );

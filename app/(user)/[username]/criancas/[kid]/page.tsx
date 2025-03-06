@@ -4,10 +4,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@/context/userContext';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, checkFriendshipStatus } from '@/lib/firebaseConfig';
 import { storage } from '@/lib/firebaseConfig'; 
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { toast } from '@/hooks/use-toast';
@@ -24,7 +24,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash } from 'lucide-react';
+import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash, AlertTriangle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ChildDetailPage() {
   const { username, kid } = useParams<{ username: string; kid: string }>();
@@ -35,6 +43,8 @@ export default function ChildDetailPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editedData, setEditedData] = useState<Partial<KidInfo>>({});
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -232,6 +242,48 @@ export default function ChildDetailPage() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  // Delete child
+  const deleteChild = async () => {
+    if (!childData?.id || !isOwner) return;
+    
+    setIsDeleting(true);
+    try {
+      // Get reference to the child document
+      const childRef = doc(db, 'children', childData.id);
+      
+      // Delete the photo from storage if it exists
+      if (childData.photoURL) {
+        try {
+          // Extract the storage path from the URL
+          const photoPath = decodeURIComponent(childData.photoURL.split('/o/')[1].split('?')[0]);
+          const photoRef = ref(storage, photoPath);
+          await deleteObject(photoRef);
+        } catch (photoError) {
+          console.error('Error deleting photo, continuing with child deletion:', photoError);
+        }
+      }
+      
+      // Delete the child document from Firestore
+      await deleteDoc(childRef);
+      
+      toast({
+        title: 'Criança removida',
+        description: 'Os dados foram excluídos com sucesso!'
+      });
+      
+      // Navigate back to the children list
+      router.push(`/${username}/criancas`);
+    } catch (error) {
+      console.error('Error deleting child:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir a criança. Tente novamente.'
+      });
+      setIsDeleting(false);
     }
   };
 
@@ -476,40 +528,108 @@ export default function ChildDetailPage() {
                 )}
                 
                 {/* Action buttons */}
-                <div className="mt-6 flex justify-end gap-2">
+                <div className="mt-6 flex justify-between items-center">
+                  {/* Delete button - only visible when not editing */}
                   {isOwner && !isEditing && (
                     <Button 
-                      onClick={() => setIsEditing(true)}
-                      variant="default"
+                      onClick={() => setShowDeleteDialog(true)}
+                      variant="destructive"
+                      size="sm"
+                      className="gap-1"
                     >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
+                      <Trash className="h-4 w-4" />
+                      <span className="hidden sm:inline">Excluir</span>
                     </Button>
                   )}
                   
-                  {isEditing && (
-                    <>
+                  {/* Spacer when in edit mode */}
+                  {isEditing && <div></div>}
+                  
+                  {/* Edit/Save buttons */}
+                  <div className="flex gap-2">
+                    {isOwner && !isEditing && (
                       <Button 
+                        onClick={() => setIsEditing(true)}
                         variant="default"
-                        onClick={() => {
-                          setIsEditing(false);
-                          setEditedData(childData);
-                          setPreviewPhoto(null);
-                        }}
-                        disabled={isSaving}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                    )}
+                    
+                    {isEditing && (
+                      <>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditedData(childData);
+                            setPreviewPhoto(null);
+                          }}
+                          disabled={isSaving}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          onClick={saveChanges}
+                          disabled={isSaving}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSaving ? 'Salvando...' : 'Salvar'}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Confirmar exclusão
+                      </DialogTitle>
+                      <DialogDescription>
+                        Você está prestes a excluir todas as informações de{' '}
+                        <strong>{childData?.firstName} {childData?.lastName}</strong>.
+                        Esta ação não pode ser desfeita.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <p className="text-sm text-gray-500">
+                        Todos os dados associados a esta criança, incluindo fotos e registros, serão permanentemente removidos.
+                      </p>
+                    </div>
+                    <DialogFooter className="flex justify-between sm:justify-between">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDeleteDialog(false)}
+                        disabled={isDeleting}
                       >
                         Cancelar
                       </Button>
-                      <Button 
-                        onClick={saveChanges}
-                        disabled={isSaving}
+                      <Button
+                        variant="destructive"
+                        onClick={deleteChild}
+                        disabled={isDeleting}
+                        className="gap-2"
                       >
-                        <Save className="h-4 w-4 mr-2" />
-                        {isSaving ? 'Salvando...' : 'Salvar'}
+                        {isDeleting ? (
+                          <>
+                            <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                            <span>Excluindo...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Trash className="h-4 w-4" />
+                            <span>Excluir permanentemente</span>
+                          </>
+                        )}
                       </Button>
-                    </>
-                  )}
-                </div>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </Card>

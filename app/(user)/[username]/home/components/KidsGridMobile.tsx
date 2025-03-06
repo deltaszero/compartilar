@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { KidInfo } from "../types";
 import { fetchChildren } from "./KidsGrid";
 import { ChildCardMobile } from "./ChildCardMobile";
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 const KidsGridMobile = ({ parentId }: { parentId: string }) => {
   const [kidsArray, setKidsArray] = useState<KidInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { username } = useParams<{ username: string }>();
 
   useEffect(() => {
     const loadChildren = async () => {
@@ -44,7 +47,13 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
               Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
             </p>
           </div>
-          <Button className="mt-2 bg-secondaryMain" variant="default">Adicionar criança</Button>
+          <Button 
+            className="mt-2 bg-secondaryMain" 
+            variant="default"
+            onClick={() => router.push(`/${username}/criancas/novo`)}
+          >
+            Adicionar criança
+          </Button>
         </div>
       </Card>
     );
