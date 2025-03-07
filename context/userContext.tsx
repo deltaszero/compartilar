@@ -106,6 +106,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     // Mark listeners as active before subscribing
                     markFirestoreListenersActive();
 
+                    // Ensure user ID token is refreshed before listening to Firestore
+                    // This ensures Firebase knows the user is authenticated before any Firestore queries
+                    await currentUser.getIdTokenResult(true);
+                    
                     // Subscribe to account info using our safe listener manager
                     const accountRef = doc(db, 'account_info', currentUser.uid);
                     

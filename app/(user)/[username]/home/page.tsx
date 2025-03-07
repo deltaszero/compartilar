@@ -76,6 +76,10 @@ export default function HomePage() {
     useEffect(() => {
         const loadFinancialData = async () => {
             if (!userData || !userData.uid) return;
+            
+            // Wait a moment to ensure authentication is complete
+            // This helps prevent Firestore permission errors
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             setLoadingExpenses(true);
             try {
