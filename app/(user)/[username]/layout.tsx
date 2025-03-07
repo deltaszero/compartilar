@@ -28,7 +28,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
         // If accessing someone else's routes other than profile, redirect
         if (userData?.username !== username && !pathname.includes('/perfil')) {
-            router.push(`/${username}/perfil`);
+            router.push(`/${username}/home`);
             return;
         }
 

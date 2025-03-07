@@ -6,7 +6,7 @@ import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 import { checkFriendshipStatus, FriendshipStatus, getUserByUsername } from '@/lib/firebaseConfig';
 import { toast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 
 // Components
@@ -139,12 +139,27 @@ export default function UserProfilePage() {
             // Exclude sensitive fields from update
             const { password, confirmPassword, uid, username, ...updateData } = formData;
 
-            // Update in Firestore
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
+            // Update in both users and account_info collections to ensure consistency
+            const accountRef = doc(db, 'account_info', user.uid);
+            
+            const updates = {
                 ...updateData,
                 updatedAt: new Date()
-            });
+            };
+            
+            // First check if the users document exists
+            const userRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userRef);
+
+            // Update account_info (which should always exist)
+            await updateDoc(accountRef, updates);
+            
+            // Only update users collection if the document exists
+            if (userDoc.exists()) {
+                await updateDoc(userRef, updates);
+            } else {
+                console.log("Users document doesn't exist, only updated account_info");
+            }
 
             // Update local state
             setProfileData(formData);

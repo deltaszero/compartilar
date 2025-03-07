@@ -73,6 +73,7 @@ export const AvatarSection = ({
             if (!storage) {
                 throw new Error("Storage is not initialized");
             }
+            // Use a simpler path structure that matches our updated storage rules
             const storageRef = ref(storage, `profile_photos/${timestamp}_${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
             
@@ -141,7 +142,7 @@ export const AvatarSection = ({
                             accept="image/*"
                             onChange={handlePhotoChange}
                         />
-                        <div className="absolute bottom-2 right-2 bg-secondary text-white p-2 rounded-full shadow-md">
+                        <div className="absolute bottom-2 right-2 bg-mainStrongGreen p-2 rounded-full shadow-md">
                             <EditIcon className="w-4 h-4" />
                         </div>
                         
@@ -263,7 +264,7 @@ export const UserProfileCard = ({
                     </div>
                 ) : (
                     <>
-                        <h2 className="text-3xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                        <h2 className="text-3xl font-black mb-1">
                             {capitalizeFirstLetter(displayData?.firstName || '')} {capitalizeFirstLetter(displayData?.lastName || '')}
                         </h2>
                         <p className="text-muted-foreground text-lg mb-3">
@@ -279,7 +280,7 @@ export const UserProfileCard = ({
                 
                 {isOwnProfile && !isEditing && (
                     <Button 
-                        className="mt-4 gap-2 rounded-full px-6 font-medium" 
+                        className="mt-4 gap-2 rounded-full px-6 font-medium bg-secondaryMain" 
                         variant="default"
                         onClick={onToggleEdit}
                     >
@@ -295,12 +296,15 @@ export const UserProfileCard = ({
                         variant="default" 
                         onClick={onToggleEdit}
                         disabled={isSaving}
+                        className="bg-mainStrongRed"
                     >
                         Cancelar
                     </Button>
                     <Button 
                         onClick={onSave}
                         disabled={isSaving}
+                        variant="default"
+                        className="bg-secondaryMain"
                     >
                         {isSaving ? 'Salvando...' : 'Salvar Alterações'}
                     </Button>

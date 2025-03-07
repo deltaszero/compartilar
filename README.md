@@ -32,13 +32,11 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 ```
 
 ```error
-now please leaving in account 
-+ /home/dusoudeth/Documentos/github/compartilar/types
-+ /home/dusoudeth/Documentos/github/compartilar/.firestore-rules
-+ /home/dusoudeth/Documentos/github/compartilar/context/userContext.tsx
-+ /home/dusoudeth/Documentos/github/compartilar/lib/firebaseConfig.ts
+in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/perfil/page.tsx when i try to change my avatar picture i got an
 
-create a geolocation collection, each document should be the user check-in history
+FirebaseError: Firebase Storage: User does not have permission to access 'profile_photos/1741373010306_cnpq.jpeg'. (storage/unauthorized)
 
-also, change /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/check-in/page.tsx in order to add a "save" button after "obter localização" is pressed (in other words, activate geolocation is free, but it will only be saved in the button is pressed)
+please fix it, my rules are in /home/dusoudeth/Documentos/github/compartilar_backup/.storage-rules
+
+beyond that i'd like to add a edit buttom like in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/criancas/[kid]/page.tsx
 ```

@@ -19,12 +19,12 @@ export default function FeatureCard({ feature, onClick, isMobile }: FeatureCardP
           <Image
             src={feature.img}
             alt={feature.title}
-            width={isMobile ? 100 : 256}
-            height={isMobile ? 100 : 256}
+            width={isMobile ? 150 : 256}
+            height={isMobile ? 150 : 256}
             className="object-cover mb-2 sm:mb-4"
           />
         ) : (
-          <div className="w-full h-[100px] sm:h-[256px] bg-gray-200 border border-black mb-2 sm:mb-4"></div>
+          <div className="w-full h-[150] sm:h-[256px] bg-gray-200 border border-black mb-2 sm:mb-4"></div>
         )}
         <h3 className="font-bold text-sm sm:text-2xl mb-1 sm:mb-2 text-center pb-1 sm:pb-0">
           {feature.title}
