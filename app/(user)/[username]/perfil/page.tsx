@@ -122,12 +122,22 @@ export default function UserProfilePage() {
     };
 
     // Handle form input changes
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { name: string, value: string }) => {
+        if ('target' in e) {
+            // Handle standard input changes
+            const { name, value } = e.target;
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        } else {
+            // Handle select changes
+            const { name, value } = e;
+            setFormData(prev => ({
+                ...prev,
+                [name]: value === '' ? null : value // Set empty selection to null
+            }));
+        }
     };
 
     // Handle saving profile changes
@@ -228,10 +238,10 @@ export default function UserProfilePage() {
                     {/* Profile Tabs */}
                     <div className="mt-8 space-y-6">
                         <Tabs defaultValue="info" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3 mb-6">
+                            <TabsList className="grid w-full grid-cols-2 mb-6">
                                 <TabsTrigger value="info">Info</TabsTrigger>
                                 <TabsTrigger value="kids">Crianças</TabsTrigger>
-                                <TabsTrigger value="activities">Atividades</TabsTrigger>
+                                {/* <TabsTrigger value="activities">Atividades</TabsTrigger> */}
                             </TabsList>
 
                             <TabsContent value="info" className="space-y-4">

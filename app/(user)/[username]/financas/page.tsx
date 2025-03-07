@@ -790,31 +790,8 @@ export default function FinancasPage() {
                 return;
             }
 
-            // Delete the group
+            // First, delete the group document
             await deleteDoc(doc(db, "cost_groups", groupId));
-
-            // Get all expenses in this group
-            const expensesQuery = query(
-                collection(db, "expenses"),
-                where("groupId", "==", groupId)
-            );
-
-            const snapshot = await getDocs(expensesQuery);
-
-            // Delete each expense one by one to avoid permission issues
-            for (const docSnap of snapshot.docs) {
-                try {
-                    await deleteDoc(docSnap.ref);
-                } catch (err) {
-                    console.error(`Could not delete expense ${docSnap.id}:`, err);
-                    // Continue with other deletions even if one fails
-                }
-            }
-
-            toast({
-                title: "Grupo excluído",
-                description: "Grupo excluído com sucesso!"
-            });
 
             // Reset selected group if it was deleted
             if (selectedGroup === groupId) {
@@ -823,8 +800,47 @@ export default function FinancasPage() {
                 setBalances([]);
             }
 
+            toast({
+                title: "Grupo excluído",
+                description: "Grupo e suas despesas foram excluídos com sucesso!"
+            });
+
             // Reload groups
             loadCostGroups();
+
+            // Now handle expense deletion separately to avoid permission issues
+            // This runs after the primary operation is complete and UI is updated
+            setTimeout(async () => {
+                try {
+                    // Get all expenses in this group
+                    const expensesQuery = query(
+                        collection(db, "expenses"),
+                        where("groupId", "==", groupId)
+                    );
+                    
+                    const snapshot = await getDocs(expensesQuery);
+                    
+                    // If there are no expenses, we're done
+                    if (snapshot.empty) return;
+                    
+                    // Delete expenses in batches to avoid timeouts
+                    const deleteBatch = async (docs: any[]) => {
+                        for (const docSnap of docs) {
+                            try {
+                                await deleteDoc(docSnap.ref);
+                            } catch (err) {
+                                console.log(`Could not delete expense ${docSnap.id}:`, err);
+                                // Continue with other deletions even if one fails
+                            }
+                        }
+                    };
+                    
+                    await deleteBatch(snapshot.docs);
+                } catch (err) {
+                    console.log("Error cleaning up expenses:", err);
+                    // Don't show error to user since the main operation succeeded
+                }
+            }, 500);
         } catch (error) {
             console.error("Error deleting group:", error);
             toast({

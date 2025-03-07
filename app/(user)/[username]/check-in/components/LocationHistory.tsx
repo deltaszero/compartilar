@@ -350,7 +350,7 @@ export function LocationHistory() {
   if (locations.length === 0) {
     return (
       <div className="text-center py-8">
-        <MapPinOff className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <MapPinOff className="mx-auto h-12 w-12 mb-4" />
         <h3 className="text-lg font-medium mb-2">Nenhuma localização salva</h3>
         <p className="text-muted-foreground text-sm">
           Suas localizações salvas aparecerão aqui.

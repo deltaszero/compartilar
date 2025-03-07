@@ -50,12 +50,12 @@ export const UserMenu = ({ userData, onSignOut }: UserMenuProps) => (
                         <span>Home</span>
                     </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                     <Link href={`/${userData.username}/settings`} className="flex items-center gap-2">
                         <Settings className="h-4 w-4" />
                         <span>Configurações</span>
                     </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 hover:text-red-500 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     <span>Sair</span>

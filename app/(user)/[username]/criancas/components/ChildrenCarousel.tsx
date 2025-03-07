@@ -52,7 +52,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
         </p>
         {isOwnChildren ? (
           <Link href={`/${username}/criancas/novo`}>
-            <Button variant="default">
+            <Button variant="default" className='bg-mainStrongGreen'>
               <Plus className="h-4 w-4 mr-2" />
               Adicionar criança
             </Button>

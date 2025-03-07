@@ -205,7 +205,7 @@ export const ChildrenGrid = ({
                 <h3 className="text-xl font-semibold">Crianças</h3>
                 {isOwnProfile && (
                     <Link href={`/${username}/criancas/novo`}>
-                        <Button variant="default" size="sm" className="rounded-full">
+                        <Button variant="default" size="sm" className="rounded-md bg-mainStrongGreen">
                             <Plus className="h-4 w-4 mr-1" /> Adicionar
                         </Button>
                     </Link>

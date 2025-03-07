@@ -8,6 +8,7 @@ export interface SignupFormData {
     photoURL?: string;
     uid?: string;
     about?: string;
+    gender?: 'male' | 'female' | 'other' | null;
 }
 
 export interface KidInfo {

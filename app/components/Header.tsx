@@ -119,9 +119,9 @@ const UserMenu = ({ userData, onSignOut }: {
         <DropdownMenuItem asChild>
           <Link href={`/${userData.username}/home`}>Perfil</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        {/* <DropdownMenuItem asChild>
           <Link href={`/${userData.username}/settings`}>Configurações</Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 flex items-center gap-2">
           <LogOut className="h-4 w-4" />
           Sair

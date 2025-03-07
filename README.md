@@ -32,11 +32,9 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 ```
 
 ```error
-in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/perfil/page.tsx when i try to change my avatar picture i got an
+In /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/financas/components/CostGroupList.tsx when i delete a group it raises
 
-FirebaseError: Firebase Storage: User does not have permission to access 'profile_photos/1741373010306_cnpq.jpeg'. (storage/unauthorized)
+Console Error
 
-please fix it, my rules are in /home/dusoudeth/Documentos/github/compartilar_backup/.storage-rules
-
-beyond that i'd like to add a edit buttom like in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/criancas/[kid]/page.tsx
+FirebaseError: Missing or insufficient permissions.
 ```

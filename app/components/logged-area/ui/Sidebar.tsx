@@ -188,7 +188,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
         // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
         { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={28} height={28} /> },
         { path: `/${userData.username}/check-in`, label: 'Check-in', icon: <IconMaplocation width={28} height={28} /> },
-        { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={28} height={28} /> },
+        // { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={28} height={28} /> },
     ] : [];
 
     // Choose animations based on context - disable animations completely when in BottomNav modal

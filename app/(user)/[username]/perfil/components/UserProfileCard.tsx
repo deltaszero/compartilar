@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignupFormData } from '../types';
 import { useRef, useState } from 'react';
 import { storage } from '@/lib/firebaseConfig';
@@ -184,7 +185,7 @@ export const UserProfileCard = ({
     isSaving?: boolean,
     onToggleEdit?: () => void,
     onSave?: () => void,
-    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+    onChange?: (e: React.ChangeEvent<HTMLInputElement> | { name: string, value: string }) => void
 }) => {
     const displayData = isEditing ? formData : userData;
     
@@ -198,6 +199,12 @@ export const UserProfileCard = ({
             } as React.ChangeEvent<HTMLInputElement>;
             
             onChange(event);
+        }
+    };
+    
+    const handleSelectChange = (name: string, value: string) => {
+        if (onChange) {
+            onChange({ name, value });
         }
     };
     
@@ -261,6 +268,23 @@ export const UserProfileCard = ({
                                 onChange={onChange}
                             />
                         </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="gender">Gênero</Label>
+                            <Select
+                                value={displayData?.gender || ''}
+                                onValueChange={(value) => handleSelectChange('gender', value)}
+                            >
+                                <SelectTrigger id="gender">
+                                    <SelectValue placeholder="Selecione seu gênero" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="male">Masculino</SelectItem>
+                                    <SelectItem value="female">Feminino</SelectItem>
+                                    <SelectItem value="other">Outro</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 ) : (
                     <>
@@ -270,6 +294,12 @@ export const UserProfileCard = ({
                         <p className="text-muted-foreground text-lg mb-3">
                             @{displayData?.username}
                         </p>
+                        {displayData?.gender && (
+                            <Badge variant={null} className="mb-2">
+                                {displayData.gender === 'male' ? 'Masculino' : 
+                                 displayData.gender === 'female' ? 'Feminino' : 'Outro'}
+                            </Badge>
+                        )}
                         {!isOwnProfile && (
                             <Badge variant="default" className="mt-3 px-4 py-1 text-sm">
                                 Perfil Visitante
@@ -280,7 +310,7 @@ export const UserProfileCard = ({
                 
                 {isOwnProfile && !isEditing && (
                     <Button 
-                        className="mt-4 gap-2 rounded-full px-6 font-medium bg-secondaryMain" 
+                        className="mt-4 gap-2 rounded-md px-6 font-medium bg-secondaryMain" 
                         variant="default"
                         onClick={onToggleEdit}
                     >
