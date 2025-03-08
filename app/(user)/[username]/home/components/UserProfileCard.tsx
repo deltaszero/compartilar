@@ -30,6 +30,15 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
     const fetchChildrenStats = async () => {
       if (!userData?.uid) return;
       
+      // Temporarily disable actual database fetching to avoid permission errors
+      setLoading(false);
+      setChildStats({
+        total: 0,
+        asEditor: 0,
+        asViewer: 0
+      });
+      
+      /* 
       try {
         setLoading(true);
         const children = await getUserChildren(userData.uid);
@@ -50,6 +59,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
       } finally {
         setLoading(false);
       }
+      */
     };
 
     fetchChildrenStats();

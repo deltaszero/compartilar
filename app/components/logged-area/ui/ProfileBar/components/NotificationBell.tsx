@@ -22,11 +22,14 @@ export const NotificationBell = () => {
     const { userData } = useUser();
     const dropdownRef = useRef<HTMLDivElement>(null);
     
-    // Load notification count - only from friendship_requests for now
-    // until notifications collection permissions are set up
+    // Load notification count - disabled to prevent permission errors
     useEffect(() => {
         if (!userData?.uid) return;
         
+        // Set count to 0 without querying Firestore
+        setUnreadCount(0);
+        
+        /* Firestore query disabled to prevent permission errors
         const loadUnreadCount = async () => {
             try {
                 // Just count friend requests for now
@@ -51,6 +54,7 @@ export const NotificationBell = () => {
         // Set up an interval to refresh the count every minute
         const interval = setInterval(loadUnreadCount, 60000);
         return () => clearInterval(interval);
+        */
     }, [userData]);
     
     // Load notifications when dropdown is opened
@@ -60,10 +64,14 @@ export const NotificationBell = () => {
         }
     }, [isOpen, userData?.uid]);
     
-    // Load notifications from friend requests
+    // Load notifications from friend requests - disabled to prevent permission errors
     const loadNotifications = async () => {
         if (!userData?.uid) return;
         
+        // Set empty notifications without querying Firestore
+        setNotifications([]);
+        
+        /* Firestore query disabled to prevent permission errors
         try {
             console.log("Loading notifications for user:", userData.uid);
             
@@ -130,6 +138,7 @@ export const NotificationBell = () => {
             // Set empty notifications array to avoid undefined
             setNotifications([]);
         }
+        */
     };
     
     // Mark notification as read - currently just redirects for friend requests
