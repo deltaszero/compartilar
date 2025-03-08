@@ -639,7 +639,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
     ];
     
     return (
-      <div key={friend.id} className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-muted rounded-lg">
+      <div key={friend.id} className="flex flex-row gap-4 items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-muted rounded-lg">
         <Link
           href={`/${friend.username}/perfil`}
           className="flex items-center flex-1 space-x-2 sm:space-x-3 hover:text-accent-foreground transition-colors"
@@ -662,11 +662,13 @@ export const FriendList = ({ userId }: { userId: string }) => {
           )}
           <div className="flex flex-col flex-1">
             <h3 className="font-medium">
-              {friend.displayName || `${friend.firstName} ${friend.lastName}`.trim() || friend.username}
+              {`${friend.firstName} ${friend.lastName}`.trim() || friend.displayName || friend.username }
             </h3>
             <span className="text-sm text-muted-foreground">
               {friend.username ? `@${friend.username}` : ''}
-              {friend.addedAt && friend.addedAt.toDate ? ` • Adicionado em ${friend.addedAt.toDate().toLocaleDateString()}` : ''}
+            </span>
+            <span className="text-sm text-muted-foreground">
+            {friend.addedAt && friend.addedAt.toDate ? `Adicionado em ${friend.addedAt.toDate().toLocaleDateString()}` : ''}
             </span>
           </div>
         </Link>
@@ -693,17 +695,12 @@ export const FriendList = ({ userId }: { userId: string }) => {
                   className="h-8 gap-1 hover:bg-accent"
                   disabled={isUpdating}
                 >
-                  <Badge 
-                    variant={getRelationshipBadgeColor(friend.relationshipType) as any}
-                    className="flex items-center gap-1"
-                  >
                     {isUpdating ? (
                       <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     ) : (
                       getRelationshipDisplay(friend.relationshipType, friend.gender)
                     )}
                     <ChevronDown className="h-3 w-3" />
-                  </Badge>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -773,23 +770,25 @@ export const FriendList = ({ userId }: { userId: string }) => {
             <DialogTitle>
               Gerenciar Acesso às Crianças
             </DialogTitle>
+            <div className="h-[1em]"/>
+            {selectedFriend && (
+              <div className="flex items-center mt-2 mb-4">
+                <Avatar className="h-8 w-8 mr-2">
+                  {selectedFriend.photoURL ? (
+                    <AvatarImage src={selectedFriend.photoURL} alt={selectedFriend.displayName || selectedFriend.username} />
+                  ) : (
+                    <AvatarFallback className="bg-gray-100">
+                      {(selectedFriend.displayName || selectedFriend.username)[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <span className="font-medium">
+                  {selectedFriend.displayName || `${selectedFriend.firstName} ${selectedFriend.lastName}`.trim() || selectedFriend.username}
+                </span>
+              </div>
+            )}
+            <div className="h-[1em]"/>
             <DialogDescription>
-              {selectedFriend && (
-                <div className="flex items-center mt-2 mb-4">
-                  <Avatar className="h-8 w-8 mr-2">
-                    {selectedFriend.photoURL ? (
-                      <AvatarImage src={selectedFriend.photoURL} alt={selectedFriend.displayName || selectedFriend.username} />
-                    ) : (
-                      <AvatarFallback className="bg-gray-100">
-                        {(selectedFriend.displayName || selectedFriend.username)[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <span className="font-medium">
-                    {selectedFriend.displayName || `${selectedFriend.firstName} ${selectedFriend.lastName}`.trim() || selectedFriend.username}
-                  </span>
-                </div>
-              )}
               Defina quais permissões este contato terá para cada criança.
             </DialogDescription>
           </DialogHeader>
