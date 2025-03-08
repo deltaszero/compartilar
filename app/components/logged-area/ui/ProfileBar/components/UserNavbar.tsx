@@ -40,7 +40,7 @@ export const UserNavbar = ({ pathname, onBackClick, userData, onSignOut }: UserN
             
             {/* Right section with user menu and notifications */}
             {userData && (
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-4">
                     <UserMenu 
                         userData={userData} 
                         onSignOut={onSignOut || (() => {})}
