@@ -276,7 +276,7 @@ export default function HomePage() {
                             </section> */}
 
                             {/* SUPPORT NETWORK SECTION */}
-                            {/* <section className="w-full mx-auto p-4">
+                            <section className="w-full mx-auto p-4">
                                 {isMobile ? (
                                     <div className="flex flex-col gap-2 pb-2">
                                         <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
@@ -317,7 +317,7 @@ export default function HomePage() {
                                         <div className="h-0"/>
                                     )}
                                 </div>
-                            </section> */}
+                            </section>
                         </div>
 
                         {/* BROWSER CALENDAR SECTION */}

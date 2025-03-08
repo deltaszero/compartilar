@@ -66,6 +66,13 @@ export const FriendList = ({ userId }: { userId: string }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingRequest, setIsProcessingRequest] = useState<{ [key: string]: boolean }>({});
   const [isUpdatingRelationship, setIsUpdatingRelationship] = useState<{ [key: string]: boolean }>({});
+  // Child permissions state
+  const [isManagingChildAccess, setIsManagingChildAccess] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [userChildren, setUserChildren] = useState<any[]>([]);
+  const [isUpdatingChildAccess, setIsUpdatingChildAccess] = useState<{[key: string]: boolean}>({});
+  
+  // Hooks
   const { userData } = useUser();
   const { toast } = useToast();
 
@@ -472,11 +479,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
     return null;
   };
   
-  // Add function to manage child permissions for a friend
-  const [isManagingChildAccess, setIsManagingChildAccess] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const [userChildren, setUserChildren] = useState<any[]>([]);
-  const [isUpdatingChildAccess, setIsUpdatingChildAccess] = useState<{[key: string]: boolean}>({});
+  // Functions for managing child permissions
   
   // Function to open child permission management modal
   const openChildPermissionManager = async (friend: Friend) => {
