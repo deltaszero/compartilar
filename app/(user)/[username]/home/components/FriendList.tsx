@@ -299,7 +299,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
     return (
       <div className="mb-6 border-2 border-black bg-secondary/10 p-4 rounded-lg">
         <h2 className="text-base sm:text-lg font-semibold mb-3 flex items-center">
-          <span className="mr-2">🔔</span>
+          {/* <span className="mr-2">🔔</span> */}
           Solicitações Pendentes ({pendingRequests.length})
         </h2>
         <div className="grid gap-3">
@@ -322,12 +322,12 @@ export const FriendList = ({ userId }: { userId: string }) => {
                       {request.senderFirstName} {request.senderLastName}
                     </p>
                   )}
-                  {request.relationshipType && (
+                  {/* {request.relationshipType && (
                     <Badge variant="default" className="mt-1">
                       {request.relationshipType === 'coparent' ? 'Co-Parent' :
                         request.relationshipType === 'support' ? 'Apoio' : 'Outro'}
                     </Badge>
-                  )}
+                  )} */}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -336,6 +336,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                   size="sm"
                   onClick={() => handleRequest(request.id, 'accepted')}
                   disabled={isProcessingRequest[request.id]}
+                  className="bg-mainStrongGreen"
                 >
                   {isProcessingRequest[request.id] ? (
                     <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-1" />
@@ -346,6 +347,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                   size="sm"
                   onClick={() => handleRequest(request.id, 'declined')}
                   disabled={isProcessingRequest[request.id]}
+                  className="bg-mainStrongRed"
                 >
                   Recusar
                 </Button>
