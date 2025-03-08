@@ -56,8 +56,13 @@ export default function UserProfilePage() {
 
             // Check if this is the current user's profile
             if (userData?.username === username) {
-                setProfileData(userData);
-                setFormData(userData); // Initialize form data
+                // Type assertion to ensure gender is compatible with SignupFormData
+                const typedUserData = {
+                    ...userData,
+                    gender: (userData.gender as 'male' | 'female' | 'other' | null)
+                };
+                setProfileData(typedUserData);
+                setFormData(typedUserData); // Initialize form data
                 setFriendshipStatus('self');
                 setIsLoading(false);
                 return;
@@ -80,7 +85,15 @@ export default function UserProfilePage() {
 
                 // We'll allow viewing profiles even if not friends, but with limited information
                 // This provides a more user-friendly experience
-                setProfileData(otherUserData);
+                // Type assertion to ensure compatibility with SignupFormData
+                const typedOtherUserData = {
+                    ...otherUserData,
+                    // Only add gender cast if gender exists, otherwise use null
+                    gender: otherUserData && 'gender' in otherUserData
+                           ? (otherUserData.gender as 'male' | 'female' | 'other' | null)
+                           : null
+                } as Partial<SignupFormData>;
+                setProfileData(typedOtherUserData);
                 
                 // Notify user about their relationship status if they're not friends
                 if (status === 'none') {
@@ -122,7 +135,7 @@ export default function UserProfilePage() {
     };
 
     // Handle form input changes
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { name: string, value: string }) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { name: string, value: string }) => {
         if ('target' in e) {
             // Handle standard input changes
             const { name, value } = e.target;

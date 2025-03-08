@@ -73,7 +73,7 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
       
       // Count events for this day 
       const dayEvents = events.filter(event => {
-        const eventDate = event.startTime.toDate();
+        const eventDate = event.startDate.toDate();
         return isSameDay(eventDate, currentDay.toDate());
       });
       
@@ -109,7 +109,7 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
   
   // Get events for the selected day
   const selectedDayEvents = events.filter(event => {
-    const eventDate = event.startTime.toDate();
+    const eventDate = event.startDate.toDate();
     return isSameDay(eventDate, selectedDate.toDate());
   });
   
@@ -117,11 +117,11 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
   const today = dayjs();
   const upcomingEvents = events
     .filter(event => {
-      const eventDate = event.startTime.toDate();
+      const eventDate = event.startDate.toDate();
       const eventDay = dayjs(eventDate);
       return eventDay.isAfter(today, 'day') && eventDay.diff(today, 'day') <= 3;
     })
-    .sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime())
+    .sort((a, b) => a.startDate.toDate().getTime() - b.startDate.toDate().getTime())
     .slice(0, 3);
 
   // Category colors for events
@@ -241,9 +241,9 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
               {selectedDayEvents.map((event) => (
                 <div key={event.id} className="py-1 border-b border-gray-100 last:border-b-0">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${categoryColors[event.category]}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${categoryColors[event.category || 'other']}`}></div>
                     <span className="text-xs font-medium text-gray-500">
-                      {format(event.startTime.toDate(), 'HH:mm')}
+                      {format(event.startDate.toDate(), 'HH:mm')}
                     </span>
                     <span className="text-xs font-bold truncate">{event.title}</span>
                     
@@ -282,14 +282,14 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
               {upcomingEvents.map((event) => (
                 <div key={event.id} className="py-1 border-b border-gray-100 last:border-b-0">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${categoryColors[event.category]}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${categoryColors[event.category || 'other']}`}></div>
                     
                     <span className="text-xs font-medium bg-gray-100 px-1 rounded">
-                      {format(event.startTime.toDate(), 'd MMM', { locale: ptBR })}
+                      {format(event.startDate.toDate(), 'd MMM', { locale: ptBR })}
                     </span>
                     
                     <span className="text-xs font-medium text-gray-500">
-                      {format(event.startTime.toDate(), 'HH:mm')}
+                      {format(event.startDate.toDate(), 'HH:mm')}
                     </span>
                     
                     <span className="text-xs font-bold truncate">{event.title}</span>

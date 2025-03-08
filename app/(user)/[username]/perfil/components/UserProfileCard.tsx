@@ -187,7 +187,7 @@ export const UserProfileCard = ({
     isSaving?: boolean,
     onToggleEdit?: () => void,
     onSave?: () => void,
-    onChange?: (e: React.ChangeEvent<HTMLInputElement> | { name: string, value: string }) => void
+    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { name: string, value: string }) => void
 }) => {
     const displayData = isEditing ? formData : userData;
     const [completionPercentage, setCompletionPercentage] = useState(0);

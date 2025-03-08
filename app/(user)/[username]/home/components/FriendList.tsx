@@ -104,7 +104,9 @@ export const FriendList = ({ userId }: { userId: string }) => {
                 lastName: userData.lastName || friendData.lastName || '',
                 displayName: userData.displayName || friendData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
                 photoURL: userData.photoURL || friendData.photoURL,
-                gender: userData.gender,
+                gender: (userData.gender === 'male' || userData.gender === 'female' || userData.gender === 'other') 
+                      ? userData.gender as 'male' | 'female' | 'other'
+                      : null,
                 relationshipType: friendData.relationshipType || 'other',
                 addedAt: friendData.addedAt || null
               });
@@ -674,7 +676,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
           <div className="flex items-center gap-2">
             {/* Child permissions button */}
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               className="h-8 px-2"
               onClick={() => openChildPermissionManager(friend)}
@@ -686,7 +688,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant="ghost" 
+                  variant="default" 
                   size="sm" 
                   className="h-8 gap-1 hover:bg-accent"
                   disabled={isUpdating}
@@ -817,7 +819,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                         </Avatar>
                         <div>
                           <p className="font-medium">{child.name}</p>
-                          <Badge variant={accessLevel === 'none' ? 'outline' : 'default'} className="mt-1">
+                          <Badge variant={accessLevel === 'none' ? 'default' : 'default'} className="mt-1">
                             {accessLevel === 'editor' ? 'Editor' : 
                              accessLevel === 'viewer' ? 'Visualizador' : 'Sem acesso'}
                           </Badge>
@@ -828,7 +830,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                         <DropdownMenuTrigger asChild>
                           <Button 
                             size="sm" 
-                            variant="outline"
+                            variant="default"
                             disabled={isUpdating}
                             className="ml-2"
                           >

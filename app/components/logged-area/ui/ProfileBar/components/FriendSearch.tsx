@@ -108,8 +108,8 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
             results.sort((a, b) => {
                 const aUsername = a.username.toLowerCase();
                 const bUsername = b.username.toLowerCase();
-                const aDisplayName = a.displayName.toLowerCase();
-                const bDisplayName = b.displayName.toLowerCase();
+                const aDisplayName = a.displayName ? a.displayName.toLowerCase() : aUsername;
+                const bDisplayName = b.displayName ? b.displayName.toLowerCase() : bUsername;
                 
                 // Exact username matches first
                 if (aUsername === searchTermLower && bUsername !== searchTermLower) return -1;
@@ -360,21 +360,21 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                         <p className="text-xs font-medium mb-2">Tipo de relação:</p>
                         <div className="flex flex-wrap gap-2">
                             <Badge 
-                                variant={selectedRelationship === 'support' ? 'default' : 'outline'}
+                                variant={selectedRelationship === 'support' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('support')}
                             >
                                 Rede de Apoio
                             </Badge>
                             <Badge 
-                                variant={selectedRelationship === 'coparent' ? 'default' : 'outline'}
+                                variant={selectedRelationship === 'coparent' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('coparent')}
                             >
                                 Co-Parental
                             </Badge>
                             <Badge 
-                                variant={selectedRelationship === 'other' ? 'default' : 'outline'}
+                                variant={selectedRelationship === 'other' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('other')}
                             >

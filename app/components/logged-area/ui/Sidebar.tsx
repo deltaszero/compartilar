@@ -176,18 +176,18 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                 { path: `/${userData.username}/criancas`, label: 'Crianças' }
             ]
         },
-        {
-            path: `/${userData.username}/plan`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
-            subpages: [
-                { path: `/${userData.username}/plan/resumo`, label: 'Resumo' },
-                { path: `/${userData.username}/plan/form`, label: 'Formulário' },
-            ]
-        },
-        { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
-        { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
-        // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
-        { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={28} height={28} /> },
-        { path: `/${userData.username}/check-in`, label: 'Check-in', icon: <IconMaplocation width={28} height={28} /> },
+        // {
+        //     path: `/${userData.username}/plan`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
+        //     subpages: [
+        //         { path: `/${userData.username}/plan/resumo`, label: 'Resumo' },
+        //         { path: `/${userData.username}/plan/form`, label: 'Formulário' },
+        //     ]
+        // },
+        // { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
+        // { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
+        // // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
+        // { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={28} height={28} /> },
+        // { path: `/${userData.username}/check-in`, label: 'Check-in', icon: <IconMaplocation width={28} height={28} /> },
         // { path: `/${userData.username}/settings`, label: 'Configurações', icon: <IconSettings width={28} height={28} /> },
     ] : [];
 

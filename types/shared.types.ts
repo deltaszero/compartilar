@@ -151,6 +151,7 @@ export interface CalendarEvent {
     isPrivate: boolean;
     checkInRequired?: boolean;
     checkInStatus?: 'pending' | 'completed' | 'missed';
+    responsibleParentId?: string; // Added this property
     createdBy: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;

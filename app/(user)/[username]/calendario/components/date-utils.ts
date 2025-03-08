@@ -23,7 +23,7 @@ export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR
 // Function to get events for a specific day
 export function getEventsForDay(date: Date, events: any[]) {
   return events.filter(event => {
-    const startDate = event.startTime.toDate();
+    const startDate = event.startDate.toDate();
     return isSameDay(date, startDate);
   });
 }

@@ -212,7 +212,7 @@ export default function Calendar({ initialMonth }: CalendarProps) {
   
   const selectedDayEvents = selectedDate 
     ? events.filter(event => {
-        const eventDate = event.startTime.toDate();
+        const eventDate = event.startDate.toDate();
         return isSameDay(eventDate, selectedDate);
       })
     : [];

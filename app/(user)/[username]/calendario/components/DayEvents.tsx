@@ -73,15 +73,15 @@ export function DayEvents({
               <div className="flex justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 sm:gap-2">
-                    <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${categoryColors[event.category]}`}></div>
+                    <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${categoryColors[event.category || 'other']}`}></div>
                     <h4 className="font-bold text-sm sm:text-base truncate">{event.title}</h4>
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-1 mt-1">
                     <Badge variant="default" className="bg-white border-black text-[10px] sm:text-xs">
-                      {format(event.startTime.toDate(), 'HH:mm')}
+                      {format(event.startDate.toDate(), 'HH:mm')}
                       {' - '}
-                      {format(event.endTime.toDate(), 'HH:mm')}
+                      {event.endDate ? format(event.endDate.toDate(), 'HH:mm') : format(event.startDate.toDate(), 'HH:mm')}
                     </Badge>
                     
                     {event.location?.address && (

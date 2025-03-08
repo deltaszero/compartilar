@@ -282,8 +282,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             // First unsubscribe from auth listener
             unsubscribePromise.then(fn => {
                 try {
-                    fn();
-                    console.log("Unsubscribed from auth listener");
+                    if (typeof fn === 'function') {
+                        fn();
+                        console.log("Unsubscribed from auth listener");
+                    } else {
+                        console.log("No auth listener to unsubscribe (not a function)");
+                    }
                 } catch (e) {
                     console.error("Error unsubscribing from auth listener:", e);
                 }

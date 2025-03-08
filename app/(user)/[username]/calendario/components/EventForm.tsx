@@ -49,8 +49,8 @@ export function EventForm({
       
       if (event) {
         // Editing existing event
-        const startDate = event.startTime.toDate();
-        const endDate = event.endTime.toDate();
+        const startDate = event.startDate.toDate();
+        const endDate = event.endDate ? event.endDate.toDate() : event.startDate.toDate();
         
         newFormData = {
           title: event.title,
@@ -62,8 +62,8 @@ export function EventForm({
           location: event.location?.address || "",
           category: event.category,
           childId: event.childId || childrenData[0]?.id || "",
-          responsibleParentId: event.responsibleParentId,
-          checkInRequired: event.checkInRequired
+          responsibleParentId: event.responsibleParentId || userId,
+          checkInRequired: event.checkInRequired || false
         };
       } else {
         // Creating new event

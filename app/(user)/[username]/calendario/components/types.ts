@@ -12,6 +12,7 @@ export interface CalendarDay {
 export interface CalendarEventWithChild extends CalendarEvent {
   childName?: string;
   childPhotoURL?: string;
+  responsibleParentId?: string; // Add the missing property
 }
 
 export interface EventFormData {
