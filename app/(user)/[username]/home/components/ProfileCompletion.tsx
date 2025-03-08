@@ -77,10 +77,10 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
   };
 
   return (
-    <div className="w-full overflow-hidden bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] mb-4">
+    <div className="w-full overflow-hidden bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] my-4">
       <div className="p-4 pb-3">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-semibold">Complete seu perfil - {completionPercentage}%</h3>
+          <h3 className="text-sm font-semibold">Complete seu perfil &nbsp; ({completionPercentage}%)</h3>
           {missingFields.length > 0 && (
             <span className="text-xs text-muted-foreground">
               {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}
@@ -88,7 +88,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
           )}
         </div>
         
-        <Progress value={completionPercentage} className="h-2" />
+        <Progress value={completionPercentage} className="h-4" />
         
         {missingFields.length > 0 && (
           <div className="mt-2 flex justify-between items-center">
@@ -98,12 +98,12 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
             </div>
             
             <Button 
-              variant="ghost" 
+              variant="default" 
               size="sm" 
-              className="h-8 p-0 text-xs"
+              className="h-8 px-4 text-xs"
               onClick={navigateToProfile}
             >
-              Completar <ChevronRight className="ml-1 h-3 w-3" />
+              Completar <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
         )}
