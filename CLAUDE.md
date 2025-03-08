@@ -22,6 +22,13 @@
 - **Performance**: Optimize Firebase queries with proper indexes; use Firestore listeners wisely
 - **Security**: Follow the permission model with viewers/editors arrays in child documents
 
+## Testing & Debugging
+- Add `console.log()` statements strategically with descriptive prefixes
+- Use Firebase Emulator for local testing with `firebase emulators:start`
+- Check browser console and Firebase logs for authentication and Firestore errors
+- Add delay after authentication operations: `await new Promise(resolve => setTimeout(resolve, 2000))`
+- Refresh auth token after signup: `await user.getIdToken(true)`
+
 ## Path Aliases
 The project uses path aliases for cleaner imports:
 - `@/*` - Root directory
