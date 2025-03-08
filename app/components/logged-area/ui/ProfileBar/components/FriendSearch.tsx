@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, UserPlus, X } from "lucide-react";
-import { collection, getDocs, query, where, limit as queryLimit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit as queryLimit, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchResult } from '../types';
@@ -171,8 +171,74 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
             console.log('Sending friend request to:', receiver.uid, 'from:', userData.uid);
             
             // Create a friendship request in a subcollection under users instead of a separate collection
-            // First check if there's an existing request
             const receiverRequestsRef = collection(db, 'users', receiver.uid, 'friendship_requests');
+            
+            // First check if there's an existing pending request from this user
+            const existingRequestQuery = query(
+                receiverRequestsRef,
+                where('senderId', '==', userData.uid),
+                where('status', '==', 'pending')
+            );
+            
+            const existingRequests = await getDocs(existingRequestQuery);
+            
+            // If there's already a pending request, don't create a duplicate
+            if (!existingRequests.empty) {
+                console.log('Pending request already exists, not creating duplicate');
+                toast({
+                    variant: "default",
+                    title: "Solicitação já enviada",
+                    description: "Você já enviou uma solicitação para este usuário"
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
+            
+            // Check if we're already friends
+            const userFriendsRef = collection(db, 'users', userData.uid, 'friends');
+            const friendDocRef = doc(userFriendsRef, receiver.uid);
+            const friendDoc = await getDoc(friendDocRef);
+            
+            if (friendDoc.exists()) {
+                console.log('Already friends, not creating request');
+                toast({
+                    variant: "default",
+                    title: "Já são amigos",
+                    description: "Você e este usuário já são amigos"
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
+            
+            // Also check for incoming friend requests from this user
+            const myRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
+            const incomingRequestQuery = query(
+                myRequestsRef,
+                where('senderId', '==', receiver.uid),
+                where('status', '==', 'pending')
+            );
+            
+            const incomingRequests = await getDocs(incomingRequestQuery);
+            
+            if (!incomingRequests.empty) {
+                console.log('Incoming request found, suggesting to accept it');
+                toast({
+                    variant: "default",
+                    title: "Solicitação pendente",
+                    description: "Esta pessoa já enviou uma solicitação para você. Verifique suas notificações."
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
             
             // Create the request data with minimal required fields
             const requestData = {
