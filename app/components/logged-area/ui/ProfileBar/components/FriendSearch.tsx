@@ -43,23 +43,6 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
         setShowResults(true);
         
         try {
-            // Simulate a search with mock data instead of querying Firestore
-            console.log("Simulating user search for:", searchTerm);
-            
-            // Wait a moment to simulate network request
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Show empty results for now
-            setSearchResults([]);
-            setIsSearching(false);
-            
-            toast({
-                variant: "default", 
-                title: "Busca desativada",
-                description: "A busca foi temporariamente desativada para testes"
-            });
-            
-            /* Firestore query code commented out to prevent permission errors  
             console.log("Loading users for search:", searchTerm);
             const searchTermLower = searchTerm.toLowerCase().trim();
             const usersRef = collection(db, 'users');
@@ -161,8 +144,6 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     description: "Tente outro termo de busca"
                 });
             }
-            */
-            
         } catch (error) {
             console.error('Search error:', error);
             toast({
@@ -187,21 +168,6 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
         setIsSending(prev => ({ ...prev, [receiver.uid]: true }));
         
         try {
-            // Simulate sending a friend request without accessing Firestore
-            console.log('Simulating friend request to:', receiver.uid, 'from:', userData.uid);
-            
-            // Wait to simulate network request
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            toast({
-                title: "Função desativada",
-                description: "As solicitações de amizade estão temporariamente desativadas para testes"
-            });
-            
-            // Update UI
-            setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
-            
-            /* Firestore code commented out to prevent permission errors
             console.log('Sending friend request to:', receiver.uid, 'from:', userData.uid);
             
             // Create a friendship request in a subcollection under users instead of a separate collection
@@ -241,7 +207,6 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                 setSearchResults([]);
                 setShowResults(false);
             }
-            */
         } catch (error) {
             console.error('Error sending friend request:', error);
             if (error instanceof Error) {
