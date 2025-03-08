@@ -135,12 +135,11 @@ export interface ParentalPlan {
 // Calendar-related types
 export interface CalendarEvent {
     id: string;
-    coParentingId: string;
-    childId?: string;
+    childId: string;
     title: string;
     description?: string;
-    startTime: Timestamp;
-    endTime: Timestamp;
+    startDate: Timestamp;
+    endDate?: Timestamp;
     location?: {
         address: string;
         coordinates?: {
@@ -148,13 +147,30 @@ export interface CalendarEvent {
             longitude: number;
         };
     };
-    category: 'school' | 'medical' | 'activity' | 'visitation' | 'other';
-    responsibleParentId: string;
-    checkInRequired: boolean;
+    category?: 'school' | 'medical' | 'activity' | 'visitation' | 'other';
+    isPrivate: boolean;
+    checkInRequired?: boolean;
     checkInStatus?: 'pending' | 'completed' | 'missed';
     createdBy: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
+    updatedBy?: string;
+}
+
+// New subcollection events schema
+export interface ChildEvent extends CalendarEvent {
+    // This extends CalendarEvent with child-specific fields
+    attendees?: string[]; // Optional list of people attending
+    reminder?: {
+        enabled: boolean;
+        reminderTime: number; // minutes before event
+    };
+    recurrence?: {
+        type: 'daily' | 'weekly' | 'monthly' | 'yearly';
+        interval: number; // Every X days/weeks/months/years
+        endDate?: Timestamp;
+        occurrences?: number;
+    };
 }
 
 // Task-related types

@@ -20,7 +20,10 @@ export enum SignupStep {
     VERIFICATION = 'verification'
 }
 
+// Access level for permissions
+export type AccessLevel = 'viewer' | 'editor';
 
+// Updated KidInfo interface with the new permission model
 export interface KidInfo {
     id: string;
     firstName: string;
@@ -42,8 +45,15 @@ export interface KidInfo {
         }[];
     };
     interests?: string[];
-    parentalPlans?: string[]; // Array of parental plan IDs
-    parentId: string; // ID of the parent
+    
+    // New permission model
+    viewers: string[]; // Array of user IDs with view access
+    editors: string[]; // Array of user IDs with edit access
+    createdBy: string; // ID of the creator
+    
+    // Optional metadata for the frontend
+    accessLevel?: AccessLevel; // Not stored in DB, used in frontend
+    
     createdAt?: Timestamp;
     updatedAt?: Timestamp;
 }
@@ -62,6 +72,7 @@ export interface SignupFormData {
     lastName: string;
     phoneNumber: string;
     birthDate: string;
+    gender?: string;
     // New kids field
     kids: Record<string, KidInfo>;
 }
