@@ -32,9 +32,10 @@ npx shadcn@latest add https://neobrutalism.dev/r/carousel.json
 ```
 
 ```error
-In /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/financas/components/CostGroupList.tsx when i delete a group it raises
+Now please change 
 
-Console Error
+- /home/dusoudeth/Documentos/github/compartilar/context/userContext.tsx
+- /home/dusoudeth/Documentos/github/compartilar/lib/firebaseConfig.ts
 
-FirebaseError: Missing or insufficient permissions.
+accordingly the refactor moment of the project
 ```

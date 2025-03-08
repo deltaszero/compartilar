@@ -2,9 +2,9 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useMemo, useContext } from 'react';
-import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener } from '@/app/lib/firebaseConfig';
+import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener, getUserChildren } from '@/app/lib/firebaseConfig';
 import { onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork, or } from 'firebase/firestore';
 import { KidInfo } from '@/types/signup.types';
 
 interface UserData {
@@ -15,8 +15,8 @@ interface UserData {
     lastName?: string;
     phoneNumber?: string;
     birthDate?: string;
+    gender?: string;
     kids?: Record<string, { id: string }>;
-    parentalPlans?: string[]; // Array of parental plan IDs
     createdAt?: typeof serverTimestamp;
     uid: string;
 }
@@ -57,7 +57,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        let unsubscribeAccount: (() => void) | undefined;
+        let unsubscribeUser: (() => void) | undefined;
         let unsubscribeKids: (() => void) | undefined;
 
         // Helper function to clean up Firestore listeners
@@ -66,8 +66,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             markFirestoreListenersInactive();
             
             // Reset local references
-            if (unsubscribeAccount) {
-                unsubscribeAccount = undefined;
+            if (unsubscribeUser) {
+                unsubscribeUser = undefined;
             }
             if (unsubscribeKids) {
                 unsubscribeKids = undefined;
@@ -110,34 +110,40 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     // This ensures Firebase knows the user is authenticated before any Firestore queries
                     await currentUser.getIdTokenResult(true);
                     
-                    // Subscribe to account info using our safe listener manager
-                    const accountRef = doc(db, 'account_info', currentUser.uid);
+                    // Subscribe to user data using our safe listener manager
+                    const userRef = doc(db, 'users', currentUser.uid);
                     
-                    // Create account listener
-                    unsubscribeAccount = addFirestoreListener(
-                        `account_${currentUser.uid}`, 
+                    // Create user listener
+                    unsubscribeUser = addFirestoreListener(
+                        `user_${currentUser.uid}`, 
                         () => {
                             return onSnapshot(
-                                accountRef, 
+                                userRef, 
                                 async (doc) => {
                                     if (!doc.exists()) {
                                         setLoading(false);
                                         return;
                                     }
         
-                                    const accountData = doc.data() as UserData;
+                                    const userData = doc.data() as UserData;
         
                                     // Validate document ownership
-                                    if (accountData.uid !== currentUser.uid) {
+                                    if (userData.uid !== currentUser.uid) {
                                         console.error('Document UID mismatch');
                                         setLoading(false);
                                         return;
                                     }
         
-                                    // Subscribe to children data
+                                    // Subscribe to children data using the new permission model
+                                    const childrenRef = collection(db, 'children');
+                                    
+                                    // Query children where the user has either viewer or editor permission
                                     const kidsQuery = query(
-                                        collection(db, 'children'),
-                                        where('parentId', '==', currentUser.uid)
+                                        childrenRef,
+                                        or(
+                                            where('viewers', 'array-contains', currentUser.uid),
+                                            where('editors', 'array-contains', currentUser.uid)
+                                        )
                                     );
         
                                     // Use safe listener management for kids data too
@@ -146,8 +152,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                         () => {
                                             return onSnapshot(kidsQuery, (snapshot) => {
                                                 const kids = snapshot.docs.reduce((acc, doc) => {
-                                                    const data = doc.data() as KidInfo;
-                                                    acc[doc.id] = data;
+                                                    const kidData = doc.data() as KidInfo;
+                                                    // Add access level information
+                                                    const accessLevel = kidData.editors?.includes(currentUser.uid) 
+                                                        ? 'editor' 
+                                                        : 'viewer';
+                                                    
+                                                    acc[doc.id] = {
+                                                        ...kidData,
+                                                        id: doc.id,
+                                                        accessLevel
+                                                    };
                                                     return acc;
                                                 }, {} as Record<string, KidInfo>);
         
@@ -156,15 +171,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                         }
                                     );
         
-                                    // Merge account data with kids list
-                                    setUserData({
-                                        ...accountData,
-                                        kids: accountData.kids || {}
-                                    });
+                                    // Set user data
+                                    setUserData(userData);
                                     setLoading(false);
                                 },
                                 (error) => {
-                                    console.error('Account info error:', error);
+                                    console.error('User data error:', error);
                                     setLoading(false);
                                 }
                             );

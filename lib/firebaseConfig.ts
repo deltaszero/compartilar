@@ -9,7 +9,22 @@ import {
     markFirestoreListenersInactive,
     markFirestoreListenersActive,
     addFirestoreListener,
-    activeListeners
+    activeListeners,
+    
+    // New schema functions
+    createChild,
+    updateChild,
+    addChildViewer,
+    addChildEditor,
+    removeChildViewer,
+    removeChildEditor,
+    getUserChildren,
+    
+    // Calendar events
+    createCalendarEvent,
+    updateCalendarEvent,
+    deleteCalendarEvent,
+    getChildEvents
 } from '@/app/lib/firebaseConfig';
 
 // Re-export type for compatibility
@@ -26,5 +41,20 @@ export {
     markFirestoreListenersInactive,
     markFirestoreListenersActive,
     addFirestoreListener,
-    activeListeners
+    activeListeners,
+    
+    // New schema functions
+    createChild,
+    updateChild,
+    addChildViewer,
+    addChildEditor,
+    removeChildViewer,
+    removeChildEditor,
+    getUserChildren,
+    
+    // Calendar events
+    createCalendarEvent,
+    updateCalendarEvent,
+    deleteCalendarEvent,
+    getChildEvents
 };
