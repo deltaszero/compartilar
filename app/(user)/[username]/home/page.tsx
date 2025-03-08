@@ -26,10 +26,11 @@ import { CurrentWeek } from "./components/CurrentWeek";
 import { FriendList } from "./components/FriendList";
 import { InvitationDialog } from "./components/InvitationDialog";
 import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
+import ProfileCompletion from "./components/ProfileCompletion";
 
 // Financial analytics
-import { collection, getDocs, query, where } from "firebase/firestore";// import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/app/lib/firebaseConfig";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db, getUserChildren } from "@/app/lib/firebaseConfig";
 import { Expense, Child } from "@/app/(user)/[username]/financas/components/types";
 // import { EXPENSE_CATEGORIES } from "../financas/components/constants";
 
@@ -87,69 +88,88 @@ export default function HomePage() {
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-                // Find cost groups for the user
-                const groupsQuery = query(
-                    collection(db, "cost_groups"),
-                    where("members", "array-contains", userData.uid)
-                );
-                const groupsSnapshot = await getDocs(groupsQuery);
-                const groupIds = groupsSnapshot.docs.map(doc => doc.id);
-
-                // If no groups found, early return
-                if (groupIds.length === 0) {
+                // First, get all children the user has access to
+                const userChildren = await getUserChildren(userData.uid);
+                
+                // If no children found, early return
+                if (userChildren.length === 0) {
                     setLoadingExpenses(false);
                     return;
                 }
-
-                // Query expenses from these groups - without using date filter to avoid requiring a composite index
+                
+                // Extract child IDs
+                const childIds = userChildren.map(child => child.id);
+                
+                // Fetch expense groups for all children
                 let allExpenses: Expense[] = [];
-                for (const groupId of groupIds) {
-                    const expensesQuery = query(
-                        collection(db, "expenses"),
-                        where("groupId", "==", groupId)
-                    );
-
-                    const expensesSnapshot = await getDocs(expensesQuery);
-                    const groupExpenses = expensesSnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    } as Expense))
-                        .filter(expense => {
-                            // Filter by date client-side instead
-                            try {
-                                const expenseDate = expense.date.toDate();
-                                return expenseDate >= thirtyDaysAgo;
-                            } catch (e) {
-                                console.log(e);
-                                console.error("Invalid date format in expense:", expense.id);
-                                return false;
+                
+                // Process each child's expense groups
+                for (const childId of childIds) {
+                    try {
+                        // Query for expense groups related to this child
+                        const expenseGroupsQuery = query(
+                            collection(db, "children", childId, "expenseGroups")
+                        );
+                        
+                        const expenseGroupsSnapshot = await getDocs(expenseGroupsQuery);
+                        
+                        // For each expense group, get the expenses
+                        for (const groupDoc of expenseGroupsSnapshot.docs) {
+                            const groupId = groupDoc.id;
+                            const groupData = groupDoc.data();
+                            
+                            // Check if user has permission to view this group
+                            // If it's a private group, only the creator can see it
+                            if (groupData.isPrivate && groupData.createdBy !== userData.uid) {
+                                continue;
                             }
-                        });
-
-                    allExpenses = [...allExpenses, ...groupExpenses];
-                }
-
-                setExpenses(allExpenses);
-
-                // Transform kids data from userData to the format needed for the charts
-                if (userData.kids) {
-                    interface KidData {
-                        id?: string;
-                        firstName?: string;
-                        lastName?: string;
-                        photoURL?: string;
-                        birthDate?: string;
+                            
+                            // Query for expenses in this group
+                            const expensesQuery = query(
+                                collection(db, "children", childId, "expenseGroups", groupId, "expenses")
+                            );
+                            
+                            const expensesSnapshot = await getDocs(expensesQuery);
+                            
+                            // Add these expenses to our collection
+                            const groupExpenses = expensesSnapshot.docs
+                                .map(doc => ({
+                                    id: doc.id,
+                                    groupId,
+                                    childId,
+                                    ...doc.data()
+                                } as Expense))
+                                .filter(expense => {
+                                    // Filter by date client-side
+                                    try {
+                                        const expenseDate = expense.date.toDate();
+                                        return expenseDate >= thirtyDaysAgo;
+                                    } catch (e) {
+                                        console.error("Invalid date format in expense:", expense.id);
+                                        return false;
+                                    }
+                                });
+                            
+                            allExpenses = [...allExpenses, ...groupExpenses];
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching expense groups for child ${childId}:`, error);
                     }
-
-                    const childrenData = Object.entries(userData.kids as Record<string, KidData>).map(([id, kidData]) => ({
-                        id,
-                        firstName: kidData?.firstName || '',
-                        lastName: kidData?.lastName || '',
-                        photoURL: kidData?.photoURL,
-                        birthDate: kidData?.birthDate || ''
-                    } as Child));
-                    setChildren(childrenData);
                 }
+                
+                setExpenses(allExpenses);
+                
+                // Transform children data from the getUserChildren function
+                const childrenData = userChildren.map(child => ({
+                    id: child.id,
+                    firstName: child.firstName || '',
+                    lastName: child.lastName || '',
+                    photoURL: child.photoURL || undefined,
+                    birthDate: child.birthDate || '',
+                    accessLevel: child.accessLevel
+                } as Child));
+                
+                setChildren(childrenData);
             } catch (error) {
                 console.error("Error loading financial data:", error);
             } finally {
@@ -171,6 +191,8 @@ export default function HomePage() {
                 <div className="flex flex-col relative sm:rounded-none">
                     <section className="flex flex-col ">
                         <UserProfileCard userData={userData} />
+                        {/* Profile completion tracker */}
+                        <ProfileCompletion userData={userData} />
                     </section>
                 </div>
 

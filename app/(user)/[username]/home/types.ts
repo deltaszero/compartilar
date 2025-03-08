@@ -18,6 +18,7 @@ export interface KidInfo {
   gender?: "male" | "female" | "other" | null;
   relationship?: "biological" | "adopted" | "guardian" | null;
   photoURL?: string | null;
+  accessLevel?: "viewer" | "editor";
 }
 
 export interface UserDialogData {

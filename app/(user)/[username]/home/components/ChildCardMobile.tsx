@@ -60,10 +60,15 @@ export const ChildCardMobile = ({ kid }: { kid: KidInfo }) => {
                   <h3 className="text-white font-black text-xl">
                     {kid.firstName}
                   </h3>
-                  {/* <p className="text-white/80 text-xs">
-                    {kid.relationship === 'biological' ? 'Biológico' : 
-                     kid.relationship === 'adopted' ? 'Adotado' : 'Guardião'}
-                  </p> */}
+                  <div className="flex mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      kid.accessLevel === 'editor' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {kid.accessLevel === 'editor' ? 'Editor' : 'Visualizador'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

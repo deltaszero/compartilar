@@ -149,28 +149,15 @@ export default function UserProfilePage() {
             // Exclude sensitive fields from update
             const { password, confirmPassword, uid, username, ...updateData } = formData;
 
-            // Update in both users and account_info collections to ensure consistency
-            const accountRef = doc(db, 'account_info', user.uid);
-            
             const updates = {
                 ...updateData,
                 updatedAt: new Date()
             };
             
-            // First check if the users document exists
+            // Since we now use only the users collection, simply update it directly
             const userRef = doc(db, 'users', user.uid);
-            const userDoc = await getDoc(userRef);
-
-            // Update account_info (which should always exist)
-            await updateDoc(accountRef, updates);
+            await updateDoc(userRef, updates);
             
-            // Only update users collection if the document exists
-            if (userDoc.exists()) {
-                await updateDoc(userRef, updates);
-            } else {
-                console.log("Users document doesn't exist, only updated account_info");
-            }
-
             // Update local state
             setProfileData(formData);
 

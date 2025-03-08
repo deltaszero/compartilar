@@ -55,6 +55,7 @@ export interface Child {
     lastName: string;
     photoURL?: string;
     birthDate: string;
+    accessLevel?: 'viewer' | 'editor';
 }
 
 export interface FinanceUserData {

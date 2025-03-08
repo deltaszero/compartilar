@@ -9,6 +9,9 @@ export interface SignupFormData {
     uid?: string;
     about?: string;
     gender?: 'male' | 'female' | 'other' | null;
+    phoneNumber?: string;
+    birthDate?: string;
+    displayName?: string;
 }
 
 export interface KidInfo {
@@ -19,4 +22,5 @@ export interface KidInfo {
     gender: "male" | "female" | "other" | null;
     relationship: "biological" | "adopted" | "guardian" | null;
     photoURL?: string | null;
+    accessLevel?: "viewer" | "editor";
 }

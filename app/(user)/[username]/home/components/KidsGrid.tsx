@@ -8,24 +8,66 @@ import { ChildCard } from "./ChildCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const fetchChildren = async (parentId: string): Promise<KidInfo[]> => {
-  const q = query(
-    collection(db, "children"),
-    where("parentId", "==", parentId)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      birthDate: data.birthDate,
-      gender: data.gender,
-      relationship: data.relationship,
-      photoURL: data.photoURL || null,
-    };
-  });
+export const fetchChildren = async (userId: string): Promise<KidInfo[]> => {
+  try {
+    // Query children where the user is either a viewer or editor
+    const editorsQuery = query(
+      collection(db, "children"),
+      where("editors", "array-contains", userId)
+    );
+    
+    const viewersQuery = query(
+      collection(db, "children"),
+      where("viewers", "array-contains", userId)
+    );
+    
+    // Execute both queries in parallel
+    const [editorsSnapshot, viewersSnapshot] = await Promise.all([
+      getDocs(editorsQuery),
+      getDocs(viewersQuery)
+    ]);
+    
+    // Track unique children to avoid duplicates
+    const uniqueChildren = new Map();
+    
+    // Process children where user is an editor
+    editorsSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      uniqueChildren.set(doc.id, {
+        id: doc.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate,
+        gender: data.gender,
+        relationship: data.relationship,
+        photoURL: data.photoURL || null,
+        accessLevel: 'editor'
+      });
+    });
+    
+    // Process children where user is a viewer (only add if not already added as editor)
+    viewersSnapshot.docs.forEach(doc => {
+      if (!uniqueChildren.has(doc.id)) {
+        const data = doc.data();
+        uniqueChildren.set(doc.id, {
+          id: doc.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          birthDate: data.birthDate,
+          gender: data.gender, 
+          relationship: data.relationship,
+          photoURL: data.photoURL || null,
+          accessLevel: 'viewer'
+        });
+      }
+    });
+    
+    // Convert Map to array
+    return Array.from(uniqueChildren.values());
+  } catch (error) {
+    console.error("Error fetching children:", error);
+    return [];
+  }
 };
 
 const KidsGrid = ({ parentId }: { parentId: string }) => {

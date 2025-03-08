@@ -40,7 +40,7 @@ export function useProfileEdit(initialData: Partial<SignupFormData>, userId: str
       // Get updatable fields (exclude certain fields like password)
       const { password, confirmPassword, uid, ...updatableData } = formData;
       
-      // Update Firestore document
+      // Update Firestore document - now we only use users collection
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
         ...updatableData,

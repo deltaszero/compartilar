@@ -86,11 +86,18 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
                             <h3 className="text-xl font-bold">{child.firstName} {child.lastName}</h3>
                             <p className="text-sm text-muted-foreground">{getAgeText(child.birthDate)}</p>
                         </div>
-                        {/* {child.gender && (
-                            <Badge variant="default" className="ml-auto">
-                                {getGenderText(child.gender)}
+                        {child.accessLevel && (
+                            <Badge 
+                                variant="default" 
+                                className={`ml-auto ${
+                                    child.accessLevel === 'editor' 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                        : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                }`}
+                            >
+                                {child.accessLevel === 'editor' ? 'Editor' : 'Visualizador'}
                             </Badge>
-                        )} */}
+                        )}
                     </div>
                     
                     {/* <div className="mt-auto pt-2">
@@ -143,14 +150,30 @@ export const ChildrenGrid = ({
             }
             
             try {
-                const q = query(
+                // Query children where the user is either a viewer or editor using the new permission model
+                const editorsQuery = query(
                     collection(db, "children"),
-                    where("parentId", "==", userId)
+                    where("editors", "array-contains", userId)
                 );
-                const snapshot = await getDocs(q);
-                const childrenData = snapshot.docs.map((doc) => {
+                
+                const viewersQuery = query(
+                    collection(db, "children"),
+                    where("viewers", "array-contains", userId)
+                );
+                
+                // Execute both queries in parallel
+                const [editorsSnapshot, viewersSnapshot] = await Promise.all([
+                    getDocs(editorsQuery),
+                    getDocs(viewersQuery)
+                ]);
+                
+                // Track unique children to avoid duplicates
+                const uniqueChildren = new Map();
+                
+                // Process children where user is an editor
+                editorsSnapshot.docs.forEach(doc => {
                     const data = doc.data();
-                    return {
+                    uniqueChildren.set(doc.id, {
                         id: doc.id,
                         firstName: data.firstName,
                         lastName: data.lastName,
@@ -158,10 +181,29 @@ export const ChildrenGrid = ({
                         gender: data.gender,
                         relationship: data.relationship,
                         photoURL: data.photoURL || null,
-                    };
+                        accessLevel: 'editor'
+                    });
                 });
                 
-                setChildren(childrenData);
+                // Process children where user is a viewer (only add if not already added as editor)
+                viewersSnapshot.docs.forEach(doc => {
+                    if (!uniqueChildren.has(doc.id)) {
+                        const data = doc.data();
+                        uniqueChildren.set(doc.id, {
+                            id: doc.id,
+                            firstName: data.firstName,
+                            lastName: data.lastName,
+                            birthDate: data.birthDate,
+                            gender: data.gender,
+                            relationship: data.relationship,
+                            photoURL: data.photoURL || null,
+                            accessLevel: 'viewer'
+                        });
+                    }
+                });
+                
+                // Convert Map to array
+                setChildren(Array.from(uniqueChildren.values()));
             } catch (error) {
                 console.error("Error fetching children:", error);
             } finally {

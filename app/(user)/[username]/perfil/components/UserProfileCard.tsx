@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { SignupFormData } from '../types';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
+import { ChevronRight } from "lucide-react";
 
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -188,6 +190,48 @@ export const UserProfileCard = ({
     onChange?: (e: React.ChangeEvent<HTMLInputElement> | { name: string, value: string }) => void
 }) => {
     const displayData = isEditing ? formData : userData;
+    const [completionPercentage, setCompletionPercentage] = useState(0);
+    const [missingFields, setMissingFields] = useState<string[]>([]);
+    
+    // Calculate profile completion
+    useEffect(() => {
+        if (!userData) {
+            setCompletionPercentage(0);
+            return;
+        }
+
+        // Define fields to check for completion - same as in ProfileCompletion
+        const fields = [
+            { name: 'firstName', label: 'Nome' },
+            { name: 'lastName', label: 'Sobrenome' },
+            { name: 'email', label: 'Email' },
+            { name: 'photoURL', label: 'Foto de perfil' },
+            { name: 'about', label: 'Sobre' },
+            { name: 'gender', label: 'Gênero' },
+            { name: 'phoneNumber', label: 'Telefone' },
+            { name: 'birthDate', label: 'Data de nascimento' }
+        ];
+
+        // Count completed fields
+        const completedFields = fields.filter(field => {
+            const value = userData[field.name as keyof typeof userData];
+            return value !== undefined && value !== null && value !== '';
+        }).length;
+
+        // Calculate percentage
+        const percentage = Math.round((completedFields / fields.length) * 100);
+        setCompletionPercentage(percentage);
+
+        // Get missing fields
+        const missing = fields
+            .filter(field => {
+                const value = userData[field.name as keyof typeof userData];
+                return value === undefined || value === null || value === '';
+            })
+            .map(field => field.label);
+        
+        setMissingFields(missing);
+    }, [userData]);
     
     const handlePhotoUpdate = (url: string) => {
         if (onChange) {
@@ -285,6 +329,41 @@ export const UserProfileCard = ({
                                 </SelectContent>
                             </Select>
                         </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="phoneNumber">Telefone</Label>
+                            <Input 
+                                id="phoneNumber" 
+                                name="phoneNumber" 
+                                type="tel"
+                                placeholder="(00) 00000-0000"
+                                value={displayData?.phoneNumber || ''} 
+                                onChange={onChange}
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="birthDate">Data de nascimento</Label>
+                            <Input 
+                                id="birthDate" 
+                                name="birthDate" 
+                                type="date"
+                                value={displayData?.birthDate || ''} 
+                                onChange={onChange}
+                            />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="about">Sobre mim</Label>
+                            <textarea 
+                                id="about" 
+                                name="about"
+                                className="w-full min-h-[100px] p-2 border rounded-md"
+                                placeholder="Escreva um pouco sobre você..."
+                                value={displayData?.about || ''} 
+                                onChange={onChange}
+                            />
+                        </div>
                     </div>
                 ) : (
                     <>
@@ -294,14 +373,36 @@ export const UserProfileCard = ({
                         <p className="text-muted-foreground text-lg mb-3">
                             @{displayData?.username}
                         </p>
-                        {displayData?.gender && (
-                            <Badge variant={null} className="mb-2">
-                                {displayData.gender === 'male' ? 'Masculino' : 
-                                 displayData.gender === 'female' ? 'Feminino' : 'Outro'}
-                            </Badge>
+                        
+                        <div className="flex flex-wrap justify-center gap-2 mb-3">
+                            {displayData?.gender && (
+                                <Badge variant={null} className="mb-1">
+                                    {displayData.gender === 'male' ? 'Masculino' : 
+                                    displayData.gender === 'female' ? 'Feminino' : 'Outro'}
+                                </Badge>
+                            )}
+                            
+                            {displayData?.birthDate && (
+                                <Badge variant={null} className="mb-1 bg-blue-100 text-blue-800">
+                                    {new Date(displayData.birthDate).toLocaleDateString('pt-BR')}
+                                </Badge>
+                            )}
+                        </div>
+                        
+                        {displayData?.phoneNumber && isOwnProfile && (
+                            <p className="text-sm text-muted-foreground mb-3">
+                                📱 {displayData.phoneNumber}
+                            </p>
                         )}
+                        
+                        {displayData?.about && (
+                            <div className="mt-3 mb-4 p-3 bg-slate-50 rounded-md text-sm text-muted-foreground text-left">
+                                "{displayData.about}"
+                            </div>
+                        )}
+                        
                         {!isOwnProfile && (
-                            <Badge variant="default" className="mt-3 px-4 py-1 text-sm">
+                            <Badge variant="default" className="mt-1 px-4 py-1 text-sm">
                                 Perfil Visitante
                             </Badge>
                         )}
@@ -309,14 +410,39 @@ export const UserProfileCard = ({
                 )}
                 
                 {isOwnProfile && !isEditing && (
-                    <Button 
-                        className="mt-4 gap-2 rounded-md px-6 font-medium bg-secondaryMain" 
-                        variant="default"
-                        onClick={onToggleEdit}
-                    >
-                        <EditIcon className="w-4 h-4" />
-                        Editar Perfil
-                    </Button>
+                    <>
+                        {/* Profile completion section */}
+                        {completionPercentage < 100 && (
+                            <div className="w-full mt-4 mb-2 p-3 border rounded-md">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-sm font-semibold">Complete seu perfil - {completionPercentage}%</h3>
+                                    {missingFields.length > 0 && (
+                                        <span className="text-xs text-muted-foreground">
+                                            {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                
+                                <Progress value={completionPercentage} className="h-2" />
+                                
+                                {missingFields.length > 0 && (
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        {missingFields.slice(0, 3).join(', ')}
+                                        {missingFields.length > 3 && ` e mais ${missingFields.length - 3}...`}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <Button 
+                            className="mt-2 gap-2 rounded-md px-6 font-medium bg-secondaryMain" 
+                            variant="default"
+                            onClick={onToggleEdit}
+                        >
+                            <EditIcon className="w-4 h-4" />
+                            {completionPercentage < 100 ? 'Completar Perfil' : 'Editar Perfil'}
+                        </Button>
+                    </>
                 )}
             </CardContent>
             
