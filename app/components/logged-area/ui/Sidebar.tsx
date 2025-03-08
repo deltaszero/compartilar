@@ -111,10 +111,10 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                 className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-base transition-colors",
                     isActive
-                        ? "bg-main/70 text-main border-l-2 border-border"
+                        ? "bg-main/70 text-main"
                         : isSubpageActive
-                            ? "bg-main/20 text-main border-l border-border/50"
-                            : "text-white hover:bg-main/10 hover:border-l hover:border-border/30"
+                            ? "bg-main/20 text-main"
+                            : "text-white hover:bg-main"
                 )}
             >
                 <div className={cn(
@@ -125,7 +125,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                 </div>
                 <span className={cn(
                     "text-sm",
-                    isActive ? "font-medium" : ""
+                    isActive ? "font-bold" : ""
                 )}>
                     {children}
                 </span>
@@ -145,7 +145,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                                     "block px-2 py-1.5 text-sm transition-colors rounded-base",
                                     isSubActive
                                         ? "bg-main/20 text-white font-medium"
-                                        : "text-white/70 hover:text-white hover:bg-main/10"
+                                        : "text-white/70 hover:text-white hover:bg-main"
                                 )}
                             >
                                 {subpage.label}
