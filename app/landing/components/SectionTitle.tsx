@@ -9,7 +9,7 @@ export default function SectionTitle({ title, className }: SectionTitleProps) {
   return (
     <div
       className={cn(
-        "flex flex-row bg-bg justify-center items-center text-center font-bold text-xl sm:text-4xl",
+        "flex flex-row bg-main justify-center items-center text-center font-bold text-xl sm:text-4xl",
         "py-12 px-4 sm:px-0",
         className
       )}>

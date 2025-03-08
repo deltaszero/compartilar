@@ -29,4 +29,5 @@ export interface SearchResult {
     firstName?: string;
     lastName?: string;
     email?: string;
+    displayName?: string;
 }

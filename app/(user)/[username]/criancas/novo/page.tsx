@@ -503,7 +503,7 @@ export default function AddChildPage() {
               <div className="flex justify-between items-center">
                 <Label className="text-lg font-semibold">Compartilhar Acesso</Label>
                 <Button 
-                  variant="outline" 
+                  variant="default" 
                   size="sm" 
                   onClick={() => setShowFriendSearch(true)}
                 >
@@ -528,21 +528,21 @@ export default function AddChildPage() {
                         </Avatar>
                         <div>
                           <p className="text-sm font-medium">{friend.displayName || friend.username}</p>
-                          <Badge variant={friend.accessLevel === 'editor' ? 'default' : 'outline'}>
+                          <Badge variant={friend.accessLevel === 'editor' ? 'default' : 'default'}>
                             {friend.accessLevel === 'editor' ? 'Editor' : 'Visualizador'}
                           </Badge>
                         </div>
                       </div>
                       <div className="flex space-x-1">
                         <Button 
-                          variant="ghost" 
+                          variant="default" 
                           size="sm" 
                           onClick={() => toggleFriendAccessLevel(friend.uid)}
                         >
                           <UserCog className="h-4 w-4" />
                         </Button>
                         <Button 
-                          variant="ghost" 
+                          variant="default" 
                           size="sm" 
                           onClick={() => removeFriend(friend.uid)}
                         >
@@ -632,7 +632,7 @@ export default function AddChildPage() {
                     </div>
                     <div className="flex space-x-1">
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         size="sm" 
                         className="bg-secondaryMain text-white"
                         onClick={() => addFriend(user, 'editor')}
@@ -640,7 +640,7 @@ export default function AddChildPage() {
                         Editor
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         size="sm"
                         onClick={() => addFriend(user, 'viewer')}
                       >
@@ -662,7 +662,7 @@ export default function AddChildPage() {
           </div>
           
           <DialogFooter className="sm:justify-start">
-            <Button variant="secondary" onClick={() => setShowFriendSearch(false)}>
+            <Button variant="default" onClick={() => setShowFriendSearch(false)}>
               Concluído
             </Button>
           </DialogFooter>

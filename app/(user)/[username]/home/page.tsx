@@ -78,9 +78,16 @@ export default function HomePage() {
         const loadFinancialData = async () => {
             if (!userData || !userData.uid) return;
             
+            // Simulate loading complete without actually querying Firestore
+            setTimeout(() => {
+                setLoadingExpenses(false);
+            }, 1000);
+            
+            // All Firestore queries commented out temporarily
+            /*
             // Wait a moment to ensure authentication is complete
             // This helps prevent Firestore permission errors
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
             setLoadingExpenses(true);
             try {
@@ -175,6 +182,7 @@ export default function HomePage() {
             } finally {
                 setLoadingExpenses(false);
             }
+            */
         };
 
         loadFinancialData();
@@ -200,7 +208,7 @@ export default function HomePage() {
                     <div className="flex flex-col gap-0 sm:gap-4 sm:flex-row">
                         <div className="flex flex-col">
                             {/* KIDS SECTION */}
-                            <section className=" mx-auto p-4">
+                            {/* <section className=" mx-auto p-4">
                                 {isMobile ? (
                                     <div>
                                         <div className="flex flex-col gap-2 pb-2">
@@ -230,15 +238,6 @@ export default function HomePage() {
                                                     sobre seus filhos.
                                                 </p>
                                             </div>
-                                            {/* <Image
-                                                src={familyImg}
-                                                alt="Family"
-                                                priority
-                                                quality={75}
-                                                className="object-contain"
-                                                width={128}
-                                                height={128}
-                                            /> */}
                                         </div>
                                         <div className="bg-base-100 rounded-xl">
                                             <div className="py-4">
@@ -247,10 +246,10 @@ export default function HomePage() {
                                         </div>
                                     </>
                                 )}
-                            </section>
+                            </section> */}
 
                             {/* MOBILE CALENDAR SECTION */}
-                            <section>
+                            {/* <section>
                                 {isMobile ? (
                                     <div className="flex flex-col mx-auto p-4">
                                         <div className="flex flex-col gap-2 pb-2">
@@ -274,7 +273,7 @@ export default function HomePage() {
                                 ) : (
                                     <div className="h-0" />
                                 )}
-                            </section>
+                            </section> */}
 
                             {/* SUPPORT NETWORK SECTION */}
                             <section className="w-full mx-auto p-4">
@@ -293,7 +292,6 @@ export default function HomePage() {
                                     </div>
                                 ) : (
                                     <div>
-                                        {/* Banner/Header */}
                                         <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                             <div className="flex flex-col gap-2 z-10 max-w-[66%]">
                                                 <h2 className="text-2xl sm:text-3xl font-black">
@@ -303,49 +301,19 @@ export default function HomePage() {
                                                     Pessoas queridas que provam que juntos somos mais fortes!
                                                 </p>
                                             </div>
-                                            {/* <Image
-                                                src={supportImg}
-                                                alt="Support Network"
-                                                priority
-                                                quality={75}
-                                                className="object-contain absolute right-0 bottom-0"
-                                                width={isMobile ? 96 : 128}
-                                                height={isMobile ? 96 : 128}
-                                            /> */}
                                         </div>
 
                                     </div>
                                 )}
-                                {/* Content Area */}
                                 <div className="bg-white overflow-hidden border-2 border-black shadow-brutalist">
-                                    {/* Friend List - always visible */}
                                     <div className="p-4">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-lg font-bold tracking-tight">Amigos e Família</h3>
-                                            {/* <Button
-                                                onClick={() => setIsInvitationDialogOpen(true)}
-                                                className="bg-secondaryMain"
-                                                // className="gap-1 rounded-none border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                                size="sm"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
-                                                Convidar
-                                            </Button> */}
                                         </div>
                                         <FriendList userId={userData.uid} />
                                     </div>
 
-                                    {/* Mobile view */}
                                     {isMobile && (
-                                        // <div className="flex justify-center pb-4">
-                                        //     <Link href={`/${userData.username}/rede`}>
-                                        //         <Button variant="default" className="shadow-brutalist">
-                                        //             Ver Rede Completa
-                                        //         </Button>
-                                        //     </Link>
-                                        // </div>
                                         <div className="h-0"/>
                                     )}
                                 </div>
@@ -353,7 +321,7 @@ export default function HomePage() {
                         </div>
 
                         {/* BROWSER CALENDAR SECTION */}
-                        <section className=" w-2/3 mx-auto p-4">
+                        {/* <section className=" w-2/3 mx-auto p-4">
                             {isMobile ? (
                                 <div className="h-0" />
                             ) : (
@@ -368,26 +336,17 @@ export default function HomePage() {
                                                 compartilhada.
                                             </p>
                                         </div>
-                                        {/* <Image
-                                            src={calendarImg}
-                                            alt="Calendar"
-                                            priority
-                                            quality={75}
-                                            className="object-contain"
-                                            width={128}
-                                            height={128}
-                                        /> */}
                                     </div>
                                     <div className="hidden sm:block bg-base-100 rounded-xl py-4">
                                         <Calendar initialMonth={new Date()} />
                                     </div>
                                 </div>
                             )}
-                        </section>
+                        </section> */}
                     </div>
 
                     {/* Invitation Dialog */}
-                    <InvitationDialog
+                    {/* <InvitationDialog
                         isOpen={isInvitationDialogOpen}
                         onClose={() => setIsInvitationDialogOpen(false)}
                         userData={{
@@ -396,9 +355,9 @@ export default function HomePage() {
                             lastName: userData.lastName || '',
                             username: userData.username
                         }}
-                    />
+                    /> */}
 
-                    {/* Financial Analytics Section */}
+                    {/* Financial Analytics Section 
                     <section className="w-full mx-auto p-4 pb-[5em]">
                         {isMobile ? (
                             <div className="flex flex-col gap-2 pb-2">
@@ -427,6 +386,7 @@ export default function HomePage() {
                                 </div>
                             </div>
                         )}
+                        
                         <div className="md:grid md:grid-cols-3 md:gap-4">
                             <HomeFinanceAnalytics
                                 expenses={expenses}
@@ -436,6 +396,7 @@ export default function HomePage() {
                             />
                         </div>
                     </section>
+                    */}
                 </article>
             </div>
             <Toaster />

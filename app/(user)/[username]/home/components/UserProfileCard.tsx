@@ -30,6 +30,15 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
     const fetchChildrenStats = async () => {
       if (!userData?.uid) return;
       
+      // Temporarily disable actual database fetching to avoid permission errors
+      setLoading(false);
+      setChildStats({
+        total: 0,
+        asEditor: 0,
+        asViewer: 0
+      });
+      
+      /* 
       try {
         setLoading(true);
         const children = await getUserChildren(userData.uid);
@@ -50,6 +59,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
       } finally {
         setLoading(false);
       }
+      */
     };
 
     fetchChildrenStats();
@@ -71,7 +81,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
         <div className="text-sm font-semibold">@{userData?.username || ""}</div>
         
         {/* Child statistics */}
-        {!loading && childStats.total > 0 && (
+        {/* {!loading && childStats.total > 0 && (
           <div className="mt-2 text-sm text-muted-foreground">
             <span className="font-medium">{childStats.total} criança{childStats.total !== 1 ? 's' : ''}</span>
             {childStats.asEditor > 0 && (
@@ -82,11 +92,11 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
               </span>
             )}
           </div>
-        )}
+        )} */}
       </div>
       
       {/* Profile Photo */}
-      {userData.photoURL && (
+      {/* {userData.photoURL && (
         <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-border">
           <Image
             src={userData.photoURL}
@@ -95,7 +105,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
             className="object-cover"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };

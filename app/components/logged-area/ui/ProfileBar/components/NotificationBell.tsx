@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { Notification, NotificationType } from '@/types/shared.types';
-import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';// import { collection, getDocs, query, where, limit, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { NotificationItem } from './NotificationItem';
 import {
@@ -29,11 +29,10 @@ export const NotificationBell = () => {
         
         const loadUnreadCount = async () => {
             try {
-                // Just count friend requests for now
-                const friendRequestsRef = collection(db, 'friendship_requests');
+                // Just count friend requests from the subcollection
+                const friendRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
                 const requestsQuery = query(
                     friendRequestsRef,
-                    where('receiverId', '==', userData.uid),
                     where('status', '==', 'pending')
                 );
                 const requestsSnapshot = await getDocs(requestsQuery);
@@ -67,11 +66,10 @@ export const NotificationBell = () => {
         try {
             console.log("Loading notifications for user:", userData.uid);
             
-            // For now, just get friend requests and convert them to notification format
-            const friendRequestsRef = collection(db, 'friendship_requests');
+            // For now, just get friend requests from the subcollection and convert them to notification format
+            const friendRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
             const requestsQuery = query(
                 friendRequestsRef,
-                where('receiverId', '==', userData.uid),
                 where('status', '==', 'pending')
             );
             

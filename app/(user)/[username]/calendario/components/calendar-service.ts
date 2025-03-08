@@ -99,7 +99,7 @@ export async function fetchEvents(
 
     createdBySnapshot.forEach(doc => {
       const eventData = doc.data() as CalendarEvent;
-      const eventStartTime = eventData.startTime.toDate();
+      const eventStartTime = eventData.startDate.toDate();
 
       // Filter by date range
       if (eventStartTime >= startDate && eventStartTime <= endDate) {
@@ -126,7 +126,7 @@ export async function fetchEvents(
 
     responsibleSnapshot.forEach(doc => {
       const eventData = doc.data() as CalendarEvent;
-      const eventStartTime = eventData.startTime.toDate();
+      const eventStartTime = eventData.startDate.toDate();
 
       // Filter by date range
       if (eventStartTime >= startDate && eventStartTime <= endDate) {
@@ -170,8 +170,8 @@ export async function saveEvent(
     const eventData: Partial<CalendarEvent> = {
       title: formData.title,
       description: formData.description,
-      startTime: startTimestamp,
-      endTime: endTimestamp,
+      startDate: startTimestamp,
+      endDate: endTimestamp,
       category: formData.category,
       childId: formData.childId || undefined,
       location: { address: formData.location },

@@ -6,6 +6,7 @@
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run local` - Run development server accessible from other devices on network
+- `firebase emulators:start` - Run Firebase emulators locally for testing
 - `firebase deploy --only firestore:rules` - Deploy Firestore security rules
 - `firebase deploy --only storage:rules` - Deploy Storage rules
 - `firebase deploy --only hosting` - Deploy the application to Firebase Hosting
@@ -13,7 +14,7 @@
 ## Code Style & Conventions
 - **TypeScript**: Use strict typing with proper interfaces/types; define shared types in `/types/` directory
 - **Components**: Use React functional components with hooks; follow separation of concerns
-- **Firebase**: Follow `collection/document/subcollection` pattern; use helper functions from `/app/lib/firebaseConfig.ts`
+- **Firebase**: Follow `collection/document/subcollection` pattern; prefer subcollections over root collections
 - **Imports Order**: React/Next.js core, Firebase, external libraries, internal components, types, styles
 - **Naming**: PascalCase for components, camelCase for variables/functions, snake_case for Firebase collections
 - **CSS**: Use Tailwind CSS utility classes; consistent color scheme using design system variables
@@ -23,11 +24,20 @@
 - **Security**: Follow the permission model with viewers/editors arrays in child documents
 
 ## Testing & Debugging
-- Add `console.log()` statements strategically with descriptive prefixes
+- Add `console.log()` statements strategically with descriptive prefixes for different modules
 - Use Firebase Emulator for local testing with `firebase emulators:start`
 - Check browser console and Firebase logs for authentication and Firestore errors
 - Add delay after authentication operations: `await new Promise(resolve => setTimeout(resolve, 2000))`
 - Refresh auth token after signup: `await user.getIdToken(true)`
+- Properly unsubscribe from Firestore listeners in useEffect cleanup functions
+
+## Firebase Best Practices
+- Use subcollections for user-specific data (friend_requests, notifications, etc.)
+- Properly detach Firestore listeners when components unmount
+- Check for existing data before creating/updating documents to prevent duplicates
+- Implement proper security rules for all collections and subcollections
+- Use batched writes or transactions for related operations
+- Handle concurrent modification with optimistic UI updates
 
 ## Path Aliases
 The project uses path aliases for cleaner imports:

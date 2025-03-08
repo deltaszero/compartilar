@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, UserPlus, X } from "lucide-react";
-import { collection, getDocs, query, where, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit as queryLimit, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/app/lib/firebaseConfig';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SearchResult } from '../types';
@@ -23,7 +23,7 @@ interface FriendSearchProps {
 }
 
 /**
- * FriendSearch component
+ * FriendSearch component - Refactored to use the updated database schema
  */
 export const FriendSearch = ({ userData }: FriendSearchProps) => {
     const { toast } = useToast();
@@ -45,50 +45,71 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
         try {
             console.log("Loading users for search:", searchTerm);
             const searchTermLower = searchTerm.toLowerCase().trim();
-            const usersRef = collection(db, 'account_info');
+            const usersRef = collection(db, 'users');
             const results: SearchResult[] = [];
             const processedUids = new Set<string>(); // Track unique users
             
-            // Get all users to filter client-side (for better partial matching)
-            const allUsersQuery = query(usersRef, limit(100));
-            const allUsersSnapshot = await getDocs(allUsersQuery);
+            // Search by username
+            const usernameQuery = query(
+                usersRef, 
+                where('username', '>=', searchTermLower),
+                where('username', '<=', searchTermLower + '\uf8ff'),
+                queryLimit(20)
+            );
             
-            allUsersSnapshot.forEach(doc => {
-                // Skip current user
-                if (doc.id !== userData?.uid) {
+            // Search by displayName
+            const displayNameQuery = query(
+                usersRef, 
+                where('displayName', '>=', searchTermLower),
+                where('displayName', '<=', searchTermLower + '\uf8ff'),
+                queryLimit(20)
+            );
+            
+            // Search by email
+            const emailQuery = query(
+                usersRef, 
+                where('email', '>=', searchTermLower),
+                where('email', '<=', searchTermLower + '\uf8ff'),
+                queryLimit(20)
+            );
+            
+            // Execute all queries in parallel
+            const [usernameSnapshot, displayNameSnapshot, emailSnapshot] = await Promise.all([
+                getDocs(usernameQuery),
+                getDocs(displayNameQuery),
+                getDocs(emailQuery)
+            ]);
+            
+            // Process all snapshots and combine results
+            const processSnapshot = (snapshot: any) => {
+                snapshot.forEach((doc: any) => {
                     const user = doc.data();
-                    
-                    // Check if any field matches the search term
-                    const username = (user.username || '').toLowerCase();
-                    const firstName = (user.firstName || '').toLowerCase();
-                    const lastName = (user.lastName || '').toLowerCase();
-                    const email = (user.email || '').toLowerCase();
-                    
-                    if (
-                        username.includes(searchTermLower) ||
-                        firstName.includes(searchTermLower) ||
-                        lastName.includes(searchTermLower) ||
-                        email.includes(searchTermLower)
-                    ) {
+                    // Skip current user and already processed users
+                    if (doc.id !== userData?.uid && !processedUids.has(doc.id)) {
+                        processedUids.add(doc.id);
                         results.push({
                             uid: doc.id,
                             username: user.username || '',
                             firstName: user.firstName || '',
                             lastName: user.lastName || '',
                             photoURL: user.photoURL || '',
-                            email: user.email || ''
+                            email: user.email || '',
+                            displayName: user.displayName || user.username || ''
                         });
                     }
-                }
-            });
+                });
+            };
+            
+            processSnapshot(usernameSnapshot);
+            processSnapshot(displayNameSnapshot);
+            processSnapshot(emailSnapshot);
             
             // Sort results by relevance
-            // Exact username matches first, then partial username matches, then name matches, then email matches
             results.sort((a, b) => {
                 const aUsername = a.username.toLowerCase();
                 const bUsername = b.username.toLowerCase();
-                const aFullName = `${a.firstName} ${a.lastName}`.toLowerCase();
-                const bFullName = `${b.firstName} ${b.lastName}`.toLowerCase();
+                const aDisplayName = a.displayName ? a.displayName.toLowerCase() : aUsername;
+                const bDisplayName = b.displayName ? b.displayName.toLowerCase() : bUsername;
                 
                 // Exact username matches first
                 if (aUsername === searchTermLower && bUsername !== searchTermLower) return -1;
@@ -98,15 +119,15 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                 if (aUsername.startsWith(searchTermLower) && !bUsername.startsWith(searchTermLower)) return -1;
                 if (bUsername.startsWith(searchTermLower) && !aUsername.startsWith(searchTermLower)) return 1;
                 
-                // Then full name starts with search term
-                if (aFullName.startsWith(searchTermLower) && !bFullName.startsWith(searchTermLower)) return -1;
-                if (bFullName.startsWith(searchTermLower) && !aFullName.startsWith(searchTermLower)) return 1;
+                // Then displayName matches
+                if (aDisplayName.includes(searchTermLower) && !bDisplayName.includes(searchTermLower)) return -1;
+                if (bDisplayName.includes(searchTermLower) && !aDisplayName.includes(searchTermLower)) return 1;
                 
                 // Alphabetical by username as fallback
                 return aUsername.localeCompare(bUsername);
             });
             
-            // Limit results
+            // Limit results to first 10
             const limitedResults = results.slice(0, 10);
             
             console.log("Search results:", limitedResults);
@@ -123,7 +144,6 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     description: "Tente outro termo de busca"
                 });
             }
-            
         } catch (error) {
             console.error('Search error:', error);
             toast({
@@ -148,25 +168,95 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
         setIsSending(prev => ({ ...prev, [receiver.uid]: true }));
         
         try {
-            // Create a new request document in the 'friendship_requests' collection
+            console.log('Sending friend request to:', receiver.uid, 'from:', userData.uid);
+            
+            // Create a friendship request in a subcollection under users instead of a separate collection
+            const receiverRequestsRef = collection(db, 'users', receiver.uid, 'friendship_requests');
+            
+            // First check if there's an existing pending request from this user
+            const existingRequestQuery = query(
+                receiverRequestsRef,
+                where('senderId', '==', userData.uid),
+                where('status', '==', 'pending')
+            );
+            
+            const existingRequests = await getDocs(existingRequestQuery);
+            
+            // If there's already a pending request, don't create a duplicate
+            if (!existingRequests.empty) {
+                console.log('Pending request already exists, not creating duplicate');
+                toast({
+                    variant: "default",
+                    title: "Solicitação já enviada",
+                    description: "Você já enviou uma solicitação para este usuário"
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
+            
+            // Check if we're already friends
+            const userFriendsRef = collection(db, 'users', userData.uid, 'friends');
+            const friendDocRef = doc(userFriendsRef, receiver.uid);
+            const friendDoc = await getDoc(friendDocRef);
+            
+            if (friendDoc.exists()) {
+                console.log('Already friends, not creating request');
+                toast({
+                    variant: "default",
+                    title: "Já são amigos",
+                    description: "Você e este usuário já são amigos"
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
+            
+            // Also check for incoming friend requests from this user
+            const myRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
+            const incomingRequestQuery = query(
+                myRequestsRef,
+                where('senderId', '==', receiver.uid),
+                where('status', '==', 'pending')
+            );
+            
+            const incomingRequests = await getDocs(incomingRequestQuery);
+            
+            if (!incomingRequests.empty) {
+                console.log('Incoming request found, suggesting to accept it');
+                toast({
+                    variant: "default",
+                    title: "Solicitação pendente",
+                    description: "Esta pessoa já enviou uma solicitação para você. Verifique suas notificações."
+                });
+                
+                // Update UI
+                setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
+                setSearchResults(prev => prev.filter(user => user.uid !== receiver.uid));
+                return;
+            }
+            
+            // Create the request data with minimal required fields
             const requestData = {
                 senderId: userData.uid,
                 receiverId: receiver.uid,
                 status: 'pending',
                 relationshipType: selectedRelationship,
                 createdAt: serverTimestamp(),
-                senderUsername: userData.username,
-                senderPhotoURL: userData.photoURL,
-                senderFirstName: userData?.firstName || '',
-                senderLastName: userData?.lastName || '',
-                receiverUsername: receiver.username,
-                receiverPhotoURL: receiver.photoURL,
-                receiverFirstName: receiver.firstName || '',
-                receiverLastName: receiver.lastName || ''
+                senderUsername: userData.username || '',
+                senderPhotoURL: userData.photoURL || '',
+                receiverUsername: receiver.username || ''
             };
             
-            // Add the request to Firestore - using the CORRECT collection name from the working component
-            await addDoc(collection(db, "friendship_requests"), requestData);
+            console.log('Creating request document with data:', requestData);
+            
+            // Add the request to the receiver's requests subcollection
+            const docRef = await addDoc(receiverRequestsRef, requestData);
+            console.log('Request document created successfully with ID:', docRef.id);
             
             toast({
                 title: "Solicitação enviada",
@@ -185,11 +275,22 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
             }
         } catch (error) {
             console.error('Error sending friend request:', error);
-            toast({
-                variant: "destructive",
-                title: "Erro ao enviar",
-                description: "Não foi possível enviar a solicitação"
-            });
+            if (error instanceof Error) {
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                
+                toast({
+                    variant: "destructive",
+                    title: "Erro ao enviar",
+                    description: `Erro: ${error.message}`
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Erro ao enviar",
+                    description: "Não foi possível enviar a solicitação"
+                });
+            }
             setIsSending(prev => ({ ...prev, [receiver.uid]: false }));
         }
     };
@@ -206,7 +307,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                 <div className="flex items-start relative w-full">
                     <Input
                         type="text"
-                        placeholder="Buscar usuários por nome ou email..."
+                        placeholder="Buscar usuários..."
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -255,32 +356,32 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     }}
                 >
                     {/* Relationship Selection */}
-                    {/* <div className="p-3 border-b border-gray-200 bg-gray-50">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50">
                         <p className="text-xs font-medium mb-2">Tipo de relação:</p>
                         <div className="flex flex-wrap gap-2">
                             <Badge 
-                                variant={selectedRelationship === 'support' ? 'default' : 'neutral'}
+                                variant={selectedRelationship === 'support' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('support')}
                             >
                                 Rede de Apoio
                             </Badge>
                             <Badge 
-                                variant={selectedRelationship === 'coparent' ? 'default' : 'neutral'}
+                                variant={selectedRelationship === 'coparent' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('coparent')}
                             >
                                 Co-Parental
                             </Badge>
                             <Badge 
-                                variant={selectedRelationship === 'other' ? 'default' : 'neutral'}
+                                variant={selectedRelationship === 'other' ? 'default' : 'default'}
                                 className="cursor-pointer"
                                 onClick={() => setSelectedRelationship('other')}
                             >
                                 Outro
                             </Badge>
                         </div>
-                    </div> */}
+                    </div>
                     
                     {/* Results List */}
                     {searchResults.length > 0 ? (
@@ -293,38 +394,36 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10 border border-gray-300">
                                             {result.photoURL ? (
-                                                <AvatarImage src={result.photoURL} alt={result.username} />
+                                                <AvatarImage src={result.photoURL} alt={result.displayName || result.username} />
                                             ) : (
                                                 <AvatarFallback className="bg-gray-100">
-                                                    {result.username && result.username[0] ? result.username[0].toUpperCase() : '?'}
+                                                    {result.displayName?.[0] || result.username?.[0] || '?'}
                                                 </AvatarFallback>
                                             )}
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium">{result.username || 'Usuário'}</p>
-                                            {result.firstName && result.lastName ? (
+                                            <p className="font-medium">{result.displayName || result.username || 'Usuário'}</p>
+                                            {result.username && (
                                                 <p className="text-xs text-gray-500">
-                                                    {result.firstName} {result.lastName}
+                                                    @{result.username}
                                                 </p>
-                                            ) : result.email ? (
-                                                <p className="text-xs text-gray-500">{result.email}</p>
-                                            ) : null}
+                                            )}
                                         </div>
                                     </div>
                                     <Button
-                                        variant="default"
-                                        size="sm"
-                                        className="gap-1"
-                                        onClick={() => sendFriendRequest(result)}
-                                        disabled={isSending[result.uid]}
-                                    >
-                                        {isSending[result.uid] ? (
-                                            <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                                        ) : (
-                                            <UserPlus className="h-4 w-4" />
-                                        )}
-                                        <span>Adicionar</span>
-                                    </Button>
+                                            variant="default"
+                                            size="sm"
+                                            className="gap-1"
+                                            onClick={() => sendFriendRequest(result)}
+                                            disabled={isSending[result.uid]}
+                                        >
+                                            {isSending[result.uid] ? (
+                                                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                            ) : (
+                                                <UserPlus className="h-4 w-4" />
+                                            )}
+                                            <span>Adicionar</span>
+                                        </Button>
                                 </div>
                             ))}
                         </div>
@@ -336,7 +435,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     ) : (
                         <div className="p-8 text-center">
                             <p className="text-gray-500">Nenhum usuário encontrado</p>
-                            <p className="text-sm text-gray-400 mt-1">Tente buscar pelo nome, sobrenome, usuário ou email</p>
+                            <p className="text-sm text-gray-400 mt-1">Tente buscar pelo nome de usuário ou nome completo</p>
                         </div>
                     )}
                 </div>

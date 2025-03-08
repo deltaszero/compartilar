@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import SectionTitle from "../SectionTitle";
+// import SectionTitle from "../SectionTitle";
 import ConceptContent from "./ConceptContent";
 import TeseImagesStack from "./TeseImagesStack";
 import { ConceptSectionProps } from "./types";
@@ -8,8 +8,8 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
   return (
     <>
       {/* Descomplique Section */}
-      <section className="w-full bg-bg px-4 sm:px-6 lg:px-8 pb-[6em]" id="descomplique">
-        <div className="max-w-6xl mx-auto">
+      <section className="px-4 sm:px-[8em] bg-main pb-12" id="descomplique">
+        <div className="sm:w-3/4 mx-auto">
           <div className="flex justify-center py-12">
             <h2 className={cn(
               "bg-black text-white inline-block shadow-[5px_5px_0px_0px_rgba(0,0,0,0.3)]",
@@ -27,7 +27,7 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
       </section>
 
       {/* Organize Section */}
-      <section className="w-full bg-white px-4 sm:px-6 lg:px-8 py-[4em]" id="organize">
+      {/* <section className="w-full bg-white px-4 sm:px-6 lg:px-8 py-[4em]" id="organize">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center pb-8">
             <h2 className={cn(
@@ -41,10 +41,10 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
             Mantenha todas as informações importantes dos seus filhos organizadas e acessíveis.
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* Proteja Section */}
-      <section className="w-full bg-bg px-4 sm:px-6 lg:px-8 py-[4em]" id="proteja">
+      {/* <section className="w-full bg-bg px-4 sm:px-6 lg:px-8 py-[4em]" id="proteja">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center pb-8">
             <h2 className={cn(
@@ -58,10 +58,10 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
             Seus dados são protegidos com a mais alta segurança, permitindo compartilhamento controlado.
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* Despreocupe-se Section */}
-      <section className="w-full bg-white px-4 sm:px-6 lg:px-8 py-[4em]" id="despreocupe-se">
+      {/* <section className="w-full bg-white px-4 sm:px-6 lg:px-8 py-[4em]" id="despreocupe-se">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center pb-8">
             <h2 className={cn(
@@ -75,7 +75,7 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
             A gente lembra você de tudo o que precisa ser feito para garantir o bem-estar dos seus filhos.
           </p>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }
