@@ -300,15 +300,41 @@ export default function ChildDetailPage() {
       // PART 2: Try to add history entry, but don't block the main flow if it fails
       // This part is executed after the main update has succeeded
       try {
-        // Calculate fields that actually changed (not just form fields)
-        const actualChangedFields = Object.keys(cleanEditedData).filter(key => 
-          key !== 'updatedAt' && key !== 'updatedBy'
-        );
+        // Calculate fields that actually changed by comparing values
+        const actualChangedFields = Object.keys(cleanEditedData).filter(key => {
+          // Skip system fields
+          if (key === 'updatedAt' || key === 'updatedBy') return false;
+          
+          // Compare values - only include if they actually changed
+          const oldValue = childData[key as keyof typeof childData];
+          const newValue = cleanEditedData[key];
+          
+          // Handle different value types - perform deep comparison for objects
+          return JSON.stringify(oldValue) !== JSON.stringify(newValue);
+        });
         
         if (actualChangedFields.length === 0) {
           console.log("No actual fields changed, skipping history entry");
           return; // No need to add history for metadata-only changes
         }
+        
+        // Field name mapping for human-readable field names
+        const fieldNameMapping: Record<string, string> = {
+          firstName: "Nome",
+          lastName: "Sobrenome",
+          birthDate: "Data de Nascimento",
+          gender: "Gênero",
+          relationship: "Relacionamento",
+          notes: "Anotações",
+          photoURL: "Foto",
+          schoolName: "Escola",
+          interests: "Interesses"
+        };
+        
+        // Get human-readable field names for display
+        const humanReadableFields = actualChangedFields.map(field => 
+          fieldNameMapping[field] || field
+        );
         
         // Get old values
         const oldValues = actualChangedFields.reduce((acc, field) => {
@@ -322,21 +348,27 @@ export default function ChildDetailPage() {
           return acc;
         }, {} as Record<string, any>);
         
+        // Create a human-readable description with field names
+        const readableDescription = `Atualizou ${humanReadableFields.length === 1 
+          ? humanReadableFields[0] 
+          : `${humanReadableFields.length} campos: ${humanReadableFields.join(', ')}`}`;
+        
         // Create history entry - this might fail due to permission issues, and that's OK
         console.log("Attempting to add history entry...");
         const historyRef = collection(db, 'children', childData.id, 'change_history');
         
         try {
-          // Add the history entry
+          // Add the history entry with human-readable field names
           const historyDoc = await addDoc(historyRef, {
             timestamp: serverTimestamp(),
             userId: user.uid,
             userName: userData?.displayName || userData?.username,
             action: 'update',
             fields: actualChangedFields,
+            fieldLabels: humanReadableFields, // Store human-readable field names
             oldValues,
             newValues,
-            description: changeDescription
+            description: readableDescription // Use our new human-readable description
           });
           
           console.log("History entry added successfully with ID:", historyDoc.id);
@@ -583,6 +615,61 @@ export default function ChildDetailPage() {
     } finally {
       setHistoryLoading(false);
     }
+  };
+  
+  // Helper function to get human-readable field names
+  const getHumanReadableFieldName = (field: string): string => {
+    const fieldNameMapping: Record<string, string> = {
+      firstName: "Nome",
+      lastName: "Sobrenome",
+      birthDate: "Data de Nascimento",
+      gender: "Gênero",
+      relationship: "Relacionamento",
+      notes: "Anotações",
+      photoURL: "Foto",
+      schoolName: "Escola",
+      interests: "Interesses"
+    };
+    return fieldNameMapping[field] || field;
+  };
+  
+  // Helper function to format field values for display
+  const formatFieldValue = (field: string, value: any): string => {
+    if (value === null || value === undefined) return 'Não definido';
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+    
+    // Format specific field types
+    if (field === 'birthDate') {
+      try {
+        return format(new Date(value), 'dd/MM/yyyy');
+      } catch (e) {
+        return String(value);
+      }
+    }
+    
+    if (field === 'gender') {
+      const genderMap: Record<string, string> = {
+        'male': 'Menino',
+        'female': 'Menina',
+        'other': 'Outro'
+      };
+      return genderMap[value] || String(value);
+    }
+    
+    if (field === 'relationship') {
+      const relationshipMap: Record<string, string> = {
+        'biological': 'Biológico(a)',
+        'adopted': 'Adotivo(a)',
+        'guardian': 'Sob Guarda'
+      };
+      return relationshipMap[value] || String(value);
+    }
+    
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    
+    return String(value);
   };
   
   // Helper to create sample history data when needed
@@ -1106,13 +1193,16 @@ export default function ChildDetailPage() {
                                 <div className="mt-1 space-y-1 pl-2 border-l-2 border-muted">
                                   {entry.fields.map(field => (
                                     <div key={field} className="pt-0.5">
-                                      <div className="font-medium">{field}:</div>
+                                      {/* Use fieldLabels if available, otherwise use the raw field name */}
+                                      <div className="font-medium">
+                                        {entry.fieldLabels?.[entry.fields.indexOf(field)] || getHumanReadableFieldName(field)}:
+                                      </div>
                                       <div className="grid grid-cols-2 gap-1 mt-0.5">
                                         <div className="text-muted-foreground">
-                                          <span>Antes:</span> {JSON.stringify(entry.oldValues?.[field])}
+                                          <span>Antes:</span> {formatFieldValue(field, entry.oldValues?.[field])}
                                         </div>
                                         <div>
-                                          <span className="text-muted-foreground">Depois:</span> {JSON.stringify(entry.newValues?.[field])}
+                                          <span className="text-muted-foreground">Depois:</span> {formatFieldValue(field, entry.newValues?.[field])}
                                         </div>
                                       </div>
                                     </div>

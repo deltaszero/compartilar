@@ -41,6 +41,7 @@ export interface ChangeHistoryEntry {
     userName?: string;
     action: 'create' | 'update' | 'delete' | 'permission_add' | 'permission_remove';
     fields: string[];
+    fieldLabels?: string[];  // Human-readable field names
     oldValues?: Record<string, any>;
     newValues?: Record<string, any>;
     description?: string;

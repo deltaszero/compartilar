@@ -27,6 +27,7 @@ import { FriendList } from "./components/FriendList";
 import { InvitationDialog } from "./components/InvitationDialog";
 import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
 import ProfileCompletion from "./components/ProfileCompletion";
+import { PremiumFeatureShowcase } from "./components/PremiumFeatureShowcase";
 
 // Financial analytics
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -201,6 +202,10 @@ export default function HomePage() {
                         <UserProfileCard userData={userData} />
                         {/* Profile completion tracker */}
                         <ProfileCompletion userData={userData} />
+                        {/* Premium features showcase */}
+                        <div className="px-4 sm:px-0">
+                            <PremiumFeatureShowcase />
+                        </div>
                     </section>
                 </div>
 
