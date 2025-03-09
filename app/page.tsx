@@ -5,10 +5,11 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import Hero from "./landing/components/Hero";
 import Features from "./landing/components/Features";
-import FeatureScreenshots from "./landing/components/FeatureScreenshots";
+// import FeatureScreenshots from "./landing/components/FeatureScreenshots";
 import ConceptSection from "./landing/components/ConceptSection";
 import ImageModal from "./landing/components/ImageModal";
-import Analytics, { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
+import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
+import { ImageSource } from "@/types/imageTypes";
 
 export default function LandingPage() {
     const router = useRouter();
@@ -16,7 +17,8 @@ export default function LandingPage() {
     const featuresRef = useRef<HTMLDivElement>(null);
     const heroRef = useRef<HTMLDivElement>(null);
     const [imageModalOpen, setImageModalOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<{ src: any; alt: string } | null>(null);
+    const [selectedImage, setSelectedImage] = useState<ImageSource | null>(null);
+
 
     // Track screen size
     useEffect(() => {
@@ -61,12 +63,12 @@ export default function LandingPage() {
         }
     };
 
-    const openImageModal = (image: any, alt: string) => {
+    const openImageModal = (image: ImageSource) => {
         trackEvent(AnalyticsEventType.SECTION_VIEW, {
             content_type: 'image',
-            content_name: alt
+            content_name: image.alt || 'Untitled Image'
         });
-        setSelectedImage({ src: image, alt });
+        setSelectedImage(image);
         setImageModalOpen(true);
     };
 
@@ -91,7 +93,7 @@ export default function LandingPage() {
             />
 
             {/* FEATURE SCREENSHOTS SECTION */}
-            <FeatureScreenshots/>
+            {/* <FeatureScreenshots/> */}
 
             {/* PLANO PARENTAL SCIENTIFIC CONCEPT SECTION */}
             <ConceptSection

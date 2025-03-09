@@ -14,7 +14,8 @@ import { useRef, useState, useEffect } from 'react';
 import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
-import { ChevronRight } from "lucide-react";
+// import { ChevronRight } from "lucide-react";
+import IconCamera from '@/app/assets/icons/camera.svg';
 
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -131,7 +132,8 @@ export const AvatarSection = ({
                         <AvatarImage src={photoURL} alt={`${firstName || 'User'}'s avatar`} />
                     ) : (
                         <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-4xl font-bold">
-                            {firstName?.charAt(0)}{lastName?.charAt(0)}
+                            {/* {firstName?.charAt(0)}{lastName?.charAt(0)} */}
+                            <IconCamera width={64} height={64} />
                         </AvatarFallback>
                     )}
                 </Avatar>

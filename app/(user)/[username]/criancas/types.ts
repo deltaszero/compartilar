@@ -6,8 +6,13 @@ export interface KidInfo {
   gender: "male" | "female" | "other" | null;
   relationship: "biological" | "adopted" | "guardian" | null;
   photoURL?: string | null;
-  parentId: string;
+  parentId?: string; // Marked as optional since we're transitioning to viewers/editors model
   notes?: string;
+  // Permission arrays for the new access model
+  viewers?: string[];
+  editors?: string[];
+  // Optional access level for frontend use
+  accessLevel?: 'viewer' | 'editor';
   medicalInfo?: {
     allergies?: string[];
     conditions?: string[];

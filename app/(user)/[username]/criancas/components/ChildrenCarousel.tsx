@@ -105,7 +105,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
       {isOwnChildren && children.length > 0 && (
         <div className="flex justify-end mb-2">
           <Link href={`/${username}/criancas/novo`}>
-            <Button variant="default" size="sm">
+            <Button variant="default" size="sm" className='bg-mainStrongGreen'>
               <Plus className="h-4 w-4 mr-2" />
               Adicionar criança
             </Button>

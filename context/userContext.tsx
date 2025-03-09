@@ -7,6 +7,15 @@ import { onAuthStateChanged, User, setPersistence, browserLocalPersistence } fro
 import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork, or } from 'firebase/firestore';
 import { KidInfo } from '@/types/signup.types';
 
+interface SubscriptionData {
+    active: boolean;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    plan: 'free' | 'premium';
+    status?: string;
+    updatedAt?: string;
+}
+
 interface UserData {
     username: string;
     email: string;
@@ -19,6 +28,7 @@ interface UserData {
     kids?: Record<string, { id: string }>;
     createdAt?: typeof serverTimestamp;
     uid: string;
+    subscription?: SubscriptionData;
 }
 
 interface UserContextType {

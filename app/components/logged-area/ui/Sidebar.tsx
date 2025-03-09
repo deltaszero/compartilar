@@ -8,6 +8,8 @@ import { useUser } from '@context/userContext';
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWindowSize } from '@/hooks/useWindowSize';
+import { SubscriptionButton } from './SubscriptionButton';
+import { Sparkles } from 'lucide-react';
 
 // importing assets
 import IconMeuLar from '@assets/icons/icon_meu_lar.svg';
@@ -166,6 +168,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
     const pathname = usePathname();
     const { width } = useWindowSize();
     const isMobile = isBottomNavModal || (width ? width < 768 : false);
+    const hasActiveSubscription = userData?.subscription?.active;
 
     // If userData is not available yet, don't try to construct nav items with undefined values
     const navItems = (userData && userData.username) ? [
@@ -215,7 +218,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                 animate={isBottomNavModal ? false : "visible"}
                 variants={containerVariants}
                 className={cn(
-                    "flex flex-col",
+                    "flex flex-col flex-1",
                     isMobile ? "p-2" : "px-3 py-1"
                 )}
             >
@@ -251,6 +254,19 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                     </motion.div>
                 )}
             </motion.div>
+
+            {/* Subscription Button at the bottom of sidebar */}
+            {!isMobile && !loading && !hasActiveSubscription && (
+                <div className="mt-auto px-4 py-4 border-t border-border/30">
+                    <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium text-white/80">Desbloqueie recursos premium</span>
+                            <Sparkles className="w-4 h-4 text-yellow-400" />
+                        </div>
+                        <SubscriptionButton />
+                    </div>
+                </div>
+            )}
         </nav>
     );
 }

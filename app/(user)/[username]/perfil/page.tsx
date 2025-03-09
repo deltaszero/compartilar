@@ -78,10 +78,17 @@ export default function UserProfilePage() {
                     return;
                 }
 
-                // Check friendship status
-                const status = await checkFriendshipStatus(user.uid, otherUserData.uid);
-                console.log(`Friendship status for ${username}: ${status}`);
-                setFriendshipStatus(status);
+                try {
+                    // Check friendship status
+                    const status = await checkFriendshipStatus(user.uid, otherUserData.uid);
+                    console.log(`Friendship status for ${username}: ${status}`);
+                    setFriendshipStatus(status);
+                } catch (error) {
+                    console.error('Error checking friendship status:', error);
+                    // Default to 'none' if there's an error checking friendship status
+                    // This ensures the user can still view the public profile
+                    setFriendshipStatus('none');
+                }
 
                 // We'll allow viewing profiles even if not friends, but with limited information
                 // This provides a more user-friendly experience

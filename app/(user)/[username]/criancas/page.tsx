@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/userContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, checkFriendshipStatus } from '@/lib/firebaseConfig';
+import { db, checkFriendshipStatus, getUserChildren } from '@/lib/firebaseConfig';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { toast } from '@/hooks/use-toast';
@@ -72,19 +72,19 @@ export default function ChildrenPage() {
                     }
                 }
 
-                // Fetch children data
-                const childrenRef = collection(db, 'children');
-                const childrenQuery = query(childrenRef, where('parentId', '==', targetUserId));
-                const childrenSnapshot = await getDocs(childrenQuery);
-
-                const childrenData = childrenSnapshot.docs.map(doc => {
+                // Fetch children data using the getUserChildren function
+                // This function handles permission logic by querying based on viewers/editors arrays
+                const childrenData = await getUserChildren(targetUserId);
+                
+                // Convert the data to match our KidInfo interface
+                const formattedChildrenData = childrenData.map(child => {
                     return {
-                        id: doc.id,
-                        ...doc.data()
+                        id: child.id,
+                        ...child
                     } as KidInfo;
                 });
 
-                setChildren(childrenData);
+                setChildren(formattedChildrenData);
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error);
