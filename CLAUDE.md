@@ -62,5 +62,21 @@ The project uses path aliases for cleaner imports:
 - Storage rules in `storage.rules` - manage access to profile and children photos
 - All operations require authentication by default
 - Children data access controlled by viewers/editors arrays in child documents
+- The `change_history` subcollection requires special rules allowing editors to read history entries
 - Private events only visible to creators
 - Expense groups can be shared or private
+
+### Firestore Rule for change_history Subcollection
+```
+match /children/{childId} {
+  // Main document rules here...
+  
+  // Change history subcollection
+  match /change_history/{historyId} {
+    allow read: if request.auth != null && 
+                (resource.data.userId == request.auth.uid || 
+                 get(/databases/$(database)/documents/children/$(childId)).data.editors.hasAny([request.auth.uid]));
+    // Only system operations can write to history (client-side writes are not allowed)
+    allow write: if false;
+  }
+}

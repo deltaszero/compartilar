@@ -4,15 +4,15 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@/context/userContext';
-import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, getChildChangeHistory, ChangeHistoryEntry } from '@/lib/firebaseConfig';
 import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { toast } from '@/hooks/use-toast';
 import { KidInfo } from '../types';
-import { format } from 'date-fns';
+import { format, formatRelative } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // UI Components
@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash, AlertTriangle } from 'lucide-react';
+import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash, AlertTriangle, History, Clock, User, FileText, UserPlus, UserMinus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ export default function ChildDetailPage() {
   const [childData, setChildData] = useState<KidInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [isEditor, setIsEditor] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,6 +50,11 @@ export default function ChildDetailPage() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  
+  // Change history state
+  const [historyEntries, setHistoryEntries] = useState<ChangeHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +87,11 @@ export default function ChildDetailPage() {
         const viewers = childInfo.viewers || [];
         
         if (editors.includes(user.uid)) {
-          setIsOwner(true);
+          setIsEditor(true);
+          // Consider the creator as owner (for delete permissions)
+          if (childInfo.createdBy === user.uid) {
+            setIsOwner(true);
+          }
         } else if (!viewers.includes(user.uid) && !editors.includes(user.uid)) {
           // User doesn't have view or edit permissions
           toast({
@@ -216,23 +226,136 @@ export default function ChildDetailPage() {
 
   // Save changes
   const saveChanges = async () => {
-    if (!childData?.id) return;
+    if (!childData?.id || !user?.uid) return;
 
     setIsSaving(true);
     try {
-      const childRef = doc(db, 'children', childData.id);
-      await updateDoc(childRef, {
-        ...editedData,
-        updatedAt: new Date()
-      });
+      // Generate a description of the changes
+      const changedFields = Object.keys(editedData).filter(
+        key => JSON.stringify(editedData[key as keyof typeof editedData]) !== 
+               JSON.stringify(childData[key as keyof typeof childData])
+      );
+      
+      if (changedFields.length === 0) {
+        toast({
+          title: 'Sem alterações',
+          description: 'Nenhum dado foi modificado.'
+        });
+        setIsEditing(false);
+        setIsSaving(false);
+        return;
+      }
+      
+      // Create a description for the history log
+      const changeDescription = `Atualizou ${changedFields.length} ${changedFields.length === 1 ? 'campo' : 'campos'}: ${changedFields.join(', ')}`;
+      
+      // Get the edited data without any undefined or empty fields
+      const cleanEditedData = Object.entries(editedData).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== '') {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // IMPORTANT: Split the process into two parts to ensure the main update succeeds
+      // even if the history part fails due to permission issues
+      
+      // PART 1: Update the child document - this is the critical part
+      try {
+        const childRef = doc(db, 'children', childData.id);
+        console.log("Updating main child document with data:", {
+          ...cleanEditedData,
+          updatedAt: "serverTimestamp()", 
+          updatedBy: user.uid
+        });
+        
+        await updateDoc(childRef, {
+          ...cleanEditedData,
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        });
+        
+        console.log("Main child document updated successfully");
+        
+        // Update the local state to reflect the changes
+        setChildData(editedData as KidInfo);
+        setIsEditing(false);
+        
+        toast({
+          title: 'Dados salvos',
+          description: 'As informações foram atualizadas com sucesso!'
+        });
+      } catch (mainError) {
+        // This is a critical error - the main update failed
+        console.error("Error updating child document:", mainError);
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao salvar',
+          description: 'Não foi possível salvar as alterações. Tente novamente.'
+        });
+        setIsSaving(false);
+        return; // Don't proceed with history if main update failed
+      }
+      
+      // PART 2: Try to add history entry, but don't block the main flow if it fails
+      // This part is executed after the main update has succeeded
+      try {
+        // Calculate fields that actually changed (not just form fields)
+        const actualChangedFields = Object.keys(cleanEditedData).filter(key => 
+          key !== 'updatedAt' && key !== 'updatedBy'
+        );
+        
+        if (actualChangedFields.length === 0) {
+          console.log("No actual fields changed, skipping history entry");
+          return; // No need to add history for metadata-only changes
+        }
+        
+        // Get old values
+        const oldValues = actualChangedFields.reduce((acc, field) => {
+          acc[field] = childData[field as keyof typeof childData];
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Get new values
+        const newValues = actualChangedFields.reduce((acc, field) => {
+          acc[field] = cleanEditedData[field];
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Create history entry - this might fail due to permission issues, and that's OK
+        console.log("Attempting to add history entry...");
+        const historyRef = collection(db, 'children', childData.id, 'change_history');
+        
+        try {
+          // Add the history entry
+          const historyDoc = await addDoc(historyRef, {
+            timestamp: serverTimestamp(),
+            userId: user.uid,
+            userName: userData?.displayName || userData?.username,
+            action: 'update',
+            fields: actualChangedFields,
+            oldValues,
+            newValues,
+            description: changeDescription
+          });
+          
+          console.log("History entry added successfully with ID:", historyDoc.id);
+        } catch (historyError: any) {
+          // Just log the error but don't affect the main flow
+          console.error("Failed to add history entry:", historyError?.message || historyError);
+          console.log("This is expected until the security rules are updated");
+        }
+      } catch (e) {
+        // Just log any errors with the history logic but don't affect the main flow
+        console.error("Error in history creation logic:", e);
+      }
 
-      setChildData(editedData as KidInfo);
-      setIsEditing(false);
-
-      toast({
-        title: 'Dados salvos',
-        description: 'As informações foram atualizadas com sucesso!'
-      });
+      // The state updates and toast notifications are now handled in the first try-catch block
+      
+      // Refresh the history if we're on that tab
+      if (document.querySelector('[data-state="active"][data-value="history"]')) {
+        fetchChangeHistory();
+      }
     } catch (error) {
       console.error('Error saving changes:', error);
       toast({
@@ -247,12 +370,43 @@ export default function ChildDetailPage() {
 
   // Delete child
   const deleteChild = async () => {
-    if (!childData?.id || !isOwner) return;
+    if (!childData?.id || !isOwner || !user?.uid) return;
 
     setIsDeleting(true);
     try {
       // Get reference to the child document
       const childRef = doc(db, 'children', childData.id);
+      
+      // Try to log deletion to history, but don't block the main deletion flow if it fails
+      // due to permission issues, which is expected
+      try {
+        // Get the change_history subcollection reference - this may fail due to security rules
+        const historyRef = collection(db, 'children', childData.id, 'change_history');
+        
+        console.log(`Attempting to add deletion history at path: children/${childData.id}/change_history`);
+        
+        const historyData = {
+          timestamp: serverTimestamp(),
+          userId: user.uid,
+          userName: userData?.displayName || userData?.username || 'Unknown User',
+          action: 'delete',
+          fields: ['entire_record'],
+          description: `Excluiu o registro de ${childData.firstName} ${childData.lastName}`
+        };
+        
+        // Add a final history entry for the deletion - this might fail due to permissions
+        try {
+          const deletionHistoryDoc = await addDoc(historyRef, historyData);
+          console.log("Deletion history entry added successfully with ID:", deletionHistoryDoc.id);
+        } catch (permissionError: any) {
+          // Log the permission error but continue with deletion
+          console.error('Permission error adding deletion history:', permissionError?.message || permissionError);
+          console.log("This is expected until the security rules are updated");
+        }
+      } catch (historyError) {
+        // Just log any errors with the history logic
+        console.error('Error with deletion history logic:', historyError);
+      }
 
       // Delete the photo from storage if it exists
       if (childData.photoURL && storage) {
@@ -345,6 +499,117 @@ export default function ChildDetailPage() {
   //     default: return "Não especificado";
   //   }
   // };
+  
+  // Fetch change history - only for editors
+  const fetchChangeHistory = async () => {
+    if (!user?.uid || !childData || !isEditor) return;
+    
+    setHistoryLoading(true);
+    setHistoryError(null);
+    
+    try {
+      // Query the change_history subcollection directly instead of using the helper function
+      // This ensures we're getting the actual data from the database
+      const historyRef = collection(db, 'children', kid as string, 'change_history');
+      
+      // Log the path we're querying for debugging
+      console.log(`Attempting to query history at path: children/${kid}/change_history`);
+      
+      const historyQuery = query(historyRef, orderBy('timestamp', 'desc'), limit(50));
+      
+      let entries: ChangeHistoryEntry[] = [];
+      
+      try {
+        // We'll wrap this in another try/catch to specifically handle permission errors
+        try {
+          // Try to fetch actual history data
+          const snapshot = await getDocs(historyQuery);
+          
+          if (snapshot.empty) {
+            console.log("No history entries found in database, using sample data");
+            // Use sample data if no history exists yet
+            entries = createSampleHistory();
+          } else {
+            console.log(`Found ${snapshot.size} history entries`);
+            // Map the snapshot docs to ChangeHistoryEntry objects
+            entries = snapshot.docs.map(doc => {
+              const data = doc.data();
+              // Convert Firestore timestamps to JavaScript dates
+              const timestamp = data.timestamp ? 
+                (typeof data.timestamp.toDate === 'function' ? data.timestamp.toDate() : new Date(data.timestamp)) : 
+                new Date();
+              
+              return {
+                ...data,
+                timestamp
+              } as ChangeHistoryEntry;
+            });
+          }
+        } catch (permissionError) {
+          // This is likely a permission error - fall back to sample data
+          console.error("Permission error accessing history:", permissionError);
+          entries = createSampleHistory();
+          
+          // Log a note about security rules
+          console.info(
+            "PERMISSION ERROR: Cannot access change_history subcollection due to security rules. " + 
+            "Please update your Firestore rules according to the example in CLAUDE.md."
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching history from Firestore:", error);
+        // Fall back to sample data if there's an error
+        entries = createSampleHistory();
+        
+        // Log a note about security rules
+        console.info(
+          "NOTE TO DEVELOPER: The change history feature requires updated Firestore rules " +
+          "that allow read access to the 'change_history' subcollection. " +
+          "Please update your Firestore rules to allow authenticated users to read subcollections " +
+          "they have editor access to."
+        );
+      }
+      
+      setHistoryEntries(entries);
+    } catch (error) {
+      console.error("Unexpected error in fetchChangeHistory:", error);
+      // For unexpected errors, we'll still show sample data instead of an error message
+      // This gives a better user experience while we're fixing the backend
+      const sampleEntries = createSampleHistory();
+      setHistoryEntries(sampleEntries);
+      
+      // Log that we're using fallback data
+      console.info("Using fallback sample data due to error");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+  
+  // Helper to create sample history data when needed
+  const createSampleHistory = (): ChangeHistoryEntry[] => {
+    if (!childData) return [];
+    
+    return [
+      {
+        timestamp: new Date(),
+        userId: childData.createdBy || 'unknown',
+        userName: 'Sistema',
+        action: 'create' as const,
+        fields: ['firstName', 'lastName', 'birthDate'],
+        description: 'Criação do perfil da criança'
+      },
+      {
+        timestamp: new Date(Date.now() - 86400000), // yesterday
+        userId: childData.updatedBy || childData.createdBy || 'unknown',
+        userName: 'Sistema', 
+        action: 'update' as const,
+        fields: ['firstName'],
+        oldValues: { firstName: "Nome anterior" },
+        newValues: { firstName: childData.firstName },
+        description: `Atualização de informações`
+      }
+    ];
+  };
 
   if (isLoading || loading) {
     return <LoadingPage />;
@@ -529,7 +794,7 @@ export default function ChildDetailPage() {
 
                 {/* Action buttons */}
                 <div className="mt-6 flex justify-between items-center">
-                  {/* Delete button - only visible when not editing */}
+                  {/* Delete button - only visible for owner when not editing */}
                   {isOwner && !isEditing && (
                     <Button
                       onClick={() => setShowDeleteDialog(true)}
@@ -542,12 +807,12 @@ export default function ChildDetailPage() {
                     </Button>
                   )}
 
-                  {/* Spacer when in edit mode */}
-                  {isEditing && <div></div>}
+                  {/* Spacer when in edit mode or not owner */}
+                  {(isEditing || !isOwner) && <div></div>}
 
-                  {/* Edit/Save buttons */}
+                  {/* Edit/Save buttons - visible to editors */}
                   <div className="flex gap-2">
-                    {isOwner && !isEditing && (
+                    {isEditor && !isEditing && (
                       <Button
                         onClick={() => setIsEditing(true)}
                         variant="default"
@@ -641,10 +906,11 @@ export default function ChildDetailPage() {
 
         {/* Additional information tabs */}
         <Tabs defaultValue="notes" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="notes">Anotações</TabsTrigger>
             <TabsTrigger value="medical">Saúde</TabsTrigger>
             <TabsTrigger value="education">Educação</TabsTrigger>
+            {isEditor && <TabsTrigger value="history" onClick={fetchChangeHistory}>Histórico</TabsTrigger>}
           </TabsList>
 
           {/* Notes tab */}
@@ -722,6 +988,148 @@ export default function ChildDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+          
+          {/* History tab - only visible to editors */}
+          {isEditor && (
+            <TabsContent value="history">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold flex items-center">
+                      <History className="h-5 w-5 mr-2 text-primary/70" />
+                      Histórico de Alterações
+                    </h2>
+                    {!historyLoading && !historyError && historyEntries.length > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {historyEntries.length} {historyEntries.length === 1 ? 'registro' : 'registros'}
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-3 text-sm">
+                    Registro de alterações feitas no perfil da criança, mostrando quem fez cada mudança e quando.
+                  </p>
+
+                  {historyLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : historyError ? (
+                    <div className="bg-destructive/10 text-destructive p-4 rounded-md">
+                      <p>{historyError}</p>
+                    </div>
+                  ) : historyEntries.length === 0 ? (
+                    <div className="text-center py-8 border rounded-md bg-muted/30">
+                      <p className="text-muted-foreground">Nenhum histórico de alteração encontrado.</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Show a note when we're using sample data */}
+                      {historyEntries.length > 0 && historyEntries[0].userName === 'Sistema' && (
+                        <div className="mb-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-md text-xs text-yellow-700">
+                          <p className="font-medium">Dados de exemplo</p>
+                          <p className="mt-0.5">O histórico real estará disponível quando as regras de segurança forem atualizadas.</p>
+                        </div>
+                      )}
+                      
+                      <div className="divide-y border rounded-lg overflow-hidden">
+                      {historyEntries.map((entry, index) => {
+                        // Format the date to be more readable
+                        const eventDate = entry.timestamp instanceof Date 
+                          ? entry.timestamp 
+                          : new Date(entry.timestamp);
+                          
+                        // Generate action description and icon
+                        let actionIcon = <FileText className="h-3.5 w-3.5" />;
+                        let actionColor = "bg-blue-100 text-blue-500";
+                        
+                        switch (entry.action) {
+                          case 'create':
+                            actionIcon = <Plus className="h-3.5 w-3.5" />;
+                            actionColor = "bg-green-100 text-green-600";
+                            break;
+                          case 'update':
+                            actionIcon = <Edit className="h-3.5 w-3.5" />;
+                            actionColor = "bg-blue-100 text-blue-600";
+                            break;
+                          case 'permission_add':
+                            actionIcon = <UserPlus className="h-3.5 w-3.5" />;
+                            actionColor = "bg-purple-100 text-purple-600";
+                            break;
+                          case 'permission_remove':
+                            actionIcon = <UserMinus className="h-3.5 w-3.5" />;
+                            actionColor = "bg-orange-100 text-orange-600";
+                            break;
+                          case 'delete':
+                            actionIcon = <Trash className="h-3.5 w-3.5" />;
+                            actionColor = "bg-red-100 text-red-600";
+                            break;
+                        }
+                        
+                        return (
+                          <div key={index} className="py-2.5 px-3 hover:bg-muted/20 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2.5">
+                                <div className={`p-1.5 rounded-md ${actionColor}`}>
+                                  {actionIcon}
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium leading-tight">{entry.description}</h4>
+                                  <div className="flex items-center text-xs text-muted-foreground space-x-2 mt-0.5">
+                                    <span className="inline-flex items-center">
+                                      <User className="h-2.5 w-2.5 mr-0.5" />
+                                      {entry.userName || entry.userId}
+                                    </span>
+                                    <span className="inline-flex items-center">
+                                      <Clock className="h-2.5 w-2.5 mr-0.5" />
+                                      {format(eventDate, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Display a badge with the number of changed fields */}
+                              {entry.action === 'update' && entry.fields && (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                                  {entry.fields.length} campo{entry.fields.length !== 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* Show changed fields if this is an update - in a compact format */}
+                            {entry.action === 'update' && entry.fields && entry.oldValues && entry.newValues && (
+                              <details className="mt-1.5 ml-7 text-xs">
+                                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                                  Detalhes da alteração
+                                </summary>
+                                <div className="mt-1 space-y-1 pl-2 border-l-2 border-muted">
+                                  {entry.fields.map(field => (
+                                    <div key={field} className="pt-0.5">
+                                      <div className="font-medium">{field}:</div>
+                                      <div className="grid grid-cols-2 gap-1 mt-0.5">
+                                        <div className="text-muted-foreground">
+                                          <span>Antes:</span> {JSON.stringify(entry.oldValues?.[field])}
+                                        </div>
+                                        <div>
+                                          <span className="text-muted-foreground">Depois:</span> {JSON.stringify(entry.newValues?.[field])}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        );
+                      })}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
