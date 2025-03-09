@@ -5,7 +5,7 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import Hero from "./landing/components/Hero";
 import Features from "./landing/components/Features";
-import FeatureScreenshots from "./landing/components/FeatureScreenshots";
+// import FeatureScreenshots from "./landing/components/FeatureScreenshots";
 import ConceptSection from "./landing/components/ConceptSection";
 import ImageModal from "./landing/components/ImageModal";
 import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
@@ -93,7 +93,7 @@ export default function LandingPage() {
             />
 
             {/* FEATURE SCREENSHOTS SECTION */}
-            <FeatureScreenshots/>
+            {/* <FeatureScreenshots/> */}
 
             {/* PLANO PARENTAL SCIENTIFIC CONCEPT SECTION */}
             <ConceptSection

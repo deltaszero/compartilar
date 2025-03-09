@@ -8,28 +8,28 @@ export const features = [
     id: "descomplique",
     title: "Descomplique",
     description:
-      "a convivência através da criação e do gerenciamento de planos de parentalidade individualizados para cada filho.",
+      "Crie planos parentais personalizados que definem claramente responsabilidades, horários de visitas e regras importantes para cada filho.",
     img: feature_image_01,
   },
   {
     id: "organize",
     title: "Organize",
     description:
-      "e centralize em um só lugar as informações que mais importam quando seus filhos vivem em mais de um lar.",
+      "Centralize informações médicas, escolares e pessoais dos seus filhos em um único sistema seguro, acessível por ambos os pais a qualquer momento, de qualquer dispositivo.",
     img: feature_image_02,
   },
   {
     id: "proteja",
     title: "Proteja",
     description:
-      "as informações dos seus filhos e garanta que elas sejam acessadas apenas por quem você autorizar.",
+      "Controle total sobre quem acessa as informações dos seus filhos. Seus dados só são compartilhados com quem você autorizar.",
       img: feature_image_03,
   },
   {
     id: "despreocupe-se",
     title: "Despreocupe-se",
     description:
-      "que a gente lembra você de tudo o que precisa ser feito para garantir o bem-estar dos seus filhos.",
+      "Nunca mais esqueça consultas médicas, reuniões escolares ou atividades importantes. Nosso sistema envia notificações personalizadas para garantir que nada passe despercebido.",
     img: feature_image_04,
   },
 ];

@@ -8,14 +8,14 @@ export default function ConceptSection({ onGetStartedClick, openImageModal }: Co
   return (
     <>
       {/* Descomplique Section */}
-      <section className="px-4 sm:px-[8em] bg-main pb-12" id="descomplique">
+      <section className="px-4 sm:px-[8em] bg-bg pb-12" id="descomplique">
         <div className="sm:w-3/4 mx-auto">
           <div className="flex justify-center py-12">
             <h2 className={cn(
               "bg-black text-white inline-block shadow-[5px_5px_0px_0px_rgba(0,0,0,0.3)]",
               "px-6 py-3 text-xl sm:text-4xl font-bold",
             )}>
-              O conceito de plano parental
+              Mais de 10 anos de experiência em um aplicativo
             </h2>
           </div>
           

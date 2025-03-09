@@ -35,7 +35,7 @@ export default function FeatureScreenshots() {
                         "px-6 py-3 text-xl sm:text-4xl font-bold",
                         "text-center"
                     )}>
-                        Mais de 10 anos de experiência em 1 aplicativo
+                        Mais de 10 anos de experiência em um aplicativo
                     </h2>
                 </div>
                 <div className="flex flex-col sm:flex-row-reverse gap-12 justify-center items-center">
