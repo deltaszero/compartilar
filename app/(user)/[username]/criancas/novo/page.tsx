@@ -310,12 +310,16 @@ export default function AddChildPage() {
             // Create child using the updated method with permission model
             const childWithData = {
                 ...childData,
+                // Add the viewers and editors arrays explicitly
+                viewers: viewers,
+                editors: editors,
                 // Remove any undefined or empty values
                 ...(childData.schoolName ? { schoolName: childData.schoolName } : {}),
                 ...(childData.relationship ? { relationship: childData.relationship } : {}),
                 ...(childData.photoURL ? { photoURL: childData.photoURL } : {})
             };
 
+            console.log("Creating child with data:", JSON.stringify(childWithData));
             const newChild = await createChild(childWithData, user.uid);
 
             toast({

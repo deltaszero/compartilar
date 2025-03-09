@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
+import { getUserChildren } from "@/lib/firebaseConfig";
 import { KidInfo } from '../types';
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +58,7 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
     };
 
     return (
-        <Card className="overflow-hidden bg-card shadow-md rounded-xl border-2 border-border hover:shadow-lg transition-shadow">
+        <Card className="overflow-hidden bg-card shadow-md rounded-xl border-2 border-border hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex flex-col sm:flex-row">
                 <div className="relative sm:w-32 h-32 sm:h-auto bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-border">
                     {child.photoURL ? (
@@ -99,12 +98,6 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
                             </Badge>
                         )}
                     </div>
-                    
-                    {/* <div className="mt-auto pt-2">
-                        <p className="text-xs text-muted-foreground border-t border-border pt-2">
-                            {getRelationshipText(child.relationship)}
-                        </p>
-                    </div> */}
                 </div>
             </div>
         </Card>
@@ -150,62 +143,26 @@ export const ChildrenGrid = ({
             }
             
             try {
-                // Query children where the user is either a viewer or editor using the new permission model
-                const editorsQuery = query(
-                    collection(db, "children"),
-                    where("editors", "array-contains", userId)
-                );
+                // Use the getUserChildren function which properly handles permissions
+                const childrenData = await getUserChildren(userId);
                 
-                const viewersQuery = query(
-                    collection(db, "children"),
-                    where("viewers", "array-contains", userId)
-                );
+                // Format the children data for display
+                const formattedChildren = childrenData.map(child => ({
+                    id: child.id,
+                    firstName: child.firstName || '',
+                    lastName: child.lastName || '',
+                    birthDate: child.birthDate || '',
+                    gender: child.gender || null,
+                    relationship: child.relationship || null,
+                    photoURL: child.photoURL || null,
+                    accessLevel: child.accessLevel || 'viewer'
+                }));
                 
-                // Execute both queries in parallel
-                const [editorsSnapshot, viewersSnapshot] = await Promise.all([
-                    getDocs(editorsQuery),
-                    getDocs(viewersQuery)
-                ]);
-                
-                // Track unique children to avoid duplicates
-                const uniqueChildren = new Map();
-                
-                // Process children where user is an editor
-                editorsSnapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    uniqueChildren.set(doc.id, {
-                        id: doc.id,
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        birthDate: data.birthDate,
-                        gender: data.gender,
-                        relationship: data.relationship,
-                        photoURL: data.photoURL || null,
-                        accessLevel: 'editor'
-                    });
-                });
-                
-                // Process children where user is a viewer (only add if not already added as editor)
-                viewersSnapshot.docs.forEach(doc => {
-                    if (!uniqueChildren.has(doc.id)) {
-                        const data = doc.data();
-                        uniqueChildren.set(doc.id, {
-                            id: doc.id,
-                            firstName: data.firstName,
-                            lastName: data.lastName,
-                            birthDate: data.birthDate,
-                            gender: data.gender,
-                            relationship: data.relationship,
-                            photoURL: data.photoURL || null,
-                            accessLevel: 'viewer'
-                        });
-                    }
-                });
-                
-                // Convert Map to array
-                setChildren(Array.from(uniqueChildren.values()));
+                setChildren(formattedChildren);
             } catch (error) {
                 console.error("Error fetching children:", error);
+                // Set empty array on error
+                setChildren([]);
             } finally {
                 setLoading(false);
             }
@@ -257,7 +214,9 @@ export const ChildrenGrid = ({
                 {children.length > 0 ? (
                     <div className="grid gap-4 md:grid-cols-2">
                         {children.map((child) => (
-                            <ChildCard key={child.id} child={child} />
+                            <Link href={`/${username}/criancas/${child.id}`} key={child.id} className="block hover:transform hover:scale-[1.01] transition-transform">
+                                <ChildCard child={child} />
+                            </Link>
                         ))}
                     </div>
                 ) : (

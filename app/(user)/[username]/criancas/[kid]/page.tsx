@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@/context/userContext';
 import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db, checkFriendshipStatus } from '@/lib/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import LoadingPage from '@/app/components/LoadingPage';
@@ -76,21 +76,21 @@ export default function ChildDetailPage() {
         setChildData(childInfo);
         setEditedData(childInfo);
 
-        // Check if user is the owner
-        if (childInfo.parentId === user.uid) {
+        // Check if user is the owner or has editor permissions
+        const editors = childInfo.editors || [];
+        const viewers = childInfo.viewers || [];
+        
+        if (editors.includes(user.uid)) {
           setIsOwner(true);
-        } else {
-          // Check friendship status
-          const status = await checkFriendshipStatus(user.uid, childInfo.parentId);
-          if (status === 'none') {
-            toast({
-              variant: 'destructive',
-              title: 'Acesso negado',
-              description: 'Você não tem permissão para ver esta informação.'
-            });
-            // router.push(`${username}/home`);
-            return;
-          }
+        } else if (!viewers.includes(user.uid) && !editors.includes(user.uid)) {
+          // User doesn't have view or edit permissions
+          toast({
+            variant: 'destructive',
+            title: 'Acesso negado',
+            description: 'Você não tem permissão para ver esta informação.'
+          });
+          router.push(`/${username}/home`);
+          return;
         }
 
         setIsLoading(false);
