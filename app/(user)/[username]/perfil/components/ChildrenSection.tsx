@@ -36,27 +36,27 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
         }
     };
 
-    const getRelationshipText = (relationship: string | null) => {
-        if (!relationship) return "Relação não especificada";
+    // const getRelationshipText = (relationship: string | null) => {
+    //     if (!relationship) return "Relação não especificada";
         
-        switch (relationship) {
-            case "biological": return "Filho(a) Biológico(a)";
-            case "adopted": return "Filho(a) Adotivo(a)";
-            case "guardian": return "Sob Guarda";
-            default: return "Relação não especificada";
-        }
-    };
+    //     switch (relationship) {
+    //         case "biological": return "Filho(a) Biológico(a)";
+    //         case "adopted": return "Filho(a) Adotivo(a)";
+    //         case "guardian": return "Sob Guarda";
+    //         default: return "Relação não especificada";
+    //     }
+    // };
 
-    const getGenderText = (gender: string | null) => {
-        if (!gender) return "";
+    // const getGenderText = (gender: string | null) => {
+    //     if (!gender) return "";
         
-        switch (gender) {
-            case "male": return "Menino";
-            case "female": return "Menina";
-            case "other": return "";
-            default: return "";
-        }
-    };
+    //     switch (gender) {
+    //         case "male": return "Menino";
+    //         case "female": return "Menina";
+    //         case "other": return "";
+    //         default: return "";
+    //     }
+    // };
 
     return (
         <Card className="overflow-hidden bg-card shadow-md rounded-xl border-2 border-border hover:shadow-lg transition-shadow cursor-pointer">
@@ -126,7 +126,10 @@ export const ChildrenGrid = ({
     const [children, setChildren] = useState<KidInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const { username } = useParams<{ username: string }>();
-    const { user } = useUser();
+    const { user, userData } = useUser();
+    
+    // Get the current user's username (for navigation)
+    const currentUserUsername = userData?.username || '';
 
     // Determine if the current user has permission to view children
     const canViewChildren = isOwnProfile || 
@@ -237,7 +240,11 @@ export const ChildrenGrid = ({
                 {children.length > 0 ? (
                     <div className="grid gap-4 md:grid-cols-2">
                         {children.map((child) => (
-                            <Link href={`/${username}/criancas/${child.id}`} key={child.id} className="block hover:transform hover:scale-[1.01] transition-transform">
+                            <Link 
+                                href={`/${currentUserUsername}/criancas/${child.id}`} 
+                                key={child.id} 
+                                className="block hover:transform hover:scale-[1.01] transition-transform"
+                            >
                                 <ChildCard child={child} />
                             </Link>
                         ))}
@@ -249,7 +256,7 @@ export const ChildrenGrid = ({
             {children.length > 0 && isOwnProfile && (
                 <CardFooter className="flex justify-center border-t border-border pt-4">
                     <Link href={`/${username}/criancas`}>
-                        <Button variant="default" className="rounded-full">
+                        <Button variant="default" className="rounded-md">
                             Gerenciar Crianças
                         </Button>
                     </Link>
