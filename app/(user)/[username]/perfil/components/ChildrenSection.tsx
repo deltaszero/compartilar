@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getUserChildren } from "@/lib/firebaseConfig";
+import { useUser } from '@/context/userContext';
 import { KidInfo } from '../types';
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,14 +61,14 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
     return (
         <Card className="overflow-hidden bg-card shadow-md rounded-xl border-2 border-border hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex flex-col sm:flex-row">
-                <div className="relative sm:w-32 h-32 sm:h-auto bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-border">
+                <div className="relative sm:h-32 sm:h-auto bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-border">
                     {child.photoURL ? (
                         <Image
                             src={child.photoURL}
                             alt={`${child.firstName}'s photo`}
                             width={256}
                             height={256}
-                            className="w-full h-full object-fill"
+                            className="w-full h-full object-fill "
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -125,6 +126,7 @@ export const ChildrenGrid = ({
     const [children, setChildren] = useState<KidInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const { username } = useParams<{ username: string }>();
+    const { user } = useUser();
 
     // Determine if the current user has permission to view children
     const canViewChildren = isOwnProfile || 
@@ -143,8 +145,29 @@ export const ChildrenGrid = ({
             }
             
             try {
-                // Use the getUserChildren function which properly handles permissions
-                const childrenData = await getUserChildren(userId);
+                // Get the current user's ID
+                const currentUserId = user?.uid || '';
+                
+                if (!currentUserId) {
+                    console.error("Current user ID not available");
+                    setLoading(false);
+                    return;
+                }
+                
+                console.log(`Fetching children for profile ${userId}, current user: ${currentUserId}`);
+                console.log(`Relationship status: ${friendshipStatus}, isOwnProfile: ${isOwnProfile}`);
+                
+                let childrenData;
+                
+                if (isOwnProfile) {
+                    // If viewing own profile, just get all children the user has access to
+                    childrenData = await getUserChildren(currentUserId);
+                } else {
+                    // If viewing someone else's profile, pass both IDs to check intersection
+                    childrenData = await getUserChildren(userId, currentUserId);
+                }
+                
+                console.log(`Found ${childrenData.length} children for user`);
                 
                 // Format the children data for display
                 const formattedChildren = childrenData.map(child => ({
@@ -169,7 +192,7 @@ export const ChildrenGrid = ({
         };
         
         fetchChildren();
-    }, [userId, canViewChildren]);
+    }, [userId, canViewChildren, user?.uid, isOwnProfile, friendshipStatus]);
 
     if (loading) {
         return (
