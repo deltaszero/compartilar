@@ -88,7 +88,7 @@ export default function ChildDetailPage() {
               title: 'Acesso negado',
               description: 'Você não tem permissão para ver esta informação.'
             });
-            router.push('/home');
+            // router.push(`${username}/home`);
             return;
           }
         }
