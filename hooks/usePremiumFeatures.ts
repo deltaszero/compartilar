@@ -4,7 +4,13 @@ import { useUser } from '@context/userContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { db } from '@/lib/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { validateSubscription, isSubscriptionExpired } from '@/lib/subscription-validator';
+import { 
+  validateSubscription, 
+  isSubscriptionExpired, 
+  isInGracePeriod,
+  isApproachingExpiration 
+} from '@/lib/subscription-validator';
+import { createSubscriptionNotification } from '@/lib/subscription-notifications';
 
 // Define the premium features available
 export type PremiumFeature = 
@@ -29,6 +35,9 @@ export function usePremiumFeatures() {
   const { userData } = useUser();
   const [freshSubscriptionStatus, setFreshSubscriptionStatus] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInGracePeriodState, setIsInGracePeriodState] = useState(false);
+  const [isApproachingExpirationState, setIsApproachingExpirationState] = useState(false);
+  const [graceEndsAt, setGraceEndsAt] = useState<string | null>(null);
 
   // Check subscription from Firestore directly to ensure it's up-to-date
   useEffect(() => {
@@ -49,23 +58,82 @@ export function usePremiumFeatures() {
           
           // First check if subscription data exists and has an end date
           if (subscription && subscription.currentPeriodEnd) {
-            // Check if the subscription period has expired
-            if (isSubscriptionExpired(subscription)) {
-              console.log('Subscription appears to be expired, validating with Stripe');
-              // Validate with Stripe if it seems expired
-              const isActive = await validateSubscription(userData.uid);
-              setFreshSubscriptionStatus(isActive);
+            // Check if the subscription is approaching expiration (for renewal warnings)
+            const approaching = isApproachingExpiration(subscription);
+            setIsApproachingExpirationState(approaching);
+            
+            // If approaching expiration, show a notification (only once per day)
+            if (approaching && subscription.active) {
+              const endDate = new Date(subscription.currentPeriodEnd);
+              const now = new Date();
+              const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              
+              const lastWarningDate = subscription.lastRenewalWarning 
+                ? new Date(subscription.lastRenewalWarning) 
+                : new Date(0);
+                
+              const daysSinceLastWarning = Math.floor((now.getTime() - lastWarningDate.getTime()) / (1000 * 60 * 60 * 24));
+              
+              // Only show warning once per day
+              if (daysSinceLastWarning >= 1) {
+                try {
+                  // Send renewal warning notification
+                  await createSubscriptionNotification(userData.uid, 'renewal_upcoming', {
+                    daysRemaining,
+                    expirationDate: subscription.currentPeriodEnd
+                  });
+                  
+                  // Update last warning timestamp in subscription data
+                  const userRef = doc(db, 'users', userData.uid);
+                  await setDoc(userRef, {
+                    subscription: {
+                      ...subscription,
+                      lastRenewalWarning: new Date().toISOString()
+                    }
+                  }, { merge: true });
+                } catch (error) {
+                  console.error('Error creating renewal notification:', error);
+                }
+              }
+            }
+            
+            // Check if the subscription period has expired (normal check without grace period)
+            if (isSubscriptionExpired(subscription, false)) {
+              console.log('Subscription appears to be expired, checking grace period');
+              
+              // Check if in grace period
+              const inGracePeriod = isInGracePeriod(subscription);
+              setIsInGracePeriodState(inGracePeriod);
+              
+              if (inGracePeriod) {
+                console.log('Subscription is in grace period');
+                // Calculate grace period end date
+                const endDate = new Date(subscription.currentPeriodEnd);
+                const gracePeriodEnd = new Date(endDate.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days
+                setGraceEndsAt(gracePeriodEnd.toISOString());
+                
+                // During grace period, still allow premium access
+                setFreshSubscriptionStatus(true);
+              } else {
+                console.log('Subscription is expired beyond grace period, validating with Stripe');
+                // Validate with Stripe if it seems completely expired
+                const isActive = await validateSubscription(userData.uid);
+                setFreshSubscriptionStatus(isActive);
+              }
             } else {
               // Subscription is within its period, use the active flag
               setFreshSubscriptionStatus(
                 !!(subscription?.active && subscription?.plan === 'premium')
               );
+              setIsInGracePeriodState(false);
             }
           } else {
             // No subscription end date, use the active flag directly
             setFreshSubscriptionStatus(
               !!(subscription?.active && subscription?.plan === 'premium')
             );
+            setIsInGracePeriodState(false);
+            setIsApproachingExpirationState(false);
           }
         } else {
           setFreshSubscriptionStatus(false);
@@ -180,6 +248,9 @@ export function usePremiumFeatures() {
     getFeatureLockedMessage,
     remainingFreeTierLimits,
     refreshSubscriptionStatus,
-    isLoading
+    isLoading,
+    isInGracePeriod: isInGracePeriodState,
+    isApproachingExpiration: isApproachingExpirationState,
+    graceEndsAt
   };
 }

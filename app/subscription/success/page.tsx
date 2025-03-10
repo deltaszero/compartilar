@@ -36,10 +36,41 @@ export default function SubscriptionSuccessPage() {
       }
       
       try {
-        setUpdateStatus('activating subscription automatically...');
-        console.log('Activating subscription with session ID:', sessionId);
+        setUpdateStatus('verifying session ownership...');
+        console.log('Verifying session:', sessionId);
         
-        // Direct Firestore update method (this is what works in the button)
+        // First verify this session belongs to the current user by checking with Stripe
+        const verifyResponse = await fetch('/api/verify-stripe-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            sessionId,
+            userId: userData?.uid
+          }),
+        });
+        
+        if (!verifyResponse.ok) {
+          const verifyError = await verifyResponse.json();
+          console.error('Session verification failed:', verifyError);
+          setUpdateStatus('error: invalid session - this session was not created by your account');
+          return; // Stop the activation process
+        }
+        
+        const verifyResult = await verifyResponse.json();
+        
+        if (!verifyResult.isValid) {
+          console.error('Session does not belong to current user:', verifyResult.reason);
+          setUpdateStatus(`error: ${verifyResult.reason || 'unauthorized session'}`);
+          return; // Stop the activation process
+        }
+        
+        // Session is valid, proceed with activation
+        setUpdateStatus('activating subscription automatically...');
+        console.log('Activating verified session:', sessionId);
+        
+        // Direct Firestore update method with verified session
         const userRef = doc(db, 'users', userData.uid);
         await setDoc(userRef, {
           subscription: {
@@ -47,6 +78,7 @@ export default function SubscriptionSuccessPage() {
             plan: 'premium',
             stripeSessionId: sessionId,
             autoActivated: true,
+            verifiedOwner: true,
             updatedAt: new Date().toISOString(),
           }
         }, { merge: true });
@@ -70,7 +102,8 @@ export default function SubscriptionSuccessPage() {
             },
             body: JSON.stringify({ 
               sessionId,
-              userId: userData?.uid
+              userId: userData?.uid,
+              requireVerification: true // Flag to ensure verification happens
             }),
           });
           
@@ -154,10 +187,38 @@ export default function SubscriptionSuccessPage() {
                     return;
                   }
                   
-                  setUpdateStatus('applying subscription manually...');
+                  setUpdateStatus('verifying session before manual activation...');
                   
                   try {
-                    // Direct Firestore update method (simple and proven to work)
+                    // First verify this session belongs to the current user
+                    const verifyResponse = await fetch('/api/verify-stripe-session', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ 
+                        sessionId,
+                        userId: userData.uid
+                      }),
+                    });
+                    
+                    if (!verifyResponse.ok) {
+                      const error = await verifyResponse.json();
+                      setUpdateStatus('error: invalid session - ' + (error.message || 'verification failed'));
+                      return;
+                    }
+                    
+                    const verifyResult = await verifyResponse.json();
+                    
+                    if (!verifyResult.isValid) {
+                      setUpdateStatus('error: ' + (verifyResult.reason || 'unauthorized session'));
+                      return;
+                    }
+                    
+                    // Session is verified, proceed with activation
+                    setUpdateStatus('applying subscription manually...');
+                    
+                    // Direct Firestore update method with verified session
                     const userRef = doc(db, 'users', userData.uid);
                     await setDoc(userRef, {
                       subscription: {
@@ -165,6 +226,7 @@ export default function SubscriptionSuccessPage() {
                         plan: 'premium',
                         manualActivation: true,
                         stripeSessionId: sessionId,
+                        verifiedOwner: true,
                         updatedAt: new Date().toISOString(),
                       }
                     }, { merge: true });

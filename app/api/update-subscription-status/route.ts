@@ -14,12 +14,41 @@ export async function POST(request: Request) {
     
     // Parse the request data
     const requestData = await request.json();
-    const { sessionId, userId: providedUserId } = requestData;
+    const { sessionId, userId: providedUserId, requireVerification } = requestData;
     
     console.log('Request data:', { 
       sessionId: sessionId ? sessionId.substring(0, 10) + '...' : null,
-      providedUserId: providedUserId ? providedUserId.substring(0, 10) + '...' : null
+      providedUserId: providedUserId ? providedUserId.substring(0, 10) + '...' : null,
+      requireVerification
     });
+    
+    // SECURITY CHECK: If verification is required or session ID is provided, verify ownership
+    if (sessionId && (requireVerification || providedUserId)) {
+      try {
+        console.log('Verifying session ownership...');
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        
+        // Verify the session belongs to the claimed user
+        if (session.client_reference_id !== providedUserId) {
+          console.error('Session ownership verification failed:');
+          console.error(`Session belongs to ${session.client_reference_id}, but requested by ${providedUserId}`);
+          
+          return NextResponse.json({
+            error: 'Unauthorized: This session does not belong to the provided user ID',
+            reason: 'session_user_mismatch'
+          }, { status: 403 });
+        }
+        
+        console.log('Session ownership verified successfully');
+      } catch (verifyError) {
+        console.error('Error verifying session:', verifyError);
+        
+        return NextResponse.json({
+          error: 'Failed to verify session ownership',
+          details: verifyError instanceof Error ? verifyError.message : 'Unknown error'
+        }, { status: 500 });
+      }
+    }
     
     // APPROACH 1: If we have a userId from the client, update directly
     // This is the most reliable approach and works with the manual button
@@ -33,6 +62,7 @@ export async function POST(request: Request) {
           plan: 'premium',
           apiDirectUpdate: true,
           stripeSessionId: sessionId,
+          verifiedOwner: true, // Since we've verified ownership above
           updatedAt: new Date().toISOString(),
         };
         
