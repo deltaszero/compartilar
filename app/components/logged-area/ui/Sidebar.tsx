@@ -256,7 +256,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
             </motion.div>
 
             {/* Subscription Button at the bottom of sidebar */}
-            {!isMobile && !loading && !hasActiveSubscription && (
+            {/* {!isMobile && !loading && !hasActiveSubscription && (
                 <div className="mt-auto px-4 py-4 border-t border-border/30">
                     <div className="flex flex-col space-y-2">
                         <div className="flex items-center justify-between mb-1">
@@ -266,7 +266,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                         <SubscriptionButton />
                     </div>
                 </div>
-            )}
+            )} */}
         </nav>
     );
 }

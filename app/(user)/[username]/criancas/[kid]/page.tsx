@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@/context/userContext';
-import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, getChildChangeHistory, ChangeHistoryEntry } from '@/lib/firebaseConfig';
 import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash, AlertTriangle, History, Clock, User, FileText, UserPlus, UserMinus } from 'lucide-react';
+import { Calendar, ChevronLeft, Camera, Edit, Save, Plus, Trash, AlertTriangle, History, Clock, User, FileText, UserPlus, UserMinus, Users, XCircle, Check, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -46,10 +46,20 @@ export default function ChildDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditorsDialog, setShowEditorsDialog] = useState(false);
+  const [showViewersDialog, setShowViewersDialog] = useState(false);
   const [editedData, setEditedData] = useState<Partial<KidInfo>>({});
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  
+  // User search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [userBeingRemoved, setUserBeingRemoved] = useState<string | null>(null);
+  const [editorsList, setEditorsList] = useState<any[]>([]);
+  const [viewersList, setViewersList] = useState<any[]>([]);
   
   // Change history state
   const [historyEntries, setHistoryEntries] = useState<ChangeHistoryEntry[]>([]);
@@ -64,6 +74,8 @@ export default function ChildDetailPage() {
       }
 
       try {
+        console.log('Fetching child data for kid:', kid);
+        
         // Get child data
         const childRef = doc(db, 'children', kid as string);
         const childSnap = await getDoc(childRef);
@@ -79,6 +91,16 @@ export default function ChildDetailPage() {
         }
 
         const childInfo = { id: childSnap.id, ...childSnap.data() } as KidInfo;
+        
+        console.log('Child data fetched:', {
+          id: childInfo.id,
+          firstName: childInfo.firstName,
+          lastName: childInfo.lastName,
+          editorsCount: childInfo.editors?.length || 0,
+          viewersCount: childInfo.viewers?.length || 0,
+          createdBy: childInfo.createdBy
+        });
+        
         setChildData(childInfo);
         setEditedData(childInfo);
 
@@ -102,6 +124,27 @@ export default function ChildDetailPage() {
           router.push(`/${username}/home`);
           return;
         }
+        
+        // Set the permissions flags first so they're correctly set when fetching users
+        if (editors.includes(user.uid)) {
+          setIsEditor(true);
+          // Consider the creator as owner (for delete permissions)
+          if (childInfo.createdBy === user.uid) {
+            setIsOwner(true);
+          }
+        } else if (!viewers.includes(user.uid) && !editors.includes(user.uid)) {
+          // User doesn't have view or edit permissions
+          toast({
+            variant: 'destructive',
+            title: 'Acesso negado',
+            description: 'Você não tem permissão para ver esta informação.'
+          });
+          router.push(`/${username}/home`);
+          return;
+        }
+
+        // Always fetch user details for complete lists
+        fetchUsersDetails(editors, viewers);
 
         setIsLoading(false);
       } catch (error) {
@@ -119,6 +162,135 @@ export default function ChildDetailPage() {
       fetchData();
     }
   }, [user, userData, kid, username, router, loading]);
+  
+  // Fetch user details for editors and viewers
+  const fetchUsersDetails = async (editorIds: string[], viewerIds: string[]) => {
+    try {
+      // Debug logging to track the process
+      console.log('Fetching user details for:', {
+        editorIds,
+        viewerIds,
+      });
+      
+      // Fetch all user details in parallel
+      const fetchUserDetails = async (uid: string) => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            return {
+              uid,
+              displayName: userData.displayName || userData.username,
+              photoURL: userData.photoURL,
+              username: userData.username,
+            };
+          }
+          return { uid, displayName: 'Usuário desconhecido', username: 'unknown' };
+        } catch (e) {
+          console.error(`Error fetching user ${uid}:`, e);
+          return { uid, displayName: 'Usuário desconhecido', username: 'unknown' };
+        }
+      };
+      
+      // Don't exclude current user - include all editors except the owner for visibility
+      // We'll let the owner see all editors including themselves for clarity
+      const allEditorsExceptCurrentUser = editorIds.filter(id => id !== user?.uid);
+      
+      const [editorsData, viewersData] = await Promise.all([
+        Promise.all(allEditorsExceptCurrentUser.map(fetchUserDetails)),
+        Promise.all(viewerIds.map(fetchUserDetails))
+      ]);
+      
+      console.log('Fetched editors/viewers data:', {
+        editorsCount: editorsData.length,
+        viewersCount: viewersData.length
+      });
+      
+      setEditorsList(editorsData);
+      setViewersList(viewersData);
+    } catch (error) {
+      console.error('Error fetching users details:', error);
+    }
+  };
+  
+  // Handle searching for users to add as editors or viewers
+  const handleUserSearch = async () => {
+    if (!searchTerm || searchTerm.length < 3) return;
+    
+    setIsSearching(true);
+    setSearchResults([]);
+    
+    try {
+      const searchTermLower = searchTerm.toLowerCase().trim();
+      const usersRef = collection(db, 'users');
+      
+      // Search by username (case insensitive)
+      const usernameQuery = query(
+        usersRef,
+        where('username', '>=', searchTermLower),
+        where('username', '<=', searchTermLower + '\uf8ff')
+      );
+      
+      // Search by displayName (case insensitive)
+      const displayNameQuery = query(
+        usersRef,
+        where('displayName', '>=', searchTermLower),
+        where('displayName', '<=', searchTermLower + '\uf8ff')
+      );
+      
+      // Execute both queries
+      const [usernameSnapshot, displayNameSnapshot] = await Promise.all([
+        getDocs(usernameQuery),
+        getDocs(displayNameQuery)
+      ]);
+      
+      // Combine results and remove duplicates
+      const results: any[] = [];
+      const processedUids = new Set<string>();
+      
+      // Helper to process search results
+      const processSnapshot = (snapshot: any) => {
+        snapshot.forEach((doc: any) => {
+          const userData = doc.data();
+          
+          // Skip the current user and already processed users
+          if (userData.uid === user?.uid || processedUids.has(userData.uid)) {
+            return;
+          }
+          
+          // Skip users who are already editors or viewers
+          const childEditors = childData?.editors || [];
+          const childViewers = childData?.viewers || [];
+          
+          if (childEditors.includes(userData.uid) || childViewers.includes(userData.uid)) {
+            return;
+          }
+          
+          processedUids.add(userData.uid);
+          results.push({
+            uid: userData.uid,
+            username: userData.username,
+            displayName: userData.displayName || userData.username,
+            photoURL: userData.photoURL
+          });
+        });
+      };
+      
+      processSnapshot(usernameSnapshot);
+      processSnapshot(displayNameSnapshot);
+      
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro na busca',
+        description: 'Não foi possível carregar os resultados da busca.'
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Handle photo selection
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,6 +396,154 @@ export default function ChildDetailPage() {
     }));
   };
 
+  // Add editor or viewer
+  const addUserAccess = async (userId: string, role: 'editor' | 'viewer') => {
+    if (!childData?.id || !user?.uid || !isOwner) return;
+    
+    try {
+      const childRef = doc(db, 'children', childData.id);
+      
+      // Update Firestore with arrayUnion
+      if (role === 'editor') {
+        await updateDoc(childRef, {
+          editors: arrayUnion(userId),
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        });
+        
+        // Fetch the user info and add to editorsList
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setEditorsList(prev => [...prev, {
+            uid: userId,
+            displayName: userData.displayName || userData.username,
+            photoURL: userData.photoURL,
+            username: userData.username
+          }]);
+        }
+        
+        toast({
+          title: 'Editor adicionado',
+          description: 'O usuário agora pode editar as informações desta criança.'
+        });
+      } else {
+        await updateDoc(childRef, {
+          viewers: arrayUnion(userId),
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        });
+        
+        // Fetch the user info and add to viewersList
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setViewersList(prev => [...prev, {
+            uid: userId,
+            displayName: userData.displayName || userData.username,
+            photoURL: userData.photoURL,
+            username: userData.username
+          }]);
+        }
+        
+        toast({
+          title: 'Visualizador adicionado',
+          description: 'O usuário agora pode visualizar as informações desta criança.'
+        });
+      }
+      
+      // Update local state
+      if (childData) {
+        const updatedChild = { ...childData };
+        if (role === 'editor') {
+          updatedChild.editors = [...(updatedChild.editors || []), userId];
+        } else {
+          updatedChild.viewers = [...(updatedChild.viewers || []), userId];
+        }
+        setChildData(updatedChild);
+      }
+      
+      // Close dialog
+      setShowEditorsDialog(false);
+      setShowViewersDialog(false);
+      setSearchTerm('');
+      setSearchResults([]);
+      
+    } catch (error) {
+      console.error(`Error adding ${role}:`, error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: `Não foi possível adicionar o usuário como ${role === 'editor' ? 'editor' : 'visualizador'}.`
+      });
+    }
+  };
+  
+  // Remove editor or viewer
+  const removeUserAccess = async (userId: string, role: 'editor' | 'viewer') => {
+    // Don't allow removing the creator/owner
+    if (!childData?.id || !user?.uid || !isOwner || userId === childData.createdBy) return;
+    
+    try {
+      setUserBeingRemoved(userId);
+      const childRef = doc(db, 'children', childData.id);
+      
+      console.log(`Removing user ${userId} as ${role} from child ${childData.id}`);
+      
+      // Update Firestore with arrayRemove
+      if (role === 'editor') {
+        await updateDoc(childRef, {
+          editors: arrayRemove(userId),
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        });
+        
+        // Update local state
+        setEditorsList(prev => prev.filter(editor => editor.uid !== userId));
+        
+        toast({
+          title: 'Editor removido',
+          description: 'O usuário não pode mais editar as informações desta criança.'
+        });
+      } else {
+        await updateDoc(childRef, {
+          viewers: arrayRemove(userId),
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid
+        });
+        
+        // Update local state
+        setViewersList(prev => prev.filter(viewer => viewer.uid !== userId));
+        
+        toast({
+          title: 'Visualizador removido',
+          description: 'O usuário não pode mais visualizar as informações desta criança.'
+        });
+      }
+      
+      // Update main child data state to ensure consistency
+      if (childData) {
+        const updatedChild = { ...childData };
+        if (role === 'editor') {
+          updatedChild.editors = (updatedChild.editors || []).filter(id => id !== userId);
+        } else {
+          updatedChild.viewers = (updatedChild.viewers || []).filter(id => id !== userId);
+        }
+        setChildData(updatedChild);
+      }
+      
+    } catch (error) {
+      console.error(`Error removing ${role}:`, error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: `Não foi possível remover o usuário como ${role === 'editor' ? 'editor' : 'visualizador'}.`
+      });
+    } finally {
+      setUserBeingRemoved(null);
+    }
+  };
+  
   // Save changes
   const saveChanges = async () => {
     if (!childData?.id || !user?.uid) return;
@@ -896,6 +1216,30 @@ export default function ChildDetailPage() {
 
                   {/* Spacer when in edit mode or not owner */}
                   {(isEditing || !isOwner) && <div></div>}
+                  
+                  {/* Permission management buttons - only for owner and not in edit mode */}
+                  {/* {isOwner && !isEditing && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-secondaryMain"
+                        onClick={() => setShowEditorsDialog(true)}
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Editores</span>
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-secondaryMain"
+                        onClick={() => setShowViewersDialog(true)}
+                      >
+                        <Users className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Visualizadores</span>
+                      </Button>
+                    </div>
+                  )} */}
 
                   {/* Edit/Save buttons - visible to editors */}
                   <div className="flex gap-2">
@@ -986,6 +1330,312 @@ export default function ChildDetailPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                
+                {/* Editors Dialog */}
+                <Dialog open={showEditorsDialog} onOpenChange={setShowEditorsDialog}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <UserPlus className="h-5 w-5 text-primary" />
+                        Gerenciar Editores
+                      </DialogTitle>
+                      <DialogDescription>
+                        Editores podem modificar todas as informações desta criança.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {/* Search for users */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input
+                          placeholder="Buscar por nome ou username..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleUserSearch}
+                        disabled={searchTerm.length < 3 || isSearching}
+                      >
+                        {isSearching ? (
+                          <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {/* Current editors list */}
+                    {editorsList.length > 0 && (
+                      <div className="mt-2">
+                        <h4 className="text-sm font-medium mb-2">Editores atuais:</h4>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                          {editorsList.map(editor => (
+                            <div 
+                              key={editor.uid}
+                              className="flex items-center justify-between bg-muted/30 p-2 rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {editor.photoURL ? (
+                                    <Image
+                                      src={editor.photoURL}
+                                      alt={editor.displayName}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {editor.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{editor.displayName}</p>
+                                  <p className="text-xs text-muted-foreground">@{editor.username}</p>
+                                </div>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => removeUserAccess(editor.uid, 'editor')}
+                                disabled={userBeingRemoved === editor.uid}
+                              >
+                                {userBeingRemoved === editor.uid ? (
+                                  <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 text-destructive" />
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Search results */}
+                    {searchResults.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Resultados da busca:</h4>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                          {searchResults.map(user => (
+                            <div 
+                              key={user.uid}
+                              className="flex items-center justify-between bg-muted/30 p-2 rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {user.photoURL ? (
+                                    <Image
+                                      src={user.photoURL}
+                                      alt={user.displayName}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {user.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{user.displayName}</p>
+                                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                </div>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-secondaryMain"
+                                onClick={() => addUserAccess(user.uid, 'editor')}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Adicionar
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+                      <div className="mt-4 text-center py-4 text-muted-foreground">
+                        Nenhum resultado encontrado
+                      </div>
+                    )}
+                    
+                    <DialogFooter>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setShowEditorsDialog(false);
+                          setSearchTerm('');
+                          setSearchResults([]);
+                        }}
+                      >
+                        Concluído
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                
+                {/* Viewers Dialog */}
+                <Dialog open={showViewersDialog} onOpenChange={setShowViewersDialog}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-primary" />
+                        Gerenciar Visualizadores
+                      </DialogTitle>
+                      <DialogDescription>
+                        Visualizadores podem ver as informações desta criança, mas não podem fazer alterações.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    {/* Search for users */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Input
+                          placeholder="Buscar por nome ou username..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleUserSearch}
+                        disabled={searchTerm.length < 3 || isSearching}
+                      >
+                        {isSearching ? (
+                          <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {/* Current viewers list */}
+                    {viewersList.length > 0 && (
+                      <div className="mt-2">
+                        <h4 className="text-sm font-medium mb-2">Visualizadores atuais:</h4>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                          {viewersList.map(viewer => (
+                            <div 
+                              key={viewer.uid}
+                              className="flex items-center justify-between bg-muted/30 p-2 rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {viewer.photoURL ? (
+                                    <Image
+                                      src={viewer.photoURL}
+                                      alt={viewer.displayName}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {viewer.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{viewer.displayName}</p>
+                                  <p className="text-xs text-muted-foreground">@{viewer.username}</p>
+                                </div>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => removeUserAccess(viewer.uid, 'viewer')}
+                                disabled={userBeingRemoved === viewer.uid}
+                              >
+                                {userBeingRemoved === viewer.uid ? (
+                                  <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 text-destructive" />
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Search results */}
+                    {searchResults.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium mb-2">Resultados da busca:</h4>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                          {searchResults.map(user => (
+                            <div 
+                              key={user.uid}
+                              className="flex items-center justify-between bg-muted/30 p-2 rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {user.photoURL ? (
+                                    <Image
+                                      src={user.photoURL}
+                                      alt={user.displayName}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {user.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{user.displayName}</p>
+                                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                </div>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-secondaryMain"
+                                onClick={() => addUserAccess(user.uid, 'viewer')}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Adicionar
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
+                      <div className="mt-4 text-center py-4 text-muted-foreground">
+                        Nenhum resultado encontrado
+                      </div>
+                    )}
+                    
+                    <DialogFooter>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setShowViewersDialog(false);
+                          setSearchTerm('');
+                          setSearchResults([]);
+                        }}
+                      >
+                        Concluído
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </Card>
@@ -1028,6 +1678,179 @@ export default function ChildDetailPage() {
                         Nenhuma anotação disponível.
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Access permissions section - only visible to owner and not in edit mode */}
+                {isOwner && !isEditing && (
+                  <div className="mt-8 pt-6 border-t">
+                    <h3 className="text-lg font-medium mb-4">Pessoas com acesso</h3>
+                    
+                    {/* Editors section */}
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-semibold flex items-center">
+                          <UserPlus className="h-4 w-4 mr-1 text-primary/70" />
+                          Editores
+                        </h4>
+                        <Button 
+                          variant="default"
+                          size="sm"
+                          onClick={() => setShowEditorsDialog(true)}
+                          className="h-7 text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Adicionar
+                        </Button>
+                      </div>
+                      
+                                      {childData.editors && childData.editors.length > 1 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {/* Show the current user first as the owner/creator */}
+                          {user && childData.createdBy === user.uid && (
+                            <div
+                              className="flex items-center justify-between bg-muted/20 p-2 rounded-md text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {userData?.photoURL ? (
+                                    <Image
+                                      src={userData.photoURL}
+                                      alt={userData.displayName || userData.username}
+                                      width={24}
+                                      height={24}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {(userData?.displayName || userData?.username || '').charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="flex items-center gap-1">
+                                  {userData?.displayName || userData?.username}
+                                  <Badge variant="default" className="ml-1 text-[10px] py-0 h-4">
+                                    Proprietário
+                                  </Badge>
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Then show other editors */}
+                          {editorsList.map(editor => (
+                            <div
+                              key={editor.uid}
+                              className="flex items-center justify-between bg-muted/20 p-2 rounded-md text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {editor.photoURL ? (
+                                    <Image
+                                      src={editor.photoURL}
+                                      alt={editor.displayName}
+                                      width={24}
+                                      height={24}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {editor.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <span>{editor.displayName}</span>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => removeUserAccess(editor.uid, 'editor')}
+                                disabled={userBeingRemoved === editor.uid}
+                              >
+                                {userBeingRemoved === editor.uid ? (
+                                  <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">
+                          Somente você tem permissão para editar
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Viewers section */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-semibold flex items-center">
+                          <Users className="h-4 w-4 mr-1 text-primary/70" />
+                          Visualizadores
+                        </h4>
+                        <Button 
+                          variant="default"
+                          size="sm"
+                          onClick={() => setShowViewersDialog(true)}
+                          className="h-7 text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Adicionar
+                        </Button>
+                      </div>
+                      
+                      {viewersList.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {viewersList.map(viewer => (
+                            <div
+                              key={viewer.uid}
+                              className="flex items-center justify-between bg-muted/20 p-2 rounded-md text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                                  {viewer.photoURL ? (
+                                    <Image
+                                      src={viewer.photoURL}
+                                      alt={viewer.displayName}
+                                      width={24}
+                                      height={24}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-medium">
+                                      {viewer.displayName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <span>{viewer.displayName}</span>
+                              </div>
+                              
+                              <Button
+                                variant="default"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => removeUserAccess(viewer.uid, 'viewer')}
+                                disabled={userBeingRemoved === viewer.uid}
+                              >
+                                {userBeingRemoved === viewer.uid ? (
+                                  <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">
+                          Nenhum visualizador adicionado
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -1138,7 +1961,7 @@ export default function ChildDetailPage() {
                             break;
                           case 'update':
                             actionIcon = <Edit className="h-3.5 w-3.5" />;
-                            actionColor = "bg-blue-100 text-blue-600";
+                            actionColor = "bg-bg text-main";
                             break;
                           case 'permission_add':
                             actionIcon = <UserPlus className="h-3.5 w-3.5" />;

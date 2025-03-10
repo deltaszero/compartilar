@@ -23,7 +23,7 @@ export type PremiumFeature =
 
 // Define limits for free tier
 const FREE_TIER_LIMITS = {
-    max_children: 2,
+    max_children: 1,
     max_calendar_events: 10,
     max_financial_entries: 15,
     reports_enabled: false,
@@ -204,7 +204,7 @@ export function usePremiumFeatures() {
         // Free tier restrictions based on feature
         switch (feature) {
             case 'unlimited_children':
-                // Logic to check if user has reached free tier limit
+                // Free users can only have 1 child as owner
                 return false;
             case 'advanced_calendar':
                 return false;
@@ -226,7 +226,7 @@ export function usePremiumFeatures() {
     const getFeatureLockedMessage = useCallback((feature: PremiumFeature): string => {
         switch (feature) {
             case 'unlimited_children':
-                return `Limite gratuito: ${FREE_TIER_LIMITS.max_children} crianças. Faça upgrade para adicionar mais.`;
+                return `Limite gratuito: ${FREE_TIER_LIMITS.max_children} criança. Faça upgrade para adicionar mais.`;
             case 'advanced_calendar':
                 return `Limite gratuito: ${FREE_TIER_LIMITS.max_calendar_events} eventos. Faça upgrade para recursos avançados.`;
             case 'detailed_reports':

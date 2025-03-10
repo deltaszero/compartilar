@@ -3,8 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/userContext';
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { db, storage, createChild } from '@/lib/firebaseConfig';
+import { db, storage, createChild, getUserChildren } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,7 @@ export default function AddChildPage() {
     const { username } = useParams<{ username: string }>();
     const router = useRouter();
     const { user, userData } = useUser();
+    const { isPremium, remainingFreeTierLimits } = usePremiumFeatures();
     const [isSaving, setIsSaving] = useState(false);
     const [photoUploading, setPhotoUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -48,6 +50,9 @@ export default function AddChildPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<FriendSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [existingChildrenCount, setExistingChildrenCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [canAddChild, setCanAddChild] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [childData, setChildData] = useState({
@@ -64,6 +69,38 @@ export default function AddChildPage() {
 
     // Array to store friends with access permissions
     const [selectedFriends, setSelectedFriends] = useState<FriendSearchResult[]>([]);
+
+    // Check count of children where user is an editor (owner)
+    useEffect(() => {
+        const checkChildrenCount = async () => {
+            if (!user?.uid) return;
+            
+            setIsLoading(true);
+            try {
+                // Get all children user has access to
+                const children = await getUserChildren(user.uid);
+                
+                // Filter only the ones where user is an editor (createdBy field)
+                const ownedChildren = children.filter(child => 
+                    child.createdBy === user.uid
+                );
+                
+                const count = ownedChildren.length;
+                setExistingChildrenCount(count);
+                
+                // Check if user can add a child (either premium or below free tier limit)
+                const maxAllowed = remainingFreeTierLimits.max_children;
+                setCanAddChild(isPremium || count < maxAllowed);
+                
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error checking children count:', error);
+                setIsLoading(false);
+            }
+        };
+        
+        checkChildrenCount();
+    }, [user?.uid, isPremium, remainingFreeTierLimits.max_children]);
 
     // Check if user has permission to add a child
     const hasPermission = user?.uid && userData?.username === username;
@@ -282,6 +319,16 @@ export default function AddChildPage() {
             return;
         }
 
+        // Check if user has reached their child limit
+        if (!isPremium && existingChildrenCount >= remainingFreeTierLimits.max_children) {
+            toast({
+                variant: 'destructive',
+                title: 'Limite atingido',
+                description: `Usuários gratuitos podem adicionar apenas ${remainingFreeTierLimits.max_children} criança. Faça upgrade para o plano Premium para adicionar mais.`
+            });
+            return;
+        }
+
         // Validate required fields
         if (!childData.firstName || !childData.lastName || !childData.birthDate) {
             toast({
@@ -341,6 +388,17 @@ export default function AddChildPage() {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Carregando..." />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mainStrongGreen"></div>
+                </div>
+            </div>
+        );
+    }
+    
     if (!hasPermission) {
         return (
             <div className="flex flex-col min-h-screen">
@@ -352,6 +410,33 @@ export default function AddChildPage() {
                         <Link href={`/${username}/criancas`}>
                             <Button>Voltar para Crianças</Button>
                         </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!isPremium && existingChildrenCount >= remainingFreeTierLimits.max_children) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <UserProfileBar pathname="Limite atingido" />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center p-6 max-w-md">
+                        <h2 className="text-2xl font-bold text-destructive mb-4">Limite de plano gratuito atingido</h2>
+                        <p className="mb-6">
+                            Você já atingiu o limite de {remainingFreeTierLimits.max_children} criança no plano gratuito. 
+                            Faça upgrade para o plano Premium para adicionar mais crianças.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link href={`/${username}/criancas`}>
+                                <Button variant="default">Voltar para Crianças</Button>
+                            </Link>
+                            <Link href="/subscription">
+                                <Button className="bg-main hover:bg-main/90">
+                                    Upgrade para Premium
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
