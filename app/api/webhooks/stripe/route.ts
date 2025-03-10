@@ -99,6 +99,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
 
+  console.log(`Processing checkout completed for user ${userId}`);
+  console.log(`Customer ID: ${customerId}, Subscription ID: ${subscriptionId}`);
+
   // Get current user data
   const userRef = doc(db, 'users', userId);
   const userDoc = await getDoc(userRef);
@@ -108,17 +111,35 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return;
   }
 
-  // Update user document with subscription information
-  await setDoc(userRef, {
-    ...userDoc.data(),
-    subscription: {
-      active: true,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      plan: 'premium',
-      updatedAt: new Date().toISOString(),
-    }
-  }, { merge: true });
+  // Get current subscription data if it exists
+  const userData = userDoc.data();
+  const existingSubscription = userData.subscription || {};
+  
+  // Build comprehensive subscription object
+  const subscriptionData = {
+    ...existingSubscription,
+    active: true,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
+    stripeSessionId: session.id,
+    webhookActivated: true,
+    plan: 'premium',
+    status: 'active',
+    createdAt: existingSubscription.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  try {
+    // Update only the subscription field to avoid permission issues
+    await setDoc(userRef, {
+      subscription: subscriptionData
+    }, { merge: true });
+    
+    console.log(`Successfully updated subscription for user ${userId} via webhook`);
+  } catch (error) {
+    console.error(`Error updating user ${userId} subscription:`, error);
+    // We'll still continue with the webhook processing
+  }
 }
 
 // Handle subscription updates
@@ -140,45 +161,54 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   
   if (snapshot.empty) {
     console.error('No user found with customer ID:', customerId);
+    console.log('This might happen if the customer ID was not saved during checkout');
     return;
   }
 
   // Update user's subscription status
   const userId = snapshot.docs[0].id;
   const userRef = doc(db, 'users', userId);
-  const currentDoc = await getDoc(userRef);
   
-  // Determine active state and plan based on subscription status
-  const isActive = subscription.status === 'active' || 
-                  subscription.status === 'trialing';
-  
-  // Get current data
-  const userData = currentDoc.exists() ? currentDoc.data() : {};
-  const currentPlan = userData.subscription?.plan || 'free';
-  
-  // Only downgrade from premium to free if subscription is inactive
-  // Otherwise, maintain the existing plan (important for subscription pauses)
-  const plan = isActive ? 'premium' : 'free';
-  
-  const subscriptionData = {
-    active: isActive,
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: subscription.id,
-    plan: plan,
-    status: subscription.status,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  console.log(`Updating subscription for user ${userId}:`, subscriptionData);
-  
-  await setDoc(userRef, {
-    ...userData,
-    subscription: subscriptionData
-  }, { merge: true });
-  
-  console.log('Subscription updated successfully');
+  try {
+    const currentDoc = await getDoc(userRef);
+    
+    // Determine active state and plan based on subscription status
+    const isActive = subscription.status === 'active' || 
+                    subscription.status === 'trialing';
+    
+    // Get current data
+    const userData = currentDoc.exists() ? currentDoc.data() : {};
+    const existingSubscription = userData.subscription || {};
+    
+    // Only downgrade from premium to free if subscription is inactive
+    // Otherwise, maintain the existing plan (important for subscription pauses)
+    const plan = isActive ? 'premium' : 'free';
+    
+    const subscriptionData = {
+      ...existingSubscription,
+      active: isActive,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscription.id,
+      plan: plan,
+      status: subscription.status,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+      webhookUpdated: true,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log(`Updating subscription for user ${userId}`);
+    
+    // Update only the subscription field to avoid permission issues
+    await setDoc(userRef, {
+      subscription: subscriptionData
+    }, { merge: true });
+    
+    console.log('Subscription updated successfully via webhook');
+  } catch (error) {
+    console.error(`Error updating subscription for user ${userId}:`, error);
+    // Log error but don't throw, to keep webhook processing
+  }
 }
 
 // Handle subscription deletions

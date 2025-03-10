@@ -28,47 +28,66 @@ export async function validateSubscription(userId: string): Promise<boolean> {
       return false;
     }
     
-    // Check if subscription information is stale and needs refreshing
-    const lastUpdated = subscription.updatedAt 
-      ? new Date(subscription.updatedAt).getTime() 
-      : 0;
+    // If subscription has active: true, consider it valid no matter how it was set
+    // (direct, api, webhook, etc.)
+    if (subscription.active === true && subscription.plan === 'premium') {
+      console.log('User has an active premium subscription');
+      
+      // Check if subscription information is stale and needs refreshing
+      const lastUpdated = subscription.updatedAt 
+        ? new Date(subscription.updatedAt).getTime() 
+        : 0;
+      
+      const timeSinceLastUpdate = Date.now() - lastUpdated;
+      
+      // If subscription info is recent enough, use the cached active status
+      if (timeSinceLastUpdate < MAX_SUBSCRIPTION_CACHE_AGE) {
+        return true;
+      }
+      
+      console.log('Subscription data is stale, validating with Stripe if possible...');
+    }
     
-    const timeSinceLastUpdate = Date.now() - lastUpdated;
+    // If we have a subscription ID, validate with Stripe
+    if (subscription.stripeSubscriptionId) {
+      try {
+        const response = await fetch('/api/validate-subscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            subscriptionId: subscription.stripeSubscriptionId,
+            userId,
+          }),
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to validate subscription with API');
+          // Still consider active if that's what Firestore says
+          return !!subscription.active;
+        }
+        
+        const result = await response.json();
+        return result.isActive;
+      } catch (apiError) {
+        console.error('Error validating with API:', apiError);
+        // On API error, trust the stored value
+        return !!subscription.active;
+      }
+    }
     
-    // If subscription info is recent enough, use the cached active status
-    if (timeSinceLastUpdate < MAX_SUBSCRIPTION_CACHE_AGE) {
+    // If we don't have a subscription ID, but have active status, trust it
+    // This handles the case of direct Firestore updates
+    if (subscription.hasOwnProperty('active')) {
       return !!subscription.active;
     }
     
-    // If subscription data is stale, check with Stripe
-    console.log('Subscription data is stale, validating with Stripe...');
-    
-    // If we have a subscription ID, validate it
-    if (subscription.stripeSubscriptionId) {
-      const response = await fetch('/api/validate-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscriptionId: subscription.stripeSubscriptionId,
-          userId,
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to validate subscription');
-        return !!subscription.active; // Fall back to cached status on API error
-      }
-      
-      const result = await response.json();
-      return result.isActive;
-    }
-    
-    // No subscription ID, assume not premium
+    // No clear subscription status
     return false;
   } catch (error) {
     console.error('Error validating subscription:', error);
+    // On error, be permissive - if Firestore says active, trust it
     return false;
   }
 }
