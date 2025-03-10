@@ -55,7 +55,7 @@ export default function HomePage() {
         setSelectedDate(date);
     };
 
-    // Check for mobile screen size
+    // check for mobile screen size
     useEffect(() => {
         const checkMobileScreen = () => {
             setIsMobile(window.innerWidth < 768);
@@ -70,7 +70,7 @@ export default function HomePage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setInitialLoading(false);
-        }, 1500);
+        }, 1);
         return () => clearTimeout(timer);
     }, []);
 

@@ -13,6 +13,11 @@ export interface KidInfo {
   editors?: string[];
   // Optional access level for frontend use
   accessLevel?: 'viewer' | 'editor';
+  // Creator and update tracking info
+  createdBy?: string;
+  createdAt?: string | any; // Using any to accommodate Firestore timestamp types
+  updatedBy?: string;
+  updatedAt?: string | any; // Using any to accommodate Firestore timestamp types
   medicalInfo?: {
     allergies?: string[];
     conditions?: string[];

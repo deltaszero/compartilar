@@ -29,6 +29,7 @@ interface UserData {
     createdAt?: typeof serverTimestamp;
     uid: string;
     subscription?: SubscriptionData;
+    displayName?: string; // Added to support displayName field
 }
 
 interface UserContextType {

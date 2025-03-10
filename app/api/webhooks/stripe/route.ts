@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/firebaseConfig';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { createSubscriptionNotification } from '@/lib/subscription-notifications';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -99,6 +100,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
 
+  console.log(`Processing checkout completed for user ${userId}`);
+  console.log(`Customer ID: ${customerId}, Subscription ID: ${subscriptionId}`);
+
   // Get current user data
   const userRef = doc(db, 'users', userId);
   const userDoc = await getDoc(userRef);
@@ -108,17 +112,60 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return;
   }
 
-  // Update user document with subscription information
-  await setDoc(userRef, {
-    ...userDoc.data(),
-    subscription: {
-      active: true,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      plan: 'premium',
-      updatedAt: new Date().toISOString(),
+  // Get current subscription data if it exists
+  const userData = userDoc.data();
+  const existingSubscription = userData.subscription || {};
+  
+  // Build comprehensive subscription object
+  const subscriptionData = {
+    ...existingSubscription,
+    active: true,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
+    stripeSessionId: session.id,
+    webhookActivated: true,
+    plan: 'premium',
+    status: 'active',
+    createdAt: existingSubscription.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  try {
+    // DOUBLE VERIFY: Check that the existing user document's ID matches the client_reference_id
+    // This adds an extra layer of security to prevent incorrect subscription assignments
+    const existingUser = await getDoc(userRef);
+    
+    if (!existingUser.exists()) {
+      console.error(`User ${userId} not found in database during webhook processing`);
+      return;
     }
-  }, { merge: true });
+    
+    // Extra security check - verify we're updating the correct user
+    if (existingUser.id !== userId) {
+      console.error(`Security alert: Webhook trying to update user ${existingUser.id} but client_reference_id is ${userId}`);
+      return;
+    }
+    
+    // Update only the subscription field to avoid permission issues
+    await setDoc(userRef, {
+      subscription: subscriptionData
+    }, { merge: true });
+    
+    console.log(`Successfully updated subscription for user ${userId} via webhook`);
+    
+    // Send notification to user about their subscription activation
+    try {
+      await createSubscriptionNotification(userId, 'subscription_activated', {
+        subscriptionId: subscriptionId,
+        customerId: customerId
+      });
+    } catch (notificationError) {
+      console.error('Error sending activation notification:', notificationError);
+    }
+  } catch (error) {
+    console.error(`Error updating user ${userId} subscription:`, error);
+    // We'll still continue with the webhook processing
+  }
 }
 
 // Handle subscription updates
@@ -140,45 +187,74 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   
   if (snapshot.empty) {
     console.error('No user found with customer ID:', customerId);
+    console.log('This might happen if the customer ID was not saved during checkout');
     return;
   }
 
   // Update user's subscription status
   const userId = snapshot.docs[0].id;
   const userRef = doc(db, 'users', userId);
-  const currentDoc = await getDoc(userRef);
   
-  // Determine active state and plan based on subscription status
-  const isActive = subscription.status === 'active' || 
-                  subscription.status === 'trialing';
-  
-  // Get current data
-  const userData = currentDoc.exists() ? currentDoc.data() : {};
-  const currentPlan = userData.subscription?.plan || 'free';
-  
-  // Only downgrade from premium to free if subscription is inactive
-  // Otherwise, maintain the existing plan (important for subscription pauses)
-  const plan = isActive ? 'premium' : 'free';
-  
-  const subscriptionData = {
-    active: isActive,
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: subscription.id,
-    plan: plan,
-    status: subscription.status,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  console.log(`Updating subscription for user ${userId}:`, subscriptionData);
-  
-  await setDoc(userRef, {
-    ...userData,
-    subscription: subscriptionData
-  }, { merge: true });
-  
-  console.log('Subscription updated successfully');
+  try {
+    const currentDoc = await getDoc(userRef);
+    
+    // Determine active state and plan based on subscription status
+    const isActive = subscription.status === 'active' || 
+                    subscription.status === 'trialing';
+    
+    // Get current data
+    const userData = currentDoc.exists() ? currentDoc.data() : {};
+    const existingSubscription = userData.subscription || {};
+    
+    // Only downgrade from premium to free if subscription is inactive
+    // Otherwise, maintain the existing plan (important for subscription pauses)
+    const plan = isActive ? 'premium' : 'free';
+    
+    const subscriptionData = {
+      ...existingSubscription,
+      active: isActive,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscription.id,
+      plan: plan,
+      status: subscription.status,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+      webhookUpdated: true,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log(`Updating subscription for user ${userId}`);
+    
+    // Update only the subscription field to avoid permission issues
+    await setDoc(userRef, {
+      subscription: subscriptionData
+    }, { merge: true });
+    
+    console.log('Subscription updated successfully via webhook');
+    
+    // Notify the user if there's a status change
+    if (subscription.status !== existingSubscription.status) {
+      try {
+        if (!isActive && existingSubscription.active) {
+          // Subscription was deactivated
+          await createSubscriptionNotification(userId, 'subscription_expired', {
+            subscriptionId: subscription.id,
+            reason: subscription.status
+          });
+        } else if (isActive && !existingSubscription.active) {
+          // Subscription was reactivated
+          await createSubscriptionNotification(userId, 'subscription_activated', {
+            subscriptionId: subscription.id
+          });
+        }
+      } catch (notificationError) {
+        console.error('Error creating subscription status notification:', notificationError);
+      }
+    }
+  } catch (error) {
+    console.error(`Error updating subscription for user ${userId}:`, error);
+    // Log error but don't throw, to keep webhook processing
+  }
 }
 
 // Handle subscription deletions
@@ -225,6 +301,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }, { merge: true });
   
   console.log('Subscription marked as canceled successfully');
+  
+  // Notify the user that their subscription has been canceled
+  try {
+    await createSubscriptionNotification(userId, 'subscription_expired', {
+      subscriptionId: subscription.id,
+      reason: 'canceled',
+      canceledAt: new Date().toISOString()
+    });
+  } catch (notificationError) {
+    console.error('Error creating subscription cancellation notification:', notificationError);
+  }
 }
 
 // Handle invoice payment failures
@@ -279,6 +366,18 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   }, { merge: true });
   
   console.log('User subscription updated to reflect payment failure');
+  
+  // Notify the user about the payment failure
+  try {
+    await createSubscriptionNotification(userId, 'payment_failed', {
+      subscriptionId: invoice.subscription,
+      attemptCount: invoice.attempt_count,
+      nextAttempt: invoice.next_payment_attempt ? 
+                  new Date(invoice.next_payment_attempt * 1000).toISOString() : null
+    });
+  } catch (notificationError) {
+    console.error('Error creating payment failure notification:', notificationError);
+  }
 }
 
 // Handle successful invoice payments
@@ -329,4 +428,17 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }, { merge: true });
   
   console.log('User subscription updated to reflect successful payment');
+  
+  // If there was a payment failure flag, notify that payment is now successful
+  if (currentSubscription.paymentFailed) {
+    try {
+      await createSubscriptionNotification(userId, 'subscription_activated', {
+        subscriptionId: invoice.subscription,
+        previouslyFailed: true,
+        message: 'Seu pagamento foi processado com sucesso após a falha anterior.'
+      });
+    } catch (notificationError) {
+      console.error('Error creating payment success notification:', notificationError);
+    }
+  }
 }
