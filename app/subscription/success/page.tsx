@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
@@ -8,7 +8,7 @@ import { db } from '@/lib/firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useUser } from '@context/userContext';
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { userData } = useUser();
@@ -278,5 +278,27 @@ export default function SubscriptionSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component to show while suspense is active
+function SubscriptionSuccessLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 p-4">
+      <div className="w-full max-w-md p-8 bg-slate-800 rounded-xl shadow-2xl border border-purple-500/20">
+        <div className="flex flex-col items-center text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Carregando...</h1>
+          <p className="text-slate-300 mb-6">Verificando dados da assinatura...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={<SubscriptionSuccessLoading />}>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }

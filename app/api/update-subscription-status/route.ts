@@ -8,6 +8,57 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
 });
 
+// Define interface for subscription data
+interface SubscriptionData {
+  active: boolean;
+  plan: string;
+  apiDirectUpdate?: boolean;     // Optional: used in direct updates
+  apiSessionUpdate?: boolean;    // Optional: used in session-based updates
+  stripeSessionId: string | null;
+  verifiedOwner?: boolean;       // Optional: may not be present in all updates
+  updatedAt: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  [key: string]: any; // Allow additional properties
+}
+
+// Helper function to create consistent subscription data objects
+function createSubscriptionData(
+  options: {
+    isDirectUpdate?: boolean;
+    isSessionUpdate?: boolean;
+    isVerified?: boolean;
+    sessionId?: string | null;
+    customerId?: string;
+    subscriptionId?: string;
+  }
+): SubscriptionData {
+  const {
+    isDirectUpdate = false,
+    isSessionUpdate = false,
+    isVerified = false,
+    sessionId = null,
+    customerId,
+    subscriptionId
+  } = options;
+  
+  const data: SubscriptionData = {
+    active: true,
+    plan: 'premium',
+    stripeSessionId: sessionId,
+    updatedAt: new Date().toISOString()
+  };
+  
+  // Add conditional properties
+  if (isDirectUpdate) data.apiDirectUpdate = true;
+  if (isSessionUpdate) data.apiSessionUpdate = true;
+  if (isVerified) data.verifiedOwner = true;
+  if (customerId) data.stripeCustomerId = customerId;
+  if (subscriptionId) data.stripeSubscriptionId = subscriptionId;
+  
+  return data;
+}
+
 export async function POST(request: Request) {
   try {
     console.log('Update subscription status API called');
@@ -56,29 +107,32 @@ export async function POST(request: Request) {
       console.log('Direct update with provided user ID:', providedUserId);
       
       try {
-        // Create a simple subscription object
-        const subscriptionData = {
-          active: true,
-          plan: 'premium',
-          apiDirectUpdate: true,
-          stripeSessionId: sessionId,
-          verifiedOwner: true, // Since we've verified ownership above
-          updatedAt: new Date().toISOString(),
-        };
+        // Create subscription data with our helper
+        let customerId: string | undefined;
+        let subscriptionId: string | undefined;
         
-        // Add Stripe data if we have a session ID 
+        // Try to get Stripe data if we have a session ID
         if (sessionId) {
           try {
             const session = await stripe.checkout.sessions.retrieve(sessionId);
             if (session && session.customer && session.subscription) {
-              subscriptionData['stripeCustomerId'] = session.customer as string;
-              subscriptionData['stripeSubscriptionId'] = session.subscription as string;
+              customerId = session.customer as string;
+              subscriptionId = session.subscription as string;
             }
           } catch (stripeError) {
             // If Stripe lookup fails, continue with the basic data we have
             console.warn('Failed to get additional Stripe data:', stripeError);
           }
         }
+        
+        // Create subscription data object
+        const subscriptionData = createSubscriptionData({
+          isDirectUpdate: true,
+          isVerified: true,
+          sessionId,
+          customerId,
+          subscriptionId
+        });
         
         // Update only the subscription field
         const userRef = doc(db, 'users', providedUserId);
@@ -118,16 +172,17 @@ export async function POST(request: Request) {
           
           // Same approach as above - update subscription data
           const userRef = doc(db, 'users', userId);
+          
+          // Create subscription data with our helper
+          const subscriptionData = createSubscriptionData({
+            isSessionUpdate: true,
+            sessionId,
+            customerId: session.customer as string,
+            subscriptionId: session.subscription as string
+          });
+          
           await setDoc(userRef, {
-            subscription: {
-              active: true,
-              plan: 'premium',
-              apiSessionUpdate: true,
-              stripeSessionId: sessionId,
-              stripeCustomerId: session.customer as string,
-              stripeSubscriptionId: session.subscription as string,
-              updatedAt: new Date().toISOString(),
-            }
+            subscription: subscriptionData
           }, { merge: true });
           
           console.log('Session-based subscription update successful');

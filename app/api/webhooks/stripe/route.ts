@@ -156,7 +156,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Send notification to user about their subscription activation
     try {
       await createSubscriptionNotification(userId, 'subscription_activated', {
-        subscriptionId: subscription.id,
+        subscriptionId: subscriptionId,
         customerId: customerId
       });
     } catch (notificationError) {

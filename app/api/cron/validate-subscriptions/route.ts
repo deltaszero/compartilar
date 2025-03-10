@@ -54,9 +54,9 @@ export async function GET(request: Request) {
     };
     
     // Process each subscription
-    const updatePromises = snapshot.docs.map(async (doc) => {
-      const userId = doc.id;
-      const userData = doc.data();
+    const updatePromises = snapshot.docs.map(async (userDoc) => {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
       const subscription = userData.subscription || {};
       
       // Skip if subscription was updated recently (last 12 hours)

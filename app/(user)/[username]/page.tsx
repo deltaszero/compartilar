@@ -1,7 +1,9 @@
 // app/(user)/[username]/page.tsx
 'use client';
+// importing modules
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+// importing components
 import { useUser } from '@context/userContext';
 import LoadingPage from '@/app/components/LoadingPage';
 
@@ -18,13 +20,13 @@ export default function UserRootPage() {
         if (loading) return;
 
         if (!user) {
-            // Not logged in
+            // not logged in
             router.push('/login');
             return;
         }
 
-        // If it's the current user, go to their home page
-        // Otherwise, go to the profile page
+        // if it's the current user, go to their home page
+        // otherwise, go to the profile page
         if (userData?.username === username) {
             router.push(`/${username}/home`);
         } else {

@@ -9,7 +9,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 export async function POST(request: Request) {
   try {
-    const headersList = headers();
+    const headersList = await headers(); // Wait for headers to be resolved
+    const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const { priceId, email, userId } = await request.json();
 
     // Validate the required fields
@@ -30,8 +31,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${headersList.get('origin')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${headersList.get('origin')}/subscription/canceled`,
+      success_url: `${origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/subscription/canceled`,
       customer_email: email,
       client_reference_id: userId,
       locale: 'pt-BR', // Set Brazilian Portuguese as the checkout language

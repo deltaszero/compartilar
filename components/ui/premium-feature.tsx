@@ -2,7 +2,8 @@
 
 import { ReactNode } from 'react';
 import { Lock, Sparkles } from 'lucide-react';
-import { usePremiumFeatures, PremiumFeature } from '@/hooks/usePremiumFeatures';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
+import type { PremiumFeature } from '@/hooks/usePremiumFeatures';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { SubscriptionButton } from '@/app/components/logged-area/ui/SubscriptionButton';
@@ -52,7 +53,7 @@ export function PremiumFeature({
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  variant="outline" 
+                  variant="default" 
                   className="bg-slate-800/80 backdrop-blur border-purple-500/30 hover:bg-slate-700/90"
                 >
                   <Lock className="w-4 h-4 mr-2 text-purple-400" />

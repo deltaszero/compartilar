@@ -3,9 +3,9 @@
 import { UserProvider } from '@/context/userContext';
 
 export default function AuthLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return <UserProvider>{children}</UserProvider>;
+    return <UserProvider>{children}</UserProvider>;
 }

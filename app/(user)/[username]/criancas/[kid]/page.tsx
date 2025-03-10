@@ -1087,7 +1087,7 @@ export default function ChildDetailPage() {
                       Histórico de Alterações
                     </h2>
                     {!historyLoading && !historyError && historyEntries.length > 0 && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="default" className="text-xs">
                         {historyEntries.length} {historyEntries.length === 1 ? 'registro' : 'registros'}
                       </Badge>
                     )}
@@ -1178,7 +1178,7 @@ export default function ChildDetailPage() {
                               
                               {/* Display a badge with the number of changed fields */}
                               {entry.action === 'update' && entry.fields && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                                <Badge variant="default" className="text-xs px-1.5 py-0 h-5">
                                   {entry.fields.length} campo{entry.fields.length !== 1 ? 's' : ''}
                                 </Badge>
                               )}
