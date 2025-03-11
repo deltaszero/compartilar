@@ -9,6 +9,14 @@
 - `firebase emulators:start` - Run Firebase emulators locally
 - `firebase deploy --only hosting` - Deploy to Firebase Hosting
 
+## Backup Commands
+- `npm run backup` - Create local Firestore backup
+- `npm run restore [backup-file-path]` - Restore from local backup
+- `npm run backup:gcs` - Create GCS backup (requires Google Cloud SDK)
+- `npm run restore:gcs [backup-name]` - Restore from GCS backup
+- `npm run export:admin --key=/path/to/serviceAccountKey.json` - Export human-readable JSON as admin
+- See `scripts/backup-docs.md` for detailed documentation
+
 ## Code Style & Conventions
 - **TypeScript**: Strict typing with shared types in `/types/` directory
 - **Components**: React functional components with hooks; include type definitions

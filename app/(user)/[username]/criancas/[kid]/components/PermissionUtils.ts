@@ -4,6 +4,14 @@ import { addPermissionChangeHistory } from './HistoryUtils';
 import { toast } from '@/hooks/use-toast';
 import { logPermissionChange } from '@/lib/auditLogger';
 
+// Editor/Viewer types
+interface UserListItem {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  username: string;
+}
+
 // Add editor or viewer
 export const addUserAccess = async (
   childData: any,
@@ -11,8 +19,8 @@ export const addUserAccess = async (
   role: 'editor' | 'viewer',
   currentUser: any,
   userData: any,
-  setEditorsList: (updater: any) => void,
-  setViewersList: (updater: any) => void,
+  setEditorsList: (updater: (prev: UserListItem[]) => UserListItem[]) => void,
+  setViewersList: (updater: (prev: UserListItem[]) => UserListItem[]) => void,
   setChildData: (data: any) => void,
   setShowEditorsDialog: (show: boolean) => void,
   setShowViewersDialog: (show: boolean) => void,
@@ -90,7 +98,7 @@ export const addUserAccess = async (
       const userDoc = await getDoc(doc(db, 'users', userId));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setEditorsList(prev => {
+        setEditorsList((prev: UserListItem[]) => {
           // Check if user already exists in list
           const userExists = prev.some(editor => editor.uid === userId);
           if (userExists) {
@@ -151,7 +159,7 @@ export const addUserAccess = async (
       const userDoc = await getDoc(doc(db, 'users', userId));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setViewersList(prev => {
+        setViewersList((prev: UserListItem[]) => {
           // Check if user already exists in list
           const userExists = prev.some(viewer => viewer.uid === userId);
           if (userExists) {
@@ -211,10 +219,10 @@ export const removeUserAccess = async (
   role: 'editor' | 'viewer',
   currentUser: any,
   userData: any,
-  editorsList: any[],
-  viewersList: any[],
-  setEditorsList: (updater: any) => void,
-  setViewersList: (updater: any) => void,
+  editorsList: UserListItem[],
+  viewersList: UserListItem[],
+  setEditorsList: (updater: (prev: UserListItem[]) => UserListItem[]) => void,
+  setViewersList: (updater: (prev: UserListItem[]) => UserListItem[]) => void,
   setChildData: (data: any) => void,
   setUserBeingRemoved: (userId: string | null) => void,
   fetchChangeHistory: () => void
@@ -283,7 +291,7 @@ export const removeUserAccess = async (
       });
       
       // Update local state
-      setEditorsList(prev => prev.filter(editor => editor.uid !== userId));
+      setEditorsList((prev: UserListItem[]) => prev.filter(editor => editor.uid !== userId));
       
       toast({
         title: 'Editor removido',
@@ -322,7 +330,7 @@ export const removeUserAccess = async (
       });
       
       // Update local state
-      setViewersList(prev => prev.filter(viewer => viewer.uid !== userId));
+      setViewersList((prev: UserListItem[]) => prev.filter(viewer => viewer.uid !== userId));
       
       toast({
         title: 'Visualizador removido',
@@ -334,9 +342,9 @@ export const removeUserAccess = async (
     if (childData) {
       const updatedChild = { ...childData };
       if (role === 'editor') {
-        updatedChild.editors = (updatedChild.editors || []).filter(id => id !== userId);
+        updatedChild.editors = (updatedChild.editors || []).filter((id: string) => id !== userId);
       } else {
-        updatedChild.viewers = (updatedChild.viewers || []).filter(id => id !== userId);
+        updatedChild.viewers = (updatedChild.viewers || []).filter((id: string) => id !== userId);
       }
       setChildData(updatedChild);
     }

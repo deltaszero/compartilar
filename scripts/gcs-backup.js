@@ -30,8 +30,8 @@ const crypto = require('crypto');
 const os = require('os');
 
 // Configuration
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'your-project-id'; // Replace with your project ID
-const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'your-bucket-name'; // Replace with your bucket name
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'compartilar-firebase-app'; // Replace with your project ID
+const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'compartilar-firebase-app_backup'; // Replace with your bucket name
 const ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY; // Optional encryption key
 const TEMP_DIR = path.join(os.tmpdir(), 'compartilar-backups');
 const USE_ENCRYPTION = process.argv.includes('--no-encryption') ? false : !!ENCRYPTION_KEY;
@@ -119,17 +119,110 @@ async function runBackup() {
     // Create a temporary file for the export
     const tempFile = path.join(TEMP_DIR, `temp-${timestamp}.json`);
     
-    // Use Firebase CLI to export data
+    // Use Google Cloud CLI to export data to a GCS location first
     console.log('Exporting data from Firestore...');
+    const tempExportDir = path.join(TEMP_DIR, `export-${timestamp}`);
+    
+    // Create temporary export directory
+    if (!fs.existsSync(tempExportDir)) {
+      fs.mkdirSync(tempExportDir, { recursive: true });
+    }
+    
+    // Export to a temporary GCS location first
+    const tempGcsExportPath = `gs://${BUCKET_NAME}/temp-exports/${timestamp}`;
+    
+    // Run the export command
     execSync(
-      `firebase firestore:export ${tempFile} --project=${PROJECT_ID}`,
+      `gcloud firestore export ${tempGcsExportPath} --project=${PROJECT_ID}`,
       { stdio: 'inherit' }
+    );
+    
+    // Download the export data
+    console.log(`Downloading export data from ${tempGcsExportPath}...`);
+    execSync(
+      `gsutil -m cp -r ${tempGcsExportPath}/* ${tempExportDir}`,
+      { stdio: 'inherit' }
+    );
+    
+    // Convert the export data to a single JSON file
+    console.log('Converting export data to JSON format...');
+    const exportFiles = [];
+    
+    // Recursively find all export files
+    function findExportFiles(dir) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          findExportFiles(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.export_metadata')) {
+          // Skip metadata files
+          continue;
+        } else if (entry.isFile()) {
+          exportFiles.push(fullPath);
+        }
+      }
+    }
+    
+    findExportFiles(tempExportDir);
+    
+    // Create a JSON structure with all the exported data
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      project: PROJECT_ID,
+      collections: {}
+    };
+    
+    // Process each export file
+    for (const file of exportFiles) {
+      try {
+        const relativePath = path.relative(tempExportDir, file);
+        const pathParts = relativePath.split(path.sep);
+        
+        // Skip metadata files
+        if (pathParts[pathParts.length - 1].endsWith('.export_metadata')) {
+          continue;
+        }
+        
+        // Read file content
+        const content = fs.readFileSync(file, 'utf8');
+        
+        // Add to the export data structure
+        let current = exportData.collections;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const part = pathParts[i];
+          if (!current[part]) {
+            current[part] = {};
+          }
+          current = current[part];
+        }
+        
+        try {
+          // Try to parse as JSON
+          current[pathParts[pathParts.length - 1]] = JSON.parse(content);
+        } catch (e) {
+          // Store as string if not valid JSON
+          current[pathParts[pathParts.length - 1]] = content;
+        }
+      } catch (e) {
+        console.warn(`Failed to process export file ${file}: ${e.message}`);
+      }
+    }
+    
+    // Write the consolidated JSON file with explicit UTF-8 encoding
+    fs.writeFileSync(tempFile, JSON.stringify(exportData, null, 2), 'utf8');
+    
+    // Clean up temporary GCS export
+    console.log('Cleaning up temporary GCS export...');
+    execSync(
+      `gsutil -m rm -r ${tempGcsExportPath}`,
+      { stdio: 'pipe' }
     );
     
     // Compress the file
     console.log('Compressing data...');
-    const fileContent = fs.readFileSync(tempFile);
-    const compressed = zlib.gzipSync(fileContent);
+    const fileContent = fs.readFileSync(tempFile, 'utf8');
+    const compressed = zlib.gzipSync(Buffer.from(fileContent, 'utf8'));
     
     let finalData;
     let iv;
@@ -163,14 +256,14 @@ async function runBackup() {
       gcsPath: `gs://${BUCKET_NAME}/backups/${backupFileName}`
     };
     
-    fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2));
+    fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2), 'utf8');
     
-    // Upload to GCS
+    // Upload to GCS with explicit content-type
     console.log(`Uploading backup to ${gcsBackupPath}...`);
-    execSync(`gsutil cp ${backupFilePath} ${gcsBackupPath}`, { stdio: 'inherit' });
+    execSync(`gsutil -h "Content-Type:application/json; charset=utf-8" cp ${backupFilePath} ${gcsBackupPath}`, { stdio: 'inherit' });
     
     console.log(`Uploading metadata to ${gcsMetadataPath}...`);
-    execSync(`gsutil cp ${metadataFilePath} ${gcsMetadataPath}`, { stdio: 'inherit' });
+    execSync(`gsutil -h "Content-Type:application/json; charset=utf-8" cp ${metadataFilePath} ${gcsMetadataPath}`, { stdio: 'inherit' });
     
     // Set appropriate metadata on the files
     execSync(`gsutil setmeta -h "Content-Type:application/octet-stream" -h "x-goog-meta-backup-date:${new Date().toISOString()}" ${gcsBackupPath}`, { stdio: 'pipe' });
@@ -180,6 +273,31 @@ async function runBackup() {
     fs.unlinkSync(tempFile);
     fs.unlinkSync(backupFilePath);
     fs.unlinkSync(metadataFilePath);
+    
+    // Clean up temporary export directory
+    console.log('Cleaning up temporary export directory...');
+    try {
+      // Recursively delete the directory
+      function deleteDir(dir) {
+        if (fs.existsSync(dir)) {
+          fs.readdirSync(dir).forEach((file) => {
+            const curPath = path.join(dir, file);
+            if (fs.lstatSync(curPath).isDirectory()) {
+              // Recursive call
+              deleteDir(curPath);
+            } else {
+              // Delete file
+              fs.unlinkSync(curPath);
+            }
+          });
+          fs.rmdirSync(dir);
+        }
+      }
+      deleteDir(tempExportDir);
+      console.log(`Removed temporary directory: ${tempExportDir}`);
+    } catch (error) {
+      console.warn(`Failed to clean up temporary directory: ${error.message}`);
+    }
     
     console.log('Backup completed successfully!');
     console.log(`Backup file: ${gcsBackupPath}`);
@@ -191,18 +309,18 @@ async function runBackup() {
     // Record backup in Firestore for tracking (optional)
     try {
       console.log('Recording backup in Firestore...');
-      const recordCmd = `firebase firestore:set --project=${PROJECT_ID} "system_backups/${timestamp}" --data='${JSON.stringify({
-        timestamp: new Date().toISOString(),
-        gcsPath: `gs://${BUCKET_NAME}/backups/${backupFileName}`,
-        fileSize: metadata.fileSize,
-        originalSize: metadata.originalSize,
-        encrypted: USE_ENCRYPTION
-      })}'`;
-      
-      execSync(recordCmd, { stdio: 'pipe' });
-      console.log('Backup recorded in Firestore.');
+      // We don't use Firebase CLI for this since it doesn't have the command we expected
+      // Instead, we'll just log to console that you should record the backup manually
+      console.log('---');
+      console.log('Backup completed at:', new Date().toISOString());
+      console.log('GCS Path:', `gs://${BUCKET_NAME}/backups/${backupFileName}`);
+      console.log('File size:', formatBytes(metadata.fileSize));
+      console.log('Original size:', formatBytes(metadata.originalSize));
+      console.log('Encrypted:', USE_ENCRYPTION ? 'Yes' : 'No');
+      console.log('---');
+      console.log('NOTE: You may want to manually record this backup in Firestore');
     } catch (recordError) {
-      console.warn('Failed to record backup in Firestore:', recordError.message);
+      console.warn('Failed to record backup information:', recordError.message);
       console.warn('This is non-critical - your backup was still uploaded successfully.');
     }
     

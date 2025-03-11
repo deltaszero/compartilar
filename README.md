@@ -74,3 +74,10 @@ See `CLAUDE.md` file for development commands and code style guidelines.
 2. Commit your changes: `git commit -m 'Add some amazing feature'`
 3. Push to the branch: `git push origin feature/amazing-feature`
 4. Open a Pull Request
+
+
+# Development Snippets
+
+```sh
+npm run export:admin -- --key=/home/dusoudeth/Downloads/compartilar-firebase-app-firebase-adminsdk-7yjqp-4c09ff6f0e.json --output=/home/dusoudeth/Documentos/github/compartilar/temp/admin-export.json
+```

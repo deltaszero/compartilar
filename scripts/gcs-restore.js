@@ -29,8 +29,8 @@ const os = require('os');
 const readline = require('readline');
 
 // Configuration
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'your-project-id'; // Replace with your project ID
-const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'your-bucket-name'; // Replace with your bucket name
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'compartilar-firebase-app'; // Replace with your project ID
+const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'compartilar-firebase-app_backup'; // Replace with your bucket name
 const ENCRYPTION_KEY = process.env.BACKUP_ENCRYPTION_KEY; // Optional encryption key
 const TEMP_DIR = path.join(os.tmpdir(), 'compartilar-restores');
 
@@ -60,6 +60,58 @@ function formatBytes(bytes, decimals = 2) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Prepare the import structure for Firestore
+function prepareImportStructure(importDir, collectionsData, parentPath = '') {
+  // For each collection
+  for (const [collectionName, collectionData] of Object.entries(collectionsData)) {
+    const collectionPath = parentPath ? `${parentPath}/${collectionName}` : collectionName;
+    const collectionDir = path.join(importDir, collectionPath);
+    
+    // Create collection directory
+    fs.mkdirSync(collectionDir, { recursive: true });
+    
+    // For each document in the collection
+    for (const [docName, docData] of Object.entries(collectionData)) {
+      // Check if this is a document or a subcollection
+      if (typeof docData === 'object' && !Array.isArray(docData) && 
+          Object.keys(docData).some(key => typeof docData[key] === 'object' && !Array.isArray(docData[key]))) {
+        
+        // This might be a combination of document data and subcollections
+        const documentData = {};
+        const subcollections = {};
+        
+        // Separate document data from subcollections
+        for (const [key, value] of Object.entries(docData)) {
+          if (typeof value === 'object' && !Array.isArray(value) && 
+              Object.keys(value).length > 0 && 
+              typeof Object.values(value)[0] === 'object') {
+            // This looks like a subcollection
+            subcollections[key] = value;
+          } else {
+            // This is regular document data
+            documentData[key] = value;
+          }
+        }
+        
+        // Write document data if there is any
+        if (Object.keys(documentData).length > 0) {
+          const docFile = path.join(collectionDir, `${docName}.json`);
+          fs.writeFileSync(docFile, JSON.stringify(documentData, null, 2), 'utf8');
+        }
+        
+        // Process subcollections recursively
+        if (Object.keys(subcollections).length > 0) {
+          prepareImportStructure(importDir, subcollections, `${collectionPath}/${docName}`);
+        }
+      } else {
+        // This is a regular document with no subcollections
+        const docFile = path.join(collectionDir, `${docName}.json`);
+        fs.writeFileSync(docFile, JSON.stringify(docData, null, 2), 'utf8');
+      }
+    }
+  }
 }
 
 // Get backup path from command line or environment
@@ -265,11 +317,42 @@ async function runRestore() {
     fs.writeFileSync(tempFile, processedData);
     console.log(`Processed backup to ${tempFile}`);
     
-    // Import data
+    // Import data to Firestore using Google Cloud instead of Firebase CLI
+    console.log('Importing data to Firestore...');
+    
+    // Parse the JSON file to get collection data
+    console.log('Parsing backup data...');
+    // Make sure we're reading and parsing with UTF-8 encoding
+    const backupData = JSON.parse(fs.readFileSync(tempFile, {encoding: 'utf8'}));
+    
+    // Create a temporary directory for the import structure
+    const importDir = path.join(TEMP_DIR, `import-${Date.now()}`);
+    fs.mkdirSync(importDir, { recursive: true });
+    
+    // Preparing import files
+    console.log('Preparing data for import...');
+    prepareImportStructure(importDir, backupData.collections);
+    
+    // Upload the import files to GCS
+    const importGcsPath = `gs://${BUCKET_NAME}/temp-imports/${Date.now()}`;
+    console.log(`Uploading import data to ${importGcsPath}...`);
+    execSync(
+      `gsutil -m cp -r ${importDir}/* ${importGcsPath}`,
+      { stdio: 'inherit' }
+    );
+    
+    // Import the data from GCS
     console.log('Importing data to Firestore...');
     execSync(
-      `firebase firestore:import ${tempFile} --project=${PROJECT_ID}`,
+      `gcloud firestore import ${importGcsPath} --project=${PROJECT_ID}`,
       { stdio: 'inherit' }
+    );
+    
+    // Clean up the temporary import files in GCS
+    console.log('Cleaning up temporary import files...');
+    execSync(
+      `gsutil -m rm -r ${importGcsPath}`,
+      { stdio: 'pipe' }
     );
     
     // Clean up
@@ -280,26 +363,45 @@ async function runRestore() {
       fs.unlinkSync(metadataFile);
     }
     
+    // Clean up import directory
+    try {
+      // Recursively delete the directory
+      function deleteDir(dir) {
+        if (fs.existsSync(dir)) {
+          fs.readdirSync(dir).forEach((file) => {
+            const curPath = path.join(dir, file);
+            if (fs.lstatSync(curPath).isDirectory()) {
+              // Recursive call
+              deleteDir(curPath);
+            } else {
+              // Delete file
+              fs.unlinkSync(curPath);
+            }
+          });
+          fs.rmdirSync(dir);
+        }
+      }
+      deleteDir(importDir);
+      console.log(`Removed temporary import directory: ${importDir}`);
+    } catch (error) {
+      console.warn(`Failed to clean up temporary import directory: ${error.message}`);
+    }
+    
     console.log('Restore completed successfully!');
     
     // Record restore in Firestore for tracking (optional)
     try {
       console.log('Recording restore in Firestore...');
-      const timestamp = new Date().toISOString()
-        .replace(/[:.]/g, '-')
-        .replace('T', '-')
-        .slice(0, 19);
-      
-      const recordCmd = `firebase firestore:set --project=${PROJECT_ID} "system_restores/${timestamp}" --data='${JSON.stringify({
-        timestamp: new Date().toISOString(),
-        sourceBackup: backupPath,
-        restoreBy: "manual-restore"
-      })}'`;
-      
-      execSync(recordCmd, { stdio: 'pipe' });
-      console.log('Restore recorded in Firestore.');
+      // We don't use Firebase CLI for this since it doesn't have the command we expected
+      // Instead, we'll just log to console that you should record the restore manually
+      console.log('---');
+      console.log('Restore completed at:', new Date().toISOString());
+      console.log('Source backup:', backupPath);
+      console.log('Project ID:', PROJECT_ID);
+      console.log('---');
+      console.log('NOTE: You may want to manually record this restore operation in Firestore');
     } catch (recordError) {
-      console.warn('Failed to record restore in Firestore:', recordError.message);
+      console.warn('Failed to record restore information:', recordError.message);
       console.warn('This is non-critical - your restore was completed successfully.');
     }
     
