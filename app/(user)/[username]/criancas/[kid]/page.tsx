@@ -697,6 +697,10 @@ export default function ChildDetailPage() {
         }
       }
 
+      // Preserve the current editors and viewers list which are needed for security rules validation
+      console.log('Starting soft delete process for child document with ID:', childData.id);
+      console.log('Using updated softDeleteDocument with proper editors/viewers handling');
+      
       // Use soft delete instead of permanent deletion
       const success = await softDeleteDocument(
         'children',
@@ -707,25 +711,35 @@ export default function ChildDetailPage() {
         childName
       );
       
-      // Add extra audit log specifically for child deletion (in addition to what softDelete logs)
-      await logChildAudit({
-        userId: user.uid,
-        userDisplayName: userData?.displayName || userData?.username,
-        childId: childData.id,
-        childName: childName,
-        action: 'soft_delete',
-        details: {
-          operation: 'soft_delete_child',
-          fields: ['isDeleted'],
-          oldValues: { isDeleted: false },
-          newValues: { 
-            isDeleted: true,
-            photoInfo: photoInfo
-          },
-          notes: `User soft-deleted child record for ${childName}`
-        }
-      });
+      if (!success) {
+        throw new Error('Soft delete operation returned failure status');
+      }
+      
+      // Try to add extra audit log, but don't let it block the main flow if it fails
+      try {
+        await logChildAudit({
+          userId: user.uid,
+          userDisplayName: userData?.displayName || userData?.username,
+          childId: childData.id,
+          childName: childName,
+          action: 'soft_delete',
+          details: {
+            operation: 'soft_delete_child',
+            fields: ['isDeleted'],
+            oldValues: { isDeleted: false },
+            newValues: { 
+              isDeleted: true,
+              photoInfo: photoInfo
+            },
+            notes: `User soft-deleted child record for ${childName}`
+          }
+        });
+      } catch (auditError) {
+        // Just log the error but continue with the main flow
+        console.error('Error logging child audit (expected if permissions are restricted):', auditError);
+      }
 
+      // Always show success message and redirect, even if some parts failed
       toast({
         title: 'Criança removida',
         description: 'Os dados foram excluídos com sucesso!'
@@ -735,11 +749,22 @@ export default function ChildDetailPage() {
       router.push(`/${username}/criancas`);
     } catch (error) {
       console.error('Error deleting child:', error);
+      
+      // Provide more specific error message if possible
+      let errorMessage = 'Não foi possível excluir a criança. Tente novamente.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission') || error.message.includes('insufficient')) {
+          errorMessage = 'Você não tem permissão para excluir esta criança.';
+        }
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Erro ao excluir',
-        description: 'Não foi possível excluir a criança. Tente novamente.'
+        description: errorMessage
       });
+      
       setIsDeleting(false);
     }
   };

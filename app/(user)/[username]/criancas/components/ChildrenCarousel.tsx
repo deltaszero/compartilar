@@ -100,10 +100,39 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
         }
     }
 
+    // Filter out any deleted children just to be extra safe
+    const visibleChildren = children.filter(child => !child.isDeleted);
+    
+    // If there are no visible children after filtering, show empty state
+    if (visibleChildren.length === 0 && !isLoading) {
+        return (
+            <div className="w-full h-[300px] rounded-xl bg-muted/30 border-2 border-border flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="text-xl font-semibold text-muted-foreground mb-2">Nenhuma criança cadastrada</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                    {isOwnChildren
+                        ? "Adicione crianças ao seu perfil para visualizá-las aqui."
+                        : "Este usuário não possui crianças cadastradas."}
+                </p>
+                {isOwnChildren ? (
+                    <Link href={`/${username}/criancas/novo`}>
+                        <Button variant="default" className='bg-mainStrongGreen'>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Adicionar criança
+                        </Button>
+                    </Link>
+                ) : (
+                    <Link href={`/${username}/perfil`}>
+                        <Button variant="default">Ir para o Perfil</Button>
+                    </Link>
+                )}
+            </div>
+        );
+    }
+    
     return (
         <div className="space-y-4">
             {/* Add Child Button - shown above carousel when user has children and it's their own profile */}
-            {isOwnChildren && children.length > 0 && (
+            {isOwnChildren && visibleChildren.length > 0 && (
                 <div className="flex justify-end mb-2">
                     <PremiumFeature feature="unlimited_children">
                         <Link href={`/${username}/criancas/novo`}>
@@ -117,9 +146,9 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
             )}
 
             <div className="w-full rounded-xl overflow-hidden border-2 border-border">
-                <Carousel className="w-full" setApi={setApi} opts={{ loop: children.length > 1 }}>
+                <Carousel className="w-full" setApi={setApi} opts={{ loop: visibleChildren.length > 1 }}>
                     <CarouselContent>
-                        {children.map((child) => (
+                        {visibleChildren.map((child) => (
                             <CarouselItem key={child.id}>
                                 <Card className="border-none shadow-none bg-transparent">
                                     <CardContent className="p-0">
@@ -171,14 +200,14 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                         ))}
                     </CarouselContent>
 
-                    {children.length > 1 && (
+                    {visibleChildren.length > 1 && (
                         <>
                             <CarouselPrevious className="left-4 bg-bw hover:bg-background" />
                             <CarouselNext className="right-4 bg-bw hover:bg-background" />
 
                             {/* Dots indicator */}
                             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
-                                {children.map((_, index) => (
+                                {visibleChildren.map((_, index) => (
                                     <button
                                         key={index}
                                         onClick={() => api?.scrollTo(index)}

@@ -66,9 +66,16 @@ export async function GET(request: NextRequest) {
     // Process children data
     const childrenMap = new Map();
     
-    // Add children from viewer query
+    // Add children from viewer query (excluding deleted children)
     viewerSnapshot.docs.forEach(doc => {
       const childData = doc.data();
+      
+      // Skip deleted children
+      if (childData.isDeleted === true) {
+        console.log(`Skipping deleted child ${doc.id} (viewer access) in API response`);
+        return;
+      }
+      
       childrenMap.set(doc.id, {
         id: doc.id,
         name: childData.name || `${childData.firstName || ''} ${childData.lastName || ''}`.trim(),
@@ -79,13 +86,21 @@ export async function GET(request: NextRequest) {
         gender: childData.gender || null,
         editors: childData.editors || [],
         viewers: childData.viewers || [],
-        accessLevel: 'viewer'
+        accessLevel: 'viewer',
+        isDeleted: childData.isDeleted || false // Include this flag for consistency
       });
     });
     
-    // Add children from editor query, updating access level if needed
+    // Add children from editor query, updating access level if needed (excluding deleted children)
     editorSnapshot.docs.forEach(doc => {
       const childData = doc.data();
+      
+      // Skip deleted children
+      if (childData.isDeleted === true) {
+        console.log(`Skipping deleted child ${doc.id} (editor access) in API response`);
+        return;
+      }
+      
       if (childrenMap.has(doc.id)) {
         // Already in map, update access level to editor
         childrenMap.get(doc.id).accessLevel = 'editor';
@@ -101,7 +116,8 @@ export async function GET(request: NextRequest) {
           gender: childData.gender || null,
           editors: childData.editors || [],
           viewers: childData.viewers || [],
-          accessLevel: 'editor'
+          accessLevel: 'editor',
+          isDeleted: childData.isDeleted || false // Include this flag for consistency
         });
       }
     });

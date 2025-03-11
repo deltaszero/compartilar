@@ -18,6 +18,9 @@ interface ChildrenGridProps {
 export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGridProps) => {
   const { username } = useParams<{ username: string }>();
 
+  // Filter out any deleted children - belt-and-suspenders approach
+  const visibleChildren = children.filter(child => !child.isDeleted);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -101,7 +104,7 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
       </div>
 
       {/* Empty state */}
-      {children.length === 0 && (
+      {visibleChildren.length === 0 && (
         <div className="bg-muted/30 rounded-xl border border-border p-8 text-center">
           <h3 className="text-xl font-medium mb-2">Nenhuma criança cadastrada</h3>
           <p className="text-muted-foreground mb-6">
@@ -122,7 +125,7 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
 
       {/* Children grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {children.map((child) => (
+        {visibleChildren.map((child) => (
           <Card key={child.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <div className="flex flex-col sm:flex-row">
               <div className="relative w-full sm:w-48 h-48 bg-gradient-to-br from-primary/10 to-secondary/10 border-b sm:border-b-0 sm:border-r border-border">

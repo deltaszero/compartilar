@@ -89,6 +89,13 @@ export async function GET(request: NextRequest) {
       // Process viewer children
       viewerSnapshot.docs.forEach(doc => {
         const childData = doc.data();
+        
+        // Skip deleted children
+        if (childData.isDeleted === true) {
+          console.log(`Skipping deleted child ${doc.id} (viewer access) in profile/children API`);
+          return;
+        }
+        
         childrenMap.set(doc.id, {
           id: doc.id,
           ...childData,
@@ -99,6 +106,13 @@ export async function GET(request: NextRequest) {
       // Process editor children, overriding accessLevel if needed
       editorSnapshot.docs.forEach(doc => {
         const childData = doc.data();
+        
+        // Skip deleted children
+        if (childData.isDeleted === true) {
+          console.log(`Skipping deleted child ${doc.id} (editor access) in profile/children API`);
+          return;
+        }
+        
         if (childrenMap.has(doc.id)) {
           // Update access level to editor
           childrenMap.get(doc.id).accessLevel = 'editor';
@@ -132,6 +146,13 @@ export async function GET(request: NextRequest) {
       
       for (const doc of editorSnapshot.docs) {
         const childData = doc.data();
+        
+        // Skip deleted children
+        if (childData.isDeleted === true) {
+          console.log(`Skipping deleted child ${doc.id} in profile view (other user's profile)`);
+          continue;
+        }
+        
         const editors = childData.editors || [];
         const viewers = childData.viewers || [];
         
