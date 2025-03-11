@@ -1,37 +1,35 @@
 # CompartiLar Development Guidelines
 
-## Build & Test Commands
+## Build Commands
 - `npm run dev` - Development server with Turbopack
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run local` - Dev server accessible from network
+- `npm run local` - Dev server accessible from local network
 - `firebase emulators:start` - Run Firebase emulators locally
 - `firebase deploy --only hosting` - Deploy to Firebase Hosting
 
 ## Code Style & Conventions
-- **TypeScript**: Strict typing; shared types in `/types/` directory
-- **Components**: React functional components with hooks
+- **TypeScript**: Strict typing with shared types in `/types/` directory
+- **Components**: React functional components with hooks; include type definitions
 - **Firebase**: Collection/document/subcollection pattern; use subcollections over root collections
 - **Permissions**: Use editors/viewers arrays in documents for access control
-- **Imports**: React/Next → Firebase → External libraries → Internal components → Types → Styles
-- **Naming**: PascalCase components, camelCase variables/functions, snake_case Firebase collections
-- **Formatting**: 2-space indent, single quotes, semicolons, Tailwind CSS utilities
-- **Error Handling**: Use try/catch with console.error for Firebase operations; provide user feedback with toasts
+- **Import Order**: React/Next → Firebase → External libraries → Internal components → Types → Styles
+- **Naming**: PascalCase for components, camelCase for variables/functions, snake_case for Firebase collections
+- **Formatting**: 2-space indent, single quotes, semicolons, Tailwind CSS utilities for styling
+- **Error Handling**: Use try/catch with console.error plus user-facing toasts for feedback
 
 ## Project Structure
 - App Router with route groups: `(auth)`, `(user)`, etc.
-- User pages under `app/(user)/[username]/` with shared components
+- User pages under `app/(user)/[username]/` with feature-specific components
 - UI components in `/components/ui/` (shadcn/ui based)
-- Firebase config in `/app/lib/firebaseConfig.ts` and `/lib/firebaseConfig.ts`
-- Path aliases: `@/*`, `@app/*`, `@components/*`, `@lib/*`
+- Path aliases: `@/*`, `@app/*`, `@components/*`, `@lib/*`, `@context/*`, `@assets/*`
 
 ## Firebase Best Practices
-- Detach Firestore listeners in useEffect cleanup
-- Check for existing data before creating/updating docs
+- Detach Firestore listeners in useEffect cleanup functions
+- Check for existing data before creating/updating documents
 - Use batched writes or transactions for related operations
-- Add change history for important operations
-- Use `addFirestoreListener` for consistent listener management
-- Implement security rules for all collections
-- For change_history access, validate editors array permissions
+- Add change_history for important operations with timestamps
+- Use permissioning through editors/viewers arrays consistently
 - After auth operations, refresh token: `await user.getIdToken(true)`
+- For sensitive operations, validate against security rules first

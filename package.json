@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "local": "next dev -H 0.0.0.0"
+    "local": "next dev -H 0.0.0.0",
+    "backup": "node scripts/local-backup.js",
+    "restore": "node scripts/local-restore.js",
+    "backup:gcs": "node scripts/gcs-backup.js",
+    "restore:gcs": "node scripts/gcs-restore.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
