@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, KeyRound, Eye, EyeOff, User } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,48 +41,26 @@ export function SignupForm() {
         },
     });
 
-    // Function to check if email already exists
-    const checkEmailExists = async (email: string): Promise<boolean> => {
-        try {
-            const usersRef = collection(db, 'users');
-            const q = query(usersRef, where('email', '==', email));
-            const snapshot = await getDocs(q);
-            return !snapshot.empty;
-        } catch (error) {
-            console.error('Error checking email:', error);
-            return false;
-        }
-    };
-
-    // Function to check if username already exists
+    // Function to check if username exists using the API
     const checkUsernameExists = async (username: string): Promise<boolean> => {
         try {
-            const usersRef = collection(db, 'users');
-            const q = query(usersRef, where('username', '==', username.toLowerCase()));
-            const snapshot = await getDocs(q);
-            return !snapshot.empty;
+            const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
+            if (!response.ok) {
+                throw new Error('Failed to check username');
+            }
+            
+            const result = await response.json();
+            return !result.available;
         } catch (error) {
             console.error('Error checking username:', error);
-            return false;
+            return false; // Assume not taken in case of error to allow signup attempt
         }
     };
 
     const handleSignup = async (data: SignupFormValues) => {
         setLoading(true);
         try {
-            // First check if email already exists
-            const emailExists = await checkEmailExists(data.email);
-            if (emailExists) {
-                toast({
-                    title: "Email já cadastrado",
-                    description: "Este email já está sendo usado por outra conta.",
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
-
-            // Then check if username already exists
+            // First check if username already exists via our API
             const usernameExists = await checkUsernameExists(data.username);
             if (usernameExists) {
                 toast({
@@ -94,95 +72,85 @@ export function SignupForm() {
                 return;
             }
 
-            // Create new user
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                data.email,
-                data.password
-            );
-            const user = userCredential.user;
-            
-            // First test write to a simple test collection to verify permissions are working
-            try {
-                console.log("Testing Firestore permissions...");
-                await setDoc(doc(db, 'test_signup', `test_${user.uid}`), {
-                    uid: user.uid,
-                    timestamp: new Date().toISOString(),
-                    testWrite: true
-                });
-                console.log("Test write successful");
-            } catch (testError) {
-                console.error("Test write failed:", testError);
-                // Continue anyway, we just want to log this
-            }
-
-            // Update profile with username
-            await updateProfile(user, {
-                displayName: data.username
-            });
-
-            console.log("Creating user document in Firestore...");
-            // Create user document in the users collection
-            try {
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
+            // Call the signup API to validate email and username
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                     email: data.email,
-                    username: data.username.toLowerCase(), // Store username in lowercase for easier lookup
-                    displayName: data.username, // Keep original casing for display
+                    password: data.password,
+                    username: data.username,
+                }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.error || 'Erro ao criar conta');
+            }
+            
+            if (result.useClientSideSignup) {
+                // Use client-side signup
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth, 
+                    data.email, 
+                    data.password
+                );
+                
+                // Update the profile with the username
+                await updateProfile(userCredential.user, {
+                    displayName: data.username
+                });
+                
+                // Create user document in Firestore
+                const userRef = doc(db, 'users', userCredential.user.uid);
+                await setDoc(userRef, {
+                    uid: userCredential.user.uid,
+                    email: data.email,
+                    username: data.username.toLowerCase(),
+                    displayName: data.username,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                 });
-                console.log("User document created successfully");
-            } catch (error) {
-                console.error("Error creating user document:", error);
-                throw error; // Re-throw to be caught by the outer catch block
+                
+                toast({
+                    title: "Conta criada",
+                    description: "Redirecionando para sua área...",
+                });
+                
+                // Redirect to the login redirect page
+                router.push('/login/redirect');
+            } else if (result.customToken) {
+                // Legacy support for custom token
+                await signInWithCustomToken(auth, result.customToken);
+                
+                toast({
+                    title: "Conta criada",
+                    description: "Redirecionando para sua área...",
+                });
+                
+                router.push('/login/redirect');
+            } else {
+                throw new Error('Resposta inválida do servidor');
             }
-            
-            // Add a small delay to ensure Firestore write completes and auth token is refreshed
-            // This helps prevent "Missing or insufficient permissions" errors
-            toast({
-                title: "Conta criada",
-                description: "Redirecionando para sua área...",
-            });
-            
-            console.log("Waiting for Firebase to process everything...");
-            // Wait for Firebase to process everything
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            console.log("Refreshing auth token...");
-            // Refresh the token to ensure it contains the latest claims
-            try {
-                await user.getIdToken(true);
-                console.log("Auth token refreshed successfully");
-            } catch (tokenError) {
-                console.error("Error refreshing auth token:", tokenError);
-            }
-            
-            // Redirect to the redirect page
-            console.log("Email signup completed, redirecting to redirect page...");
-            router.push('/login/redirect');
-
         } catch (error: unknown) {
             console.error("Signup error:", error);
             let message = "Erro ao criar conta";
 
             if (error instanceof FirebaseError) {
-                console.error("Firebase error code:", error.code);
-                console.error("Firebase error message:", error.message);
-                
                 if (error.code === 'auth/email-already-in-use') {
                     message = "Este email já está em uso";
                 } else if (error.code === 'auth/invalid-email') {
                     message = "Email inválido";
                 } else if (error.code === 'auth/weak-password') {
                     message = "Senha muito fraca";
-                } else if (error.code === 'permission-denied' || error.code === 'firebase/permission-denied') {
-                    message = "Erro de permissão ao criar conta. Por favor, tente novamente.";
-                } else if (error.code === 'firebase/insufficient-permissions') {
-                    message = "Permissões insuficientes para criar conta.";
                 } else {
-                    message = `Erro: ${error.message}`;
+                    message = `Erro de autenticação: ${error.message}`;
                 }
+            } else if (error instanceof Error) {
+                message = error.message;
             }
 
             toast({
@@ -208,116 +176,83 @@ export function SignupForm() {
                 prompt: 'select_account'
             });
             
-            // Sign in with popup
+            // Use Firebase client SDK for Google login
             const result = await signInWithPopup(auth, provider);
-            const user = result.user;
             
-            // First test write to a simple test collection to verify permissions are working
-            try {
-                console.log("Testing Google Firestore permissions...");
-                await setDoc(doc(db, 'test_signup', `google_test_${user.uid}`), {
-                    uid: user.uid,
-                    timestamp: new Date().toISOString(),
-                    testWrite: true,
-                    provider: 'google'
-                });
-                console.log("Google test write successful");
-            } catch (testError) {
-                console.error("Google test write failed:", testError);
-                // Continue anyway, we just want to log this
-            }
+            // Get the ID token for API call
+            const idToken = await result.user.getIdToken();
             
-            // Check if the Google email already exists in our database
-            const emailExists = await checkEmailExists(user.email || '');
+            // Check if user has a document in Firestore
+            const userRef = doc(db, 'users', result.user.uid);
+            const userDoc = await getDoc(userRef);
             
-            // Small delay to ensure authentication is fully processed
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            try {
-                // Get user reference from Firestore
-                const userRef = doc(db, 'users', user.uid);
-                
-                // Extract name information from Google
-                const displayName = user.displayName || '';
+            // If user doesn't exist in Firestore, create their document
+            if (!userDoc.exists()) {
+                // Extract name from Google
+                const displayName = result.user.displayName || '';
                 const nameParts = displayName.split(' ');
                 const firstName = nameParts[0] || '';
                 const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
                 
                 // Create a username from email
-                const emailPrefix = user.email?.split('@')[0] || '';
-                let baseUsername = emailPrefix.toLowerCase();
-                let username = baseUsername;
+                const emailPrefix = result.user.email?.split('@')[0] || '';
+                const baseUsername = emailPrefix.toLowerCase();
                 
-                // Check if the username exists, add a random number if it does
-                let usernameExists = await checkUsernameExists(username);
-                let attempt = 0;
+                // Check if username exists
+                const usernameResponse = await fetch(`/api/auth/check-username?username=${encodeURIComponent(baseUsername)}`);
+                const usernameData = await usernameResponse.json();
                 
-                // If username already exists, try adding random numbers until we find an available one
-                while (usernameExists && attempt < 5) {
-                    const random = Math.floor(Math.random() * 10000);
-                    username = `${baseUsername}${random}`;
-                    usernameExists = await checkUsernameExists(username);
-                    attempt++;
+                let finalUsername = baseUsername;
+                if (!usernameData.available) {
+                    // Try adding numbers until we find an available username
+                    let attempt = 0;
+                    while (attempt < 5) {
+                        const random = Math.floor(Math.random() * 10000);
+                        const candidateUsername = `${baseUsername}${random}`;
+                        
+                        const checkResponse = await fetch(`/api/auth/check-username?username=${encodeURIComponent(candidateUsername)}`);
+                        const checkData = await checkResponse.json();
+                        
+                        if (checkData.available) {
+                            finalUsername = candidateUsername;
+                            break;
+                        }
+                        
+                        attempt++;
+                    }
                 }
                 
-                console.log("Creating user document for Google sign-in...");
-                // Create user document in Firestore
-                try {
-                    await setDoc(userRef, {
-                        uid: user.uid,
-                        email: user.email,
-                        username: username,
-                        displayName: displayName || username, // Use Google display name or username
-                        firstName: firstName,
-                        lastName: lastName,
-                        photoURL: user.photoURL,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    });
-                    console.log("Google user document created successfully");
-                } catch (docError) {
-                    console.error("Error creating Google user document:", docError);
-                    throw docError;
-                }
+                // Create the user document
+                await setDoc(userRef, {
+                    uid: result.user.uid,
+                    email: result.user.email,
+                    username: finalUsername,
+                    displayName: result.user.displayName || finalUsername,
+                    firstName: firstName,
+                    lastName: lastName,
+                    photoURL: result.user.photoURL,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
                 
                 toast({
-                    title: emailExists ? "Login efetuado" : "Conta criada",
+                    title: "Conta criada",
                     description: "Redirecionando para sua área...",
                 });
-                
-                console.log("Waiting for Google Firebase to process everything...");
-                // Wait for Firebase to process everything - increased delay for Google auth
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                console.log("Refreshing Google auth token...");
-                // Refresh the token to ensure it contains the latest claims
-                try {
-                    await user.getIdToken(true);
-                    console.log("Google auth token refreshed successfully");
-                } catch (tokenError) {
-                    console.error("Error refreshing Google auth token:", tokenError);
-                }
-            } catch (firestoreError) {
-                console.error("Error saving user data to Firestore:", firestoreError);
+            } else {
                 toast({
-                    title: "Aviso",
-                    description: "Autenticado com sucesso, mas ocorreu um erro ao salvar seus dados. Algumas funcionalidades podem estar limitadas.",
+                    title: "Login efetuado",
+                    description: "Redirecionando para sua área...",
                 });
-                // Continue with signup even if saving user data fails
-                // The user is still authenticated at this point
             }
             
             // Redirect to the redirect page
-            console.log("Google signup completed, redirecting to redirect page...");
             router.push('/login/redirect');
         } catch (error: unknown) {
             console.error("Google signup error:", error);
             let message = "Erro ao criar conta com Google";
             
             if (error instanceof FirebaseError) {
-                console.error("Google Firebase error code:", error.code);
-                console.error("Google Firebase error message:", error.message);
-                
                 if (error.code === 'auth/popup-closed-by-user') {
                     message = "Cadastro cancelado pelo usuário";
                 } else if (error.code === 'auth/account-exists-with-different-credential') {
@@ -326,15 +261,9 @@ export function SignupForm() {
                     message = "Autenticação com Google não está habilitada. Contate o administrador.";
                 } else if (error.code === 'auth/popup-blocked') {
                     message = "Bloqueador de pop-ups impediu a autenticação. Permita pop-ups e tente novamente.";
-                } else if (error.code === 'permission-denied' || error.code === 'firebase/permission-denied') {
-                    message = "Erro de permissão ao criar conta com Google. Por favor, tente novamente.";
-                } else if (error.code === 'firebase/insufficient-permissions') {
-                    message = "Permissões insuficientes para criar conta com Google.";
-                } else if (error.message && error.message.includes('stream token')) {
-                    message = "Erro de conexão com Firebase. Tente novamente em alguns instantes.";
-                } else {
-                    message = `Erro Google: ${error.message}`;
                 }
+            } else if (error instanceof Error) {
+                message = error.message;
             }
             
             toast({

@@ -59,12 +59,32 @@ export function useProfileEdit(initialData: Partial<SignupFormData>, userId: str
       // Get updatable fields (exclude certain fields like password)
       const { password, confirmPassword, uid, ...updatableData } = formData;
       
-      // Update Firestore document - now we only use users collection
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        ...updatableData,
-        updatedAt: new Date()
+      // Call the API to update the profile
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId,
+          updateData: updatableData
+        })
       });
+      
+      if (!response.ok) {
+        // Try to get the error message
+        let errorMessage = 'Não foi possível salvar suas alterações.';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If we can't parse the JSON, just use the default message
+        }
+        
+        throw new Error(errorMessage);
+      }
       
       // Show success toast
       toast({
@@ -79,7 +99,7 @@ export function useProfileEdit(initialData: Partial<SignupFormData>, userId: str
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar',
-        description: 'Não foi possível salvar suas alterações. Tente novamente.',
+        description: error.message || 'Não foi possível salvar suas alterações. Tente novamente.',
       });
     } finally {
       setIsSaving(false);

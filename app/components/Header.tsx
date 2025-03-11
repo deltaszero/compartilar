@@ -21,8 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/app/lib/utils';
 import { useUser } from '@/context/userContext';
 import { signOut } from 'firebase/auth';
-import { auth, markFirestoreListenersInactive, db } from '@/lib/firebaseConfig';
-import { disableNetwork, enableNetwork } from 'firebase/firestore';
+import { auth, markFirestoreListenersInactive } from '@/lib/firebaseConfig';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -153,27 +152,28 @@ const Header = () => {
 
     const handleSignOut = async () => {
         try {
-            // First, mark all listeners as inactive
+            // Mark listeners as inactive to prevent further updates
             markFirestoreListenersInactive();
             
-            try {
-                // Force disconnect Firestore
-                await disableNetwork(db);
-            } catch (e) {
-                console.log("Error disabling network:", e);
-                // Non-critical, continue
-            }
-            
-            // Navigate away from protected routes
+            // Navigate away from protected routes immediately
             router.push('/');
             
-            // Sign out with a small delay
-            setTimeout(async () => {
+            if (user) {
                 try {
-                    await signOut(auth);
+                    // Get the current ID token
+                    const idToken = await user.getIdToken();
                     
-                    // Re-enable network after sign out
-                    await enableNetwork(db);
+                    // Call the logout API to revoke tokens server-side
+                    const response = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    // Sign out client-side regardless of server response
+                    await signOut(auth);
                     
                     toast({
                         title: "Logout realizado",
@@ -181,14 +181,15 @@ const Header = () => {
                     });
                 } catch (innerError) {
                     console.error('Error in sign out process:', innerError);
-                    // Re-enable network even on error
+                    
+                    // Still attempt to sign out client-side
                     try {
-                        await enableNetwork(db);
-                    } catch (networkError) {
-                        console.log("Error re-enabling network:", networkError);
+                        await signOut(auth);
+                    } catch (signOutError) {
+                        console.error('Error in client sign out:', signOutError);
                     }
                 }
-            }, 100);
+            }
         } catch (error) {
             console.error('Error signing out:', error);
             toast({

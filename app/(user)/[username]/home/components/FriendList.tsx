@@ -1,7 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, where, updateDoc, doc, getDoc, setDoc, Timestamp, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -73,91 +71,69 @@ export const FriendList = ({ userId }: { userId: string }) => {
     const [isUpdatingChildAccess, setIsUpdatingChildAccess] = useState<{ [key: string]: boolean }>({});
 
     // Hooks
-    const { userData } = useUser();
+    const { user, userData } = useUser();
     const { toast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
+            
+            if (!user) {
+                console.log('No user available, skipping fetch');
+                setIsLoading(false);
+                return;
+            }
+            
+            if (!userData?.uid) {
+                console.log('No userData.uid available, skipping fetch');
+                setIsLoading(false);
+                return;
+            }
+            
             try {
-                // Fetch confirmed friends from user's friends subcollection
-                const userFriendsRef = collection(db, 'users', userId, 'friends');
-                const friendsSnapshot = await getDocs(userFriendsRef);
-
-                const friendsData: Friend[] = [];
-                const friendPromises = friendsSnapshot.docs.map(async (docSnap) => {
-                    const friendData = docSnap.data();
-                    const friendId = docSnap.id;
-
-                    // Get the full user profile of each friend
+                console.log('Fetching friends data for user ID:', userData.uid);
+                
+                // Get the auth token (might need for future authentication)
+                const token = await user.getIdToken();
+                
+                // Fetch friends data from API - use the actual userId we receive as a prop
+                const friendsResponse = await fetch(`/api/friends?userId=${userId}`);
+                
+                // Log response status for debugging
+                console.log('Friends API response status:', friendsResponse.status, 'for userId:', userId);
+                
+                if (!friendsResponse.ok) {
+                    // Try to get more error details
+                    let errorText = '';
                     try {
-                        const friendUserRef = doc(db, 'users', friendId);
-                        const friendUserSnap = await getDoc(friendUserRef);
-
-                        if (friendUserSnap.exists()) {
-                            const userData = friendUserSnap.data();
-
-                            friendsData.push({
-                                id: friendId,
-                                username: userData.username || friendData.username || '',
-                                firstName: userData.firstName || friendData.firstName || '',
-                                lastName: userData.lastName || friendData.lastName || '',
-                                displayName: userData.displayName || friendData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
-                                photoURL: userData.photoURL || friendData.photoURL,
-                                gender: (userData.gender === 'male' || userData.gender === 'female' || userData.gender === 'other')
-                                    ? userData.gender as 'male' | 'female' | 'other'
-                                    : null,
-                                relationshipType: friendData.relationshipType || 'other',
-                                addedAt: friendData.addedAt || null
-                            });
-                        } else {
-                            // If the user doesn't exist, still add with available data
-                            friendsData.push({
-                                id: friendId,
-                                ...friendData,
-                                username: friendData.username || '',
-                                firstName: friendData.firstName || '',
-                                lastName: friendData.lastName || '',
-                                relationshipType: friendData.relationshipType || 'other'
-                            });
-                        }
-                    } catch (err) {
-                        console.error(`Error fetching friend data for ${friendId}:`, err);
-                        // Add with minimal data
-                        friendsData.push({
-                            id: friendId,
-                            ...friendData,
-                            username: friendData.username || '',
-                            firstName: friendData.firstName || '',
-                            lastName: friendData.lastName || '',
-                            relationshipType: friendData.relationshipType || 'other'
-                        });
+                        const errorData = await friendsResponse.json();
+                        errorText = errorData.message || errorData.error || 'Unknown error';
+                        console.error('Friends API error details:', errorData);
+                    } catch (e) {
+                        errorText = await friendsResponse.text();
                     }
-                });
-
-                // Wait for all friend data to be fetched
-                await Promise.all(friendPromises);
-
+                    throw new Error(`Failed to fetch friends: ${errorText}`);
+                }
+                
+                const friendsData = await friendsResponse.json();
+                console.log('Friends data received:', friendsData);
                 setFriends(friendsData);
-
-                // Fetch pending friend requests from user's friendship_requests subcollection
-                const requestsRef = collection(db, 'users', userId, 'friendship_requests');
-                const requestsQuery = query(
-                    requestsRef,
-                    where('status', '==', 'pending')
-                );
-
-                const requestsSnapshot = await getDocs(requestsQuery);
-                const requestsData: FriendshipRequest[] = [];
-
-                requestsSnapshot.forEach((docSnap) => {
-                    requestsData.push({
-                        id: docSnap.id,
-                        ...docSnap.data() as Omit<FriendshipRequest, 'id'>
-                    });
-                });
-
-                setPendingRequests(requestsData);
+                
+                // Fetch pending requests from API
+                try {
+                    const requestsResponse = await fetch(`/api/friends/requests?userId=${userId}`);
+                    
+                    if (!requestsResponse.ok) {
+                        throw new Error('Failed to fetch friend requests');
+                    }
+                    
+                    const requestsData = await requestsResponse.json();
+                    setPendingRequests(requestsData);
+                } catch (reqErr) {
+                    console.error('Error fetching friend requests:', reqErr);
+                    // Initialize with empty array on error
+                    setPendingRequests([]);
+                }
             } catch (err) {
                 console.error('Error fetching friend data:', err);
                 toast({
@@ -173,109 +149,48 @@ export const FriendList = ({ userId }: { userId: string }) => {
         if (userId) {
             fetchData();
         }
-    }, [userId, toast]);
+    }, [userId, toast, user]);
 
     const handleRequest = async (requestId: string, status: 'accepted' | 'declined') => {
-        if (!userData) return;
+        if (!userData || !user) return;
 
         setIsProcessingRequest(prev => ({ ...prev, [requestId]: true }));
 
         try {
-            const requestRef = doc(db, 'users', userId, 'friendship_requests', requestId);
-            const requestSnapshot = await getDoc(requestRef);
-
-            if (!requestSnapshot.exists()) {
-                toast({
-                    variant: "destructive",
-                    title: "Erro",
-                    description: "Solicitação não encontrada"
-                });
-                setIsProcessingRequest(prev => ({ ...prev, [requestId]: false }));
-                return;
-            }
-
-            const request = requestSnapshot.data() as FriendshipRequest;
-            const timestamp = Timestamp.now();
-
-            // Update the request status
-            await updateDoc(requestRef, {
-                status,
-                updatedAt: timestamp
+            // Call the API to handle the request - no token needed for now
+            const response = await fetch('/api/friends/requests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requestId,
+                    status
+                })
             });
-
-            // If accepted, add to both users' friends subcollections
-            if (status === 'accepted') {
-                // Add sender to current user's friends
-                await setDoc(doc(db, 'users', userData.uid, 'friends', request.senderId), {
-                    username: request.senderUsername,
-                    photoURL: request.senderPhotoURL,
-                    addedAt: timestamp,
-                    firstName: request.senderFirstName || '',
-                    lastName: request.senderLastName || '',
-                    relationshipType: request.relationshipType || 'support',
-                    ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
-                });
-
-                // Add current user to sender's friends
-                await setDoc(doc(db, 'users', request.senderId, 'friends', userData.uid), {
-                    username: userData.username,
-                    photoURL: userData.photoURL,
-                    addedAt: timestamp,
-                    firstName: userData.firstName || '',
-                    lastName: userData.lastName || '',
-                    relationshipType: request.relationshipType || 'support',
-                    ...(request.sharedChildren && { sharedChildren: request.sharedChildren })
-                });
-
-                // Add a notification for the request sender
-                await addDoc(collection(db, 'users', request.senderId, 'notifications'), {
-                    type: 'friendship_accepted',
-                    title: 'Solicitação de amizade aceita',
-                    message: `${userData.firstName || userData.username} aceitou sua solicitação de amizade`,
-                    status: 'unread',
-                    createdAt: serverTimestamp(),
-                    metadata: {
-                        userId: userData.uid,
-                        username: userData.username,
-                        relationshipType: request.relationshipType
-                    }
-                });
-
-                // Add to friends list immediately in UI
-                setFriends(prev => [...prev, {
-                    id: request.senderId,
-                    username: request.senderUsername,
-                    firstName: request.senderFirstName || '',
-                    lastName: request.senderLastName || '',
-                    photoURL: request.senderPhotoURL,
-                    relationshipType: request.relationshipType,
-                    addedAt: timestamp
-                }]);
-
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to process friend request');
+            }
+            
+            const result = await response.json();
+            
+            // If accepted, add the new friend to the friends list
+            if (status === 'accepted' && result.friend) {
+                setFriends(prev => [...prev, result.friend]);
+                
                 toast({
                     title: "Solicitação aceita",
-                    description: `Você e ${request.senderUsername} agora são amigos!`
+                    description: `Você e ${result.friend.username} agora são amigos!`
                 });
             } else {
-                // Send notification of declined request
-                await addDoc(collection(db, 'users', request.senderId, 'notifications'), {
-                    type: 'friendship_declined',
-                    title: 'Solicitação de amizade recusada',
-                    message: `${userData.firstName || userData.username} recusou sua solicitação de amizade`,
-                    status: 'unread',
-                    createdAt: serverTimestamp(),
-                    metadata: {
-                        userId: userData.uid,
-                        username: userData.username
-                    }
-                });
-
                 toast({
                     title: "Solicitação recusada",
                     description: "A solicitação de amizade foi recusada"
                 });
             }
-
+            
             // Remove from pending requests
             setPendingRequests(prev => prev.filter(req => req.id !== requestId));
         } catch (error) {
@@ -365,6 +280,9 @@ export const FriendList = ({ userId }: { userId: string }) => {
         return (
             <div className="text-center py-6 flex flex-col items-center gap-2 text-gray-500">
                 <p>Você ainda não tem amigos adicionados</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                    Adicione amigos para compartilhar informações das crianças
+                </p>
             </div>
         );
     }
@@ -376,7 +294,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
     // Add function to change relationship
     const changeRelationship = async (friendId: string, newRelationship: RelationshipType) => {
-        if (!userData?.uid) return;
+        if (!userData?.uid || !user) return;
 
         // Don't allow changes if already updating
         if (isUpdatingRelationship[friendId]) return;
@@ -387,54 +305,37 @@ export const FriendList = ({ userId }: { userId: string }) => {
             // Get the friend data
             const friend = friends.find(f => f.id === friendId);
             if (!friend) throw new Error("Friend not found");
-
-            // Update in both users' friends subcollections
-            const userFriendRef = doc(db, 'users', userData.uid, 'friends', friendId);
-            const friendUserRef = doc(db, 'users', friendId, 'friends', userData.uid);
-
-            // Update in current user's friends list
-            await updateDoc(userFriendRef, {
-                relationshipType: newRelationship,
-                updatedAt: serverTimestamp()
-            });
-
-            // Update in friend's friends list too (for consistency)
-            await updateDoc(friendUserRef, {
-                relationshipType: newRelationship,
-                updatedAt: serverTimestamp()
-            });
-
-            // Send notification to the friend about relationship change
-            await addDoc(collection(db, 'users', friendId, 'notifications'), {
-                type: 'relationship_change',
-                title: 'Relacionamento atualizado',
-                message: `${userData.firstName || userData.username} alterou o tipo de relacionamento com você`,
-                status: 'unread',
-                createdAt: serverTimestamp(),
-                metadata: {
+            
+            // Call the API to update the relationship - no auth token for now
+            const response = await fetch('/api/friends/relationship', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                     userId: userData.uid,
-                    username: userData.username,
+                    friendId,
                     relationshipType: newRelationship
-                }
+                })
             });
-
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update relationship');
+            }
+            
+            const result = await response.json();
+            
             // Update local state
             setFriends(prev =>
                 prev.map(f =>
                     f.id === friendId ? { ...f, relationshipType: newRelationship } : f
                 )
             );
-
-            // Get relationship display name for toast
-            const relationshipDisplay =
-                newRelationship === 'coparent' ?
-                    (friend.gender === 'male' ? 'Pai' :
-                        friend.gender === 'female' ? 'Mãe' : 'Co-Parent') :
-                    newRelationship === 'support' ? 'Apoio' : 'Outro';
-
+            
             toast({
                 title: "Relacionamento atualizado",
-                description: `${friend.firstName} agora é ${relationshipDisplay} na sua rede!`
+                description: `${friend.firstName} agora é ${result.relationshipDisplay} na sua rede!`
             });
         } catch (error) {
             console.error('Error updating relationship:', error);
@@ -450,26 +351,22 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
     // Add function to get user's children
     const getUserChildren = async () => {
-        if (!userData?.uid) return [];
+        if (!userData?.uid || !user) return [];
 
         try {
-            const childrenRef = collection(db, 'children');
-            const editorQuery = query(
-                childrenRef,
-                where('editors', 'array-contains', userData.uid)
-            );
-
-            const snapshot = await getDocs(editorQuery);
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                name: `${doc.data().firstName} ${doc.data().lastName}`.trim(),
-                photoURL: doc.data().photoURL,
-                firstName: doc.data().firstName,
-                lastName: doc.data().lastName,
-                // Permissions data
-                editors: doc.data().editors || [],
-                viewers: doc.data().viewers || []
-            }));
+            // Call the API to get children with friend-specific access info
+            const friendId = selectedFriend?.id;
+            const url = friendId 
+                ? `/api/children/access?userId=${userData.uid}&friendId=${friendId}`
+                : `/api/children/access?userId=${userData.uid}`;
+                
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch children');
+            }
+            
+            return await response.json();
         } catch (error) {
             console.error('Error getting user children:', error);
             return [];
@@ -505,85 +402,56 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
     // Function to update child permissions for a friend
     const updateChildAccess = async (childId: string, accessLevel: 'editor' | 'viewer' | 'none') => {
-        if (!userData?.uid || !selectedFriend) return;
+        if (!userData?.uid || !selectedFriend || !user) return;
 
         // Mark this child as updating
         setIsUpdatingChildAccess(prev => ({ ...prev, [childId]: true }));
 
         try {
-            const childRef = doc(db, 'children', childId);
-            const childDoc = await getDoc(childRef);
-
-            if (!childDoc.exists()) {
-                throw new Error('Criança não encontrada');
-            }
-
-            const childData = childDoc.data();
-
-            // First remove from both arrays to ensure clean state
-            let editors = [...(childData.editors || [])].filter(id => id !== selectedFriend.id);
-            let viewers = [...(childData.viewers || [])].filter(id => id !== selectedFriend.id);
-
-            // Then add to the appropriate array based on new access level
-            if (accessLevel === 'editor') {
-                editors.push(selectedFriend.id);
-            } else if (accessLevel === 'viewer') {
-                viewers.push(selectedFriend.id);
-            }
-            // If 'none', they've already been removed from both arrays
-
-            // Update the child document
-            await updateDoc(childRef, {
-                editors,
-                viewers,
-                updatedAt: serverTimestamp()
+            // Call the API to update child access - no auth token for now
+            const response = await fetch('/api/children/access', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    childId,
+                    friendId: selectedFriend.id,
+                    accessLevel
+                })
             });
-
-            // Send notification to the friend
-            if (accessLevel !== 'none') {
-                await addDoc(collection(db, 'users', selectedFriend.id, 'notifications'), {
-                    type: 'child_access',
-                    title: 'Acesso a criança atualizado',
-                    message: `${userData.firstName || userData.username} adicionou você como ${accessLevel === 'editor' ? 'editor' : 'visualizador'} de ${childData.firstName}`,
-                    status: 'unread',
-                    createdAt: serverTimestamp(),
-                    metadata: {
-                        childId: childId,
-                        childName: `${childData.firstName} ${childData.lastName}`.trim(),
-                        accessLevel: accessLevel,
-                        grantedBy: userData.uid
-                    }
-                });
-            } else {
-                // Notify about removal of access
-                await addDoc(collection(db, 'users', selectedFriend.id, 'notifications'), {
-                    type: 'child_access_removed',
-                    title: 'Acesso a criança removido',
-                    message: `${userData.firstName || userData.username} removeu seu acesso a ${childData.firstName}`,
-                    status: 'unread',
-                    createdAt: serverTimestamp(),
-                    metadata: {
-                        childId: childId,
-                        childName: `${childData.firstName} ${childData.lastName}`.trim(),
-                        removedBy: userData.uid
-                    }
-                });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update child access');
             }
-
+            
+            const result = await response.json();
+            
             // Update the local state
             setUserChildren(prev =>
                 prev.map(child => {
                     if (child.id === childId) {
+                        // Create new editors and viewers arrays based on the access level
+                        const newEditors = [...(child.editors || [])].filter(id => id !== selectedFriend.id);
+                        const newViewers = [...(child.viewers || [])].filter(id => id !== selectedFriend.id);
+                        
+                        if (accessLevel === 'editor') {
+                            newEditors.push(selectedFriend.id);
+                        } else if (accessLevel === 'viewer') {
+                            newViewers.push(selectedFriend.id);
+                        }
+                        
                         return {
                             ...child,
-                            editors: editors,
-                            viewers: viewers
+                            editors: newEditors,
+                            viewers: newViewers
                         };
                     }
                     return child;
                 })
             );
-
+            
             // Display success message
             toast({
                 title: accessLevel === 'none' ? 'Acesso removido' : 'Acesso atualizado',

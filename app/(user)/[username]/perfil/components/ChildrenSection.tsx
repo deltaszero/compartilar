@@ -160,31 +160,25 @@ export const ChildrenGrid = ({
                 console.log(`Fetching children for profile ${userId}, current user: ${currentUserId}`);
                 console.log(`Relationship status: ${friendshipStatus}, isOwnProfile: ${isOwnProfile}`);
                 
-                let childrenData;
+                // Use the API to fetch children
+                const response = await fetch(`/api/profile/children?userId=${userId}&currentUserId=${currentUserId}&relationshipStatus=${friendshipStatus || 'none'}`);
                 
-                if (isOwnProfile) {
-                    // If viewing own profile, just get all children the user has access to
-                    childrenData = await getUserChildren(currentUserId);
-                } else {
-                    // If viewing someone else's profile, pass both IDs to check intersection
-                    childrenData = await getUserChildren(userId, currentUserId);
+                if (!response.ok) {
+                    // Handle 403/permission denied gracefully
+                    if (response.status === 403) {
+                        console.log('Permission denied to view children');
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    throw new Error(`Failed to fetch children: ${response.status}`);
                 }
                 
+                const childrenData = await response.json();
                 console.log(`Found ${childrenData.length} children for user`);
                 
-                // Format the children data for display
-                const formattedChildren = childrenData.map(child => ({
-                    id: child.id,
-                    firstName: child.firstName || '',
-                    lastName: child.lastName || '',
-                    birthDate: child.birthDate || '',
-                    gender: child.gender || null,
-                    relationship: child.relationship || null,
-                    photoURL: child.photoURL || null,
-                    accessLevel: child.accessLevel || 'viewer'
-                }));
-                
-                setChildren(formattedChildren);
+                // The API already formats the data correctly, so we can use it directly
+                setChildren(childrenData);
             } catch (error) {
                 console.error("Error fetching children:", error);
                 // Set empty array on error
