@@ -168,7 +168,8 @@ const Header = () => {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest' // CSRF protection
                         }
                     });
                     

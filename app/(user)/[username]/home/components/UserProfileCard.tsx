@@ -73,7 +73,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
   return (
     <div className="flex justify-between items-start p-4">
       <div className="flex flex-col items-start gap-0">
-        <div className="text-6xl font-black">
+        <div className="text-5xl font-black">
           Olá,
           <br />
           {capitalizeFirstLetter(displayName)}!

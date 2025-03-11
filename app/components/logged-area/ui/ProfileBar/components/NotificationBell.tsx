@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { Notification, NotificationType } from '@/types/shared.types';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { db } from '@/app/lib/firebaseConfig';
+import { db, auth } from '@/app/lib/firebaseConfig';
 import { NotificationItem } from './NotificationItem';
 import {
     DropdownMenu,
@@ -22,24 +22,37 @@ export const NotificationBell = () => {
     const { userData } = useUser();
     const dropdownRef = useRef<HTMLDivElement>(null);
     
-    // Load notification count - only from friendship_requests for now
-    // until notifications collection permissions are set up
+    // Load notification count from API
     useEffect(() => {
         if (!userData?.uid) return;
         
         const loadUnreadCount = async () => {
             try {
-                // Just count friend requests from the subcollection
-                const friendRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
-                const requestsQuery = query(
-                    friendRequestsRef,
-                    where('status', '==', 'pending')
-                );
-                const requestsSnapshot = await getDocs(requestsQuery);
-                const requestsCount = requestsSnapshot.size;
+                // Get authentication token
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error('User not authenticated');
+                    return;
+                }
                 
-                // Set the count
-                setUnreadCount(requestsCount);
+                const token = await user.getIdToken();
+                
+                // Get notification count from the API with auth token
+                const response = await fetch(`/api/notifications?userId=${userData.uid}&status=pending`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error loading notifications count');
+                }
+                
+                const notifications = await response.json();
+                
+                // Set the count based on the number of notifications
+                setUnreadCount(notifications.length);
             } catch (error) {
                 console.error('Error loading unread count:', error);
             }
@@ -59,70 +72,52 @@ export const NotificationBell = () => {
         }
     }, [isOpen, userData?.uid]);
     
-    // Load notifications from friend requests
+    // Load notifications from API
     const loadNotifications = async () => {
         if (!userData?.uid) return;
         
         try {
             console.log("Loading notifications for user:", userData.uid);
             
-            // For now, just get friend requests from the subcollection and convert them to notification format
-            const friendRequestsRef = collection(db, 'users', userData.uid, 'friendship_requests');
-            const requestsQuery = query(
-                friendRequestsRef,
-                where('status', '==', 'pending')
-            );
-            
-            const requestsSnapshot = await getDocs(requestsQuery);
-            console.log(`Found ${requestsSnapshot.size} friend requests`);
-            
-            if (requestsSnapshot.empty) {
-                setNotifications([]);
+            // Get authentication token
+            const user = auth.currentUser;
+            if (!user) {
+                console.error('User not authenticated');
                 return;
             }
             
-            const friendRequests: Notification[] = [];
+            const token = await user.getIdToken();
             
-            requestsSnapshot.forEach(doc => {
-                try {
-                    const data = doc.data();
-                    console.log("Processing request:", doc.id, data);
-                    
-                    // Ensure all required fields exist
-                    if (!data || !data.senderUsername) {
-                        console.log("Missing required data for notification, skipping");
-                        return;
-                    }
-                    
-                    // Create a notification object with proper validation
-                    const notification: Notification = {
-                        id: doc.id,
-                        userId: userData.uid,
-                        type: 'friend_request' as NotificationType,
-                        title: 'Nova solicitação de amizade',
-                        message: `${data.senderUsername} quer se conectar como ${data.relationshipType || 'amigo'}`,
-                        status: 'unread' as 'unread' | 'read' | 'archived',
-                        createdAt: data.createdAt || Timestamp.now(),
-                        metadata: {
-                            senderId: data.senderId || '',
-                            senderUsername: data.senderUsername || '',
-                            senderPhotoURL: data.senderPhotoURL || '',
-                            requestId: doc.id,
-                            relationshipType: data.relationshipType || 'support'
-                        },
-                        actionUrl: `/${userData.username}/home`
-                    };
-                    
-                    friendRequests.push(notification);
-                } catch (err) {
-                    console.error("Error processing notification:", err);
+            // Use the API endpoint to fetch notifications with auth token
+            const response = await fetch(`/api/notifications?userId=${userData.uid}&status=pending`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
             });
             
-            console.log("Final notifications list:", friendRequests);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error loading notifications');
+            }
+            
+            const notificationsData = await response.json();
+            console.log(`Loaded ${notificationsData.length} notifications from API`);
+            
+            // Convert to Notification objects
+            const formattedNotifications: Notification[] = notificationsData.map((notif: any) => ({
+                id: notif.id,
+                userId: notif.userId,
+                type: notif.type as NotificationType,
+                title: notif.title,
+                message: notif.message,
+                status: notif.status as 'unread' | 'read' | 'archived',
+                createdAt: notif.createdAt ? new Timestamp(Math.floor(notif.createdAt / 1000), 0) : Timestamp.now(),
+                metadata: notif.metadata || {},
+                actionUrl: notif.actionUrl || `/${userData.username}/home`
+            }));
             
             // Set notifications
-            setNotifications(friendRequests);
+            setNotifications(formattedNotifications);
         } catch (error) {
             console.error('Error loading notifications:', error);
             // Set empty notifications array to avoid undefined

@@ -201,11 +201,13 @@ export default function HomePage() {
                     <section className="flex flex-col ">
                         <UserProfileCard userData={userData} />
                         {/* Profile completion tracker */}
-                        <ProfileCompletion userData={userData} />
-                        {/* Premium features showcase */}
-                        <div className="px-4 sm:px-0">
-                            <PremiumFeatureShowcase />
+                        <div className="p-4">
+                            <ProfileCompletion userData={userData} />
                         </div>
+                        {/* Premium features showcase */}
+                        {/* <div className="px-4 sm:px-0">
+                            <PremiumFeatureShowcase />
+                        </div> */}
                     </section>
                 </div>
 

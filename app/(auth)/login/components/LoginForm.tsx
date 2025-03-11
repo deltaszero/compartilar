@@ -42,36 +42,15 @@ export function LoginForm() {
     const handleLogin = async (data: LoginFormValues) => {
         setLoading(true);
         try {
-            // First call our API to verify the email exists
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: data.email,
-                    password: data.password,
-                }),
-            });
+            // Use Firebase client SDK directly for password authentication
+            // This avoids sending credentials to our server
+            await signInWithEmailAndPassword(auth, data.email, data.password);
             
-            const result = await response.json();
+            // Get a fresh token after login to ensure we have the latest claims
+            await auth.currentUser?.getIdToken(true);
             
-            if (!response.ok) {
-                throw new Error(result.error || 'Erro ao fazer login');
-            }
-            
-            // If the API tells us to use client-side auth, do that
-            if (result.useClientSideAuth) {
-                // Use Firebase client SDK for password authentication
-                await signInWithEmailAndPassword(auth, data.email, data.password);
-                router.push('/login/redirect');
-            } else if (result.customToken) {
-                // If somehow we got a custom token, use it (for future compatibility)
-                await signInWithCustomToken(auth, result.customToken);
-                router.push('/login/redirect');
-            } else {
-                throw new Error('Login não autorizado');
-            }
+            // Redirect to the appropriate page
+            router.push('/login/redirect');
         } catch (error: unknown) {
             console.error(error);
             let message = "Erro ao fazer login";
@@ -112,17 +91,20 @@ export function LoginForm() {
                 prompt: 'select_account'
             });
             
-            // First sign in with popup to get the ID token
+            // Sign in with popup
             const result = await signInWithPopup(auth, provider);
             
-            // Get the ID token
+            // Get the ID token to send to our backend for verification
             const idToken = await result.user.getIdToken();
             
-            // Now call our login API with the ID token
-            const response = await fetch('/api/auth/login', {
+            // Now call our API to verify the token and complete any server-side setup
+            // This API call is necessary to handle new user creation in Firestore
+            const response = await fetch('/api/auth/google-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    // Add CSRF protection header
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     idToken
@@ -132,10 +114,10 @@ export function LoginForm() {
             const apiResult = await response.json();
             
             if (!response.ok) {
-                throw new Error(apiResult.error || 'Erro ao fazer login com Google');
+                throw new Error(apiResult.error || 'Erro ao verificar login com Google');
             }
             
-            // If this is a new user, we may want to show a different message
+            // If this is a new user, show a welcome message
             if (apiResult.newUser) {
                 toast({
                     title: "Conta criada",

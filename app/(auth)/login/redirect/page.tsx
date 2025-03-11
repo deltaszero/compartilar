@@ -15,26 +15,44 @@ function LoginRedirectContent() {
     // We need to wait for userData to be loaded
     if (loading) return
     
-    // If we have a user and userData with username, redirect to their home page
-    if (user && userData?.username) {
-      router.push(`/${userData.username}/home`)
-    } else if (user) {
-      // If we have a user but no userData yet, wait a bit longer
-      // This handles the case where Firebase auth is faster than Firestore
-      const timeout = setTimeout(() => {
-        // If we still don't have userData, use the callback URL or default to /
-        if (callbackUrl) {
-          router.push(callbackUrl)
-        } else {
-          router.push('/')
+    // Verify the user is authenticated and has a valid token
+    const verifyAuth = async () => {
+      if (user) {
+        try {
+          // Get a fresh token to ensure we have the latest claims
+          // This is a security measure to ensure token is valid
+          await user.getIdToken(true)
+          
+          // Check if we have user data with username
+          if (userData?.username) {
+            // User is fully authenticated and has a profile, go to home
+            router.push(`/${userData.username}/home`)
+          } else {
+            // If we have a user but no userData yet, wait a bit longer
+            // This handles the case where Firebase auth is faster than Firestore
+            const timeout = setTimeout(() => {
+              // If we still don't have userData, use the callback URL or default to /
+              if (callbackUrl) {
+                router.push(callbackUrl)
+              } else {
+                router.push('/')
+              }
+            }, 2000)
+            
+            return () => clearTimeout(timeout)
+          }
+        } catch (error) {
+          console.error('Auth verification failed:', error)
+          // Token refresh failed, send user back to login
+          router.push('/login')
         }
-      }, 2000)
-      
-      return () => clearTimeout(timeout)
-    } else {
-      // No user, redirect back to login
-      router.push('/login')
+      } else {
+        // No user, redirect back to login
+        router.push('/login')
+      }
     }
+    
+    verifyAuth()
   }, [callbackUrl, router, user, userData, loading])
 
   return (

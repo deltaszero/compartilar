@@ -77,10 +77,10 @@ export function SignupForm() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest' // CSRF protection
                 },
                 body: JSON.stringify({
                     email: data.email,
-                    password: data.password,
                     username: data.username,
                 }),
             });
@@ -182,57 +182,51 @@ export function SignupForm() {
             // Get the ID token for API call
             const idToken = await result.user.getIdToken();
             
-            // Check if user has a document in Firestore
-            const userRef = doc(db, 'users', result.user.uid);
-            const userDoc = await getDoc(userRef);
+            // Send the token to our server for verification and user setup
+            const response = await fetch('/api/auth/google-signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest' // CSRF protection
+                },
+                body: JSON.stringify({
+                    idToken
+                }),
+            });
             
-            // If user doesn't exist in Firestore, create their document
-            if (!userDoc.exists()) {
+            const apiResult = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(apiResult.error || 'Erro ao verificar conta com Google');
+            }
+            
+            // If this is a new user, create their document in Firestore
+            if (apiResult.newUser) {
+                // Get user info from the response
+                const { uid, username } = apiResult;
+                
                 // Extract name from Google
                 const displayName = result.user.displayName || '';
                 const nameParts = displayName.split(' ');
                 const firstName = nameParts[0] || '';
                 const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
                 
-                // Create a username from email
-                const emailPrefix = result.user.email?.split('@')[0] || '';
-                const baseUsername = emailPrefix.toLowerCase();
-                
-                // Check if username exists
-                const usernameResponse = await fetch(`/api/auth/check-username?username=${encodeURIComponent(baseUsername)}`);
-                const usernameData = await usernameResponse.json();
-                
-                let finalUsername = baseUsername;
-                if (!usernameData.available) {
-                    // Try adding numbers until we find an available username
-                    let attempt = 0;
-                    while (attempt < 5) {
-                        const random = Math.floor(Math.random() * 10000);
-                        const candidateUsername = `${baseUsername}${random}`;
-                        
-                        const checkResponse = await fetch(`/api/auth/check-username?username=${encodeURIComponent(candidateUsername)}`);
-                        const checkData = await checkResponse.json();
-                        
-                        if (checkData.available) {
-                            finalUsername = candidateUsername;
-                            break;
-                        }
-                        
-                        attempt++;
-                    }
-                }
-                
-                // Create the user document
+                // Create user document in Firestore with server-verified username
+                const userRef = doc(db, 'users', uid);
                 await setDoc(userRef, {
-                    uid: result.user.uid,
+                    uid: uid,
                     email: result.user.email,
-                    username: finalUsername,
-                    displayName: result.user.displayName || finalUsername,
+                    username: username,
+                    displayName: result.user.displayName || username,
                     firstName: firstName,
                     lastName: lastName,
                     photoURL: result.user.photoURL,
                     createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
+                    updatedAt: serverTimestamp(),
+                    subscription: {
+                      status: 'free',
+                      validUntil: null
+                    }
                 });
                 
                 toast({
@@ -245,6 +239,9 @@ export function SignupForm() {
                     description: "Redirecionando para sua área...",
                 });
             }
+            
+            // Get a fresh token after signup to ensure we have the latest claims
+            await result.user.getIdToken(true);
             
             // Redirect to the redirect page
             router.push('/login/redirect');

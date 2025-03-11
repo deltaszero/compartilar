@@ -41,3 +41,27 @@
 - Use permissioning through editors/viewers arrays consistently
 - After auth operations, refresh token: `await user.getIdToken(true)`
 - For sensitive operations, validate against security rules first
+
+## API Security Guidelines
+- **Authentication Required**: All API routes MUST verify Firebase auth tokens
+- **Admin SDK Usage**: Only use Firebase Admin SDK in API routes with proper auth checks
+- **Token Verification**:
+  ```typescript
+  // Example for API routes
+  const token = request.headers.get('authorization')?.split('Bearer ')[1];
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const decodedToken = await adminAuth().verifyIdToken(token);
+  ```
+- **Client Token Sending**:
+  ```typescript
+  // In client components
+  const token = await user.getIdToken();
+  fetch('/api/endpoint', { headers: { 'Authorization': `Bearer ${token}` }});
+  ```
+- **Authorization Checks**: Verify the authenticated user has permission for the operation
+- **Security Rule Pattern**: Design API routes to follow Firestore security rules patterns
+- **Error Handling**: Return appropriate HTTP status codes (401, 403) for auth/permission errors
+- **Never Trust**: Always validate client inputs, even with Firebase auth
+- **Sensitive Actions**: Require re-authentication for critical operations
+- **Admin Routes Protection**: Add extra validation for admin-only operations
+- **Logging**: Log auth failures but avoid exposing sensitive information

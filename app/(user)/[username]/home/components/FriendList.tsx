@@ -16,7 +16,7 @@ import {
 import { RelationshipType } from "@/types/friendship.types";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, Users, Heart, UserCog, UserCheck, Edit, Eye, X } from "lucide-react";
+import { ChevronDown, Users, Heart, UserCog, UserCheck, Edit, Eye, X, Search } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -77,31 +77,31 @@ export const FriendList = ({ userId }: { userId: string }) => {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            
+
             if (!user) {
                 console.log('No user available, skipping fetch');
                 setIsLoading(false);
                 return;
             }
-            
+
             if (!userData?.uid) {
                 console.log('No userData.uid available, skipping fetch');
                 setIsLoading(false);
                 return;
             }
-            
+
             try {
                 console.log('Fetching friends data for user ID:', userData.uid);
-                
+
                 // Get the auth token (might need for future authentication)
                 const token = await user.getIdToken();
-                
+
                 // Fetch friends data from API - use the actual userId we receive as a prop
                 const friendsResponse = await fetch(`/api/friends?userId=${userId}`);
-                
+
                 // Log response status for debugging
                 console.log('Friends API response status:', friendsResponse.status, 'for userId:', userId);
-                
+
                 if (!friendsResponse.ok) {
                     // Try to get more error details
                     let errorText = '';
@@ -114,19 +114,19 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     }
                     throw new Error(`Failed to fetch friends: ${errorText}`);
                 }
-                
+
                 const friendsData = await friendsResponse.json();
                 console.log('Friends data received:', friendsData);
                 setFriends(friendsData);
-                
+
                 // Fetch pending requests from API
                 try {
                     const requestsResponse = await fetch(`/api/friends/requests?userId=${userId}`);
-                    
+
                     if (!requestsResponse.ok) {
                         throw new Error('Failed to fetch friend requests');
                     }
-                    
+
                     const requestsData = await requestsResponse.json();
                     setPendingRequests(requestsData);
                 } catch (reqErr) {
@@ -168,18 +168,18 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     status
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to process friend request');
             }
-            
+
             const result = await response.json();
-            
+
             // If accepted, add the new friend to the friends list
             if (status === 'accepted' && result.friend) {
                 setFriends(prev => [...prev, result.friend]);
-                
+
                 toast({
                     title: "Solicitação aceita",
                     description: `Você e ${result.friend.username} agora são amigos!`
@@ -190,7 +190,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     description: "A solicitação de amizade foi recusada"
                 });
             }
-            
+
             // Remove from pending requests
             setPendingRequests(prev => prev.filter(req => req.id !== requestId));
         } catch (error) {
@@ -280,9 +280,12 @@ export const FriendList = ({ userId }: { userId: string }) => {
         return (
             <div className="text-center py-6 flex flex-col items-center gap-2 text-gray-500">
                 <p>Você ainda não tem amigos adicionados</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                    Adicione amigos para compartilhar informações das crianças
-                </p>
+                <div className="flex items-center max-w-xs mt-2">
+                    <Search />
+                    <p className="text-xs text-muted-foreground">
+                        Adicione amigos através da busca na barra de pesquisa no topo da página.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -305,7 +308,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
             // Get the friend data
             const friend = friends.find(f => f.id === friendId);
             if (!friend) throw new Error("Friend not found");
-            
+
             // Call the API to update the relationship - no auth token for now
             const response = await fetch('/api/friends/relationship', {
                 method: 'PUT',
@@ -318,21 +321,21 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     relationshipType: newRelationship
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to update relationship');
             }
-            
+
             const result = await response.json();
-            
+
             // Update local state
             setFriends(prev =>
                 prev.map(f =>
                     f.id === friendId ? { ...f, relationshipType: newRelationship } : f
                 )
             );
-            
+
             toast({
                 title: "Relacionamento atualizado",
                 description: `${friend.firstName} agora é ${result.relationshipDisplay} na sua rede!`
@@ -356,16 +359,16 @@ export const FriendList = ({ userId }: { userId: string }) => {
         try {
             // Call the API to get children with friend-specific access info
             const friendId = selectedFriend?.id;
-            const url = friendId 
+            const url = friendId
                 ? `/api/children/access?userId=${userData.uid}&friendId=${friendId}`
                 : `/api/children/access?userId=${userData.uid}`;
-                
+
             const response = await fetch(url);
-            
+
             if (!response.ok) {
                 throw new Error('Failed to fetch children');
             }
-            
+
             return await response.json();
         } catch (error) {
             console.error('Error getting user children:', error);
@@ -420,14 +423,14 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     accessLevel
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to update child access');
             }
-            
+
             const result = await response.json();
-            
+
             // Update the local state
             setUserChildren(prev =>
                 prev.map(child => {
@@ -435,13 +438,13 @@ export const FriendList = ({ userId }: { userId: string }) => {
                         // Create new editors and viewers arrays based on the access level
                         const newEditors = [...(child.editors || [])].filter(id => id !== selectedFriend.id);
                         const newViewers = [...(child.viewers || [])].filter(id => id !== selectedFriend.id);
-                        
+
                         if (accessLevel === 'editor') {
                             newEditors.push(selectedFriend.id);
                         } else if (accessLevel === 'viewer') {
                             newViewers.push(selectedFriend.id);
                         }
-                        
+
                         return {
                             ...child,
                             editors: newEditors,
@@ -451,7 +454,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     return child;
                 })
             );
-            
+
             // Display success message
             toast({
                 title: accessLevel === 'none' ? 'Acesso removido' : 'Acesso atualizado',

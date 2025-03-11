@@ -77,7 +77,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
   };
 
   return (
-    <div className="w-full overflow-hidden bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] my-4">
+    <div className="w-full overflow-hidden bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)]">
       <div className="p-4 pb-3">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-semibold">Complete seu perfil &nbsp; ({completionPercentage}%)</h3>

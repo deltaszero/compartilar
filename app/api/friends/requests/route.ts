@@ -1,316 +1,350 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getFirestore } from 'firebase/firestore';
-import { db as clientDb } from '@/app/lib/firebaseConfig';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  serverTimestamp,
+  doc,
+  getDoc,
+  updateDoc,
+  Timestamp,
+  setDoc
+} from 'firebase/firestore';
+import { db } from '@/app/lib/firebaseConfig';
+import { adminDb, adminAuth } from '@/app/lib/firebase-admin';
 
-// Try to get admin instances, but fall back to client if needed
-let auth, db;
+// Verify Firebase auth token
+async function verifyAuthToken(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: 'Unauthorized - Missing or invalid authorization header', status: 401 };
+  }
 
-try {
-  // Get the auth instance
-  auth = adminAuth();
-  
-  // Get the firestore instance
-  db = adminDb();
-  
-  console.log('Successfully initialized Firebase Admin SDK for friend requests');
-} catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK for friend requests, falling back:', error.message);
-  
-  // Fall back to client SDK for development
-  auth = null;
-  db = clientDb ? clientDb : getFirestore();
+  const token = authHeader.split('Bearer ')[1];
+  try {
+    // Verify token using Firebase Admin SDK
+    const decodedToken = await adminAuth().verifyIdToken(token);
+    return { uid: decodedToken.uid };
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return { error: 'Unauthorized - Invalid token', status: 401 };
+  }
 }
 
-// For debugging
-console.log('Initializing friends/requests API route');
-
+// GET endpoint to fetch friend requests
 export async function GET(request: NextRequest) {
   try {
-    console.log('GET /api/friends/requests called');
+    // Verify authentication
+    const auth = await verifyAuthToken(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     
-    // Get the userId from URL params or authorization
+    // Get the authenticated user's ID from the token
+    const authenticatedUserId = auth.uid;
+    
+    // Get query parameters
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
-    // Verify we have a userId
-    if (!userId) {
-      return NextResponse.json({ error: 'userId parameter is required' }, { status: 400 });
-    }
-    
-    console.log('Getting friend requests for userId:', userId);
-    
-    // Temporary solution for Firebase credential issue:
-    // Since we can't properly connect to Firestore in this environment yet,
-    // we'll return an empty array for now
-    if (process.env.NODE_ENV === 'development' && !db) {
-      console.error('Firebase not properly initialized for friend requests, returning empty array');
-      return NextResponse.json([]);
-    }
-    
-    // Query pending friendship requests where this user is the receiver
-    const requestsRef = db.collection('users').doc(userId).collection('friendship_requests');
-    const pendingRequestsQuery = requestsRef.where('status', '==', 'pending');
-    const pendingRequestsSnapshot = await pendingRequestsQuery.get();
-    
-    if (pendingRequestsSnapshot.empty) {
-      console.log(`No pending requests found for user ${userId}`);
-      return NextResponse.json([]);
-    }
-    
-    // Process the requests data
-    const requestsPromises = pendingRequestsSnapshot.docs.map(async (doc) => {
-      try {
-        const requestData = doc.data();
-        const senderId = requestData.senderId;
-        
-        // Get the sender's user data
-        const senderDoc = await db.collection('users').doc(senderId).get();
-        if (!senderDoc.exists) {
-          console.log(`Sender ${senderId} not found, skipping request`);
-          return null;
-        }
-        
-        const senderData = senderDoc.data();
-        
-        return {
-          id: doc.id,
-          senderId: senderId,
-          senderUsername: senderData.username || '',
-          senderPhotoURL: senderData.photoURL || null,
-          senderFirstName: senderData.firstName || '',
-          senderLastName: senderData.lastName || '',
-          receiverId: userId,
-          receiverUsername: requestData.receiverUsername || '',
-          receiverPhotoURL: requestData.receiverPhotoURL || null,
-          receiverFirstName: requestData.receiverFirstName || '',
-          receiverLastName: requestData.receiverLastName || '',
-          status: 'pending',
-          relationshipType: requestData.relationshipType || 'other',
-          createdAt: requestData.createdAt ? requestData.createdAt.toDate().toISOString() : new Date().toISOString(),
-          updatedAt: requestData.updatedAt ? requestData.updatedAt.toDate().toISOString() : new Date().toISOString()
-        };
-      } catch (docError) {
-        console.error(`Error processing request document:`, docError);
-        return null; // Skip this request on error
-      }
-    });
-    
-    const requestsData = await Promise.all(requestsPromises);
-    
-    // Filter out any null values (failed lookups)
-    const validRequests = requestsData.filter(request => request !== null);
-    
-    console.log(`Returning ${validRequests.length} pending requests for user ${userId}`);
-    return NextResponse.json(validRequests);
-  } catch (error) {
-    console.error('Error in friend requests API:', error);
-    return NextResponse.json({ error: 'Internal server error', message: error.message }, { status: 500 });
-  }
-}
+    const status = searchParams.get('status') || 'pending';
 
-export async function POST(request: NextRequest) {
-  try {
-    console.log('POST /api/friends/requests called');
-    
-    // Get request data from body
-    const { requestId, status } = await request.json();
-    
-    // Validate request data
-    if (!requestId || !status) {
-      return NextResponse.json({ error: 'requestId and status are required' }, { status: 400 });
+    // Verify that the requested userId matches the authenticated user's ID
+    if (userId !== authenticatedUserId) {
+      console.error(`User ID mismatch: ${userId} vs authenticated ${authenticatedUserId}`);
+      return NextResponse.json({ 
+        error: 'Unauthorized - User ID in query does not match authenticated user' 
+      }, { status: 403 });
     }
+
+    console.log(`Fetching friend requests for user: ${userId} with status: ${status}`);
+
+    // Use admin DB for the query
+    const requestsRef = adminDb().collection('users').doc(userId).collection('friendship_requests');
+    const requestsSnapshot = await requestsRef.where('status', '==', status).get();
     
-    if (status !== 'accepted' && status !== 'declined') {
-      return NextResponse.json({ error: 'status must be "accepted" or "declined"' }, { status: 400 });
+    if (requestsSnapshot.empty) {
+      return NextResponse.json([]);
     }
-    
-    console.log('Handling request:', { requestId, status });
-    
-    // Find which user collection contains this request
-    // This approach enables finding the request without knowing the receiver's ID upfront
-    const collectionsToCheck = ['friendship_requests'];
-    let requestDoc = null;
-    let receiverId = null;
-    
-    // Get all users
-    const usersSnapshot = await db.collection('users').get();
-    
-    // Search for the request in each user's friendship_requests collection
-    for (const userDoc of usersSnapshot.docs) {
-      const userId = userDoc.id;
+
+    // Process the requests
+    const friendRequests = [];
+
+    requestsSnapshot.forEach(doc => {
+      const data = doc.data();
       
-      for (const collectionName of collectionsToCheck) {
-        const requestRef = db.collection('users').doc(userId).collection(collectionName).doc(requestId);
-        const snapshot = await requestRef.get();
-        
-        if (snapshot.exists) {
-          requestDoc = snapshot;
-          receiverId = userId;
-          break;
-        }
-      }
-      
-      if (requestDoc) break;
-    }
-    
-    if (!requestDoc) {
-      return NextResponse.json({ error: 'Friend request not found' }, { status: 404 });
-    }
-    
-    const requestData = requestDoc.data();
-    const senderId = requestData.senderId;
-    
-    // Update request status
-    await requestDoc.ref.update({
-      status: status,
-      updatedAt: FieldValue.serverTimestamp()
-    });
-    
-    // If request is accepted, create the friendship
-    if (status === 'accepted') {
-      // Get user data for both sender and receiver
-      const [senderDoc, receiverDoc] = await Promise.all([
-        db.collection('users').doc(senderId).get(),
-        db.collection('users').doc(receiverId).get()
-      ]);
-      
-      if (!senderDoc.exists || !receiverDoc.exists) {
-        return NextResponse.json({ error: 'One or both users not found' }, { status: 404 });
-      }
-      
-      const senderData = senderDoc.data();
-      const receiverData = receiverDoc.data();
-      
-      // Create friendship in both users' collections
-      const relationshipType = requestData.relationshipType || 'other';
-      const timestamp = FieldValue.serverTimestamp();
-      
-      // Add sender to receiver's friends
-      await db.collection('users').doc(receiverId).collection('friends').doc(senderId).set({
-        userId: senderId,
-        username: senderData.username || '',
-        relationshipType: relationshipType,
-        addedAt: timestamp
-      });
-      
-      // Add receiver to sender's friends
-      await db.collection('users').doc(senderId).collection('friends').doc(receiverId).set({
-        userId: receiverId,
-        username: receiverData.username || '',
-        relationshipType: relationshipType,
-        addedAt: timestamp
-      });
-      
-      // Return the new friend data
-      const friend = {
-        id: senderId,
-        username: senderData.username || '',
-        firstName: senderData.firstName || '',
-        lastName: senderData.lastName || '',
-        displayName: senderData.displayName || `${senderData.firstName || ''} ${senderData.lastName || ''}`.trim(),
-        photoURL: senderData.photoURL || null,
-        relationshipType: relationshipType,
-        addedAt: new Date().toISOString()
+      // Format the request data
+      const request = {
+        id: doc.id,
+        senderId: data.senderId,
+        receiverId: data.receiverId,
+        status: data.status,
+        relationshipType: data.relationshipType || 'support',
+        createdAt: data.createdAt ? new Date(data.createdAt.toDate()).getTime() : null,
+        senderUsername: data.senderUsername || '',
+        senderPhotoURL: data.senderPhotoURL || '',
+        receiverUsername: data.receiverUsername || ''
       };
       
-      return NextResponse.json({
-        status: status,
-        friend: friend
-      });
-    } else {
-      // Just return status for declined requests
-      return NextResponse.json({
-        status: status,
-        friend: null
-      });
-    }
+      friendRequests.push(request);
+    });
+
+    return NextResponse.json(friendRequests);
   } catch (error) {
-    console.error('Error handling friend request:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error getting friend requests:', error);
+    return NextResponse.json(
+      { error: 'Failed to get friend requests', message: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
-// POST endpoint for creating a new friend request
-export async function PUT(request: NextRequest) {
+// POST endpoint to create a friend request
+export async function POST(request: NextRequest) {
   try {
-    console.log('PUT /api/friends/requests called');
+    // Verify authentication
+    const auth = await verifyAuthToken(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     
-    // Get request data from body
-    const { senderId, receiverId, relationshipType } = await request.json();
+    // Get the authenticated user's ID from the token
+    const authenticatedUserId = auth.uid;
     
-    // Validate request data
+    // Parse request body
+    const body = await request.json();
+    const { 
+      senderId, 
+      receiverId, 
+      relationshipType, 
+      senderUsername, 
+      senderPhotoURL, 
+      receiverUsername 
+    } = body;
+
+    // Validate required fields
     if (!senderId || !receiverId) {
-      return NextResponse.json({ error: 'senderId and receiverId are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Sender ID and Receiver ID are required' }, { status: 400 });
     }
-    
+
+    // Verify that the sender ID matches the authenticated user's ID
+    if (senderId !== authenticatedUserId) {
+      console.error(`Sender ID mismatch: ${senderId} vs authenticated ${authenticatedUserId}`);
+      return NextResponse.json({ 
+        error: 'Unauthorized - Sender ID does not match authenticated user' 
+      }, { status: 403 });
+    }
+
     if (senderId === receiverId) {
-      return NextResponse.json({ error: 'Cannot send friend request to yourself' }, { status: 400 });
+      return NextResponse.json({ error: 'You cannot send a friend request to yourself' }, { status: 400 });
     }
+
+    console.log(`Creating friend request from ${senderId} to ${receiverId}`);
+
+    // Use admin DB for all operations
+    const dbAdmin = adminDb();
     
-    console.log('Creating friend request:', { senderId, receiverId, relationshipType });
+    // Check if receiver exists
+    const receiverRef = dbAdmin.collection('users').doc(receiverId);
+    const receiverDoc = await receiverRef.get();
     
-    // Get user data for both sender and receiver
-    const [senderDoc, receiverDoc] = await Promise.all([
-      db.collection('users').doc(senderId).get(),
-      db.collection('users').doc(receiverId).get()
-    ]);
-    
-    if (!senderDoc.exists || !receiverDoc.exists) {
-      return NextResponse.json({ error: 'One or both users not found' }, { status: 404 });
+    if (!receiverDoc.exists) {
+      return NextResponse.json({ error: 'Receiver user not found' }, { status: 404 });
     }
-    
-    const senderData = senderDoc.data();
-    const receiverData = receiverDoc.data();
-    
-    // Check if a friendship already exists
-    const existingFriendshipRef = db.collection('users').doc(receiverId).collection('friends').doc(senderId);
-    const existingFriendship = await existingFriendshipRef.get();
-    
-    if (existingFriendship.exists) {
-      return NextResponse.json({ error: 'Users are already friends' }, { status: 400 });
-    }
-    
-    // Check if a request already exists
-    const existingRequestsQuery = db.collection('users')
-      .doc(receiverId)
-      .collection('friendship_requests')
+
+    // Check if there's an existing pending request
+    const receiverRequestsRef = dbAdmin.collection('users').doc(receiverId).collection('friendship_requests');
+    const existingRequestsSnapshot = await receiverRequestsRef
       .where('senderId', '==', senderId)
-      .where('status', '==', 'pending');
+      .where('status', '==', 'pending')
+      .get();
     
-    const existingRequests = await existingRequestsQuery.get();
-    
-    if (!existingRequests.empty) {
-      return NextResponse.json({ error: 'Friend request already sent' }, { status: 400 });
+    if (!existingRequestsSnapshot.empty) {
+      return NextResponse.json({ 
+        message: 'Friend request already sent',
+        requestId: existingRequestsSnapshot.docs[0].id
+      });
     }
+
+    // Check if users are already friends
+    const senderFriendsRef = dbAdmin.collection('users').doc(senderId).collection('friends').doc(receiverId);
+    const senderFriendDoc = await senderFriendsRef.get();
     
-    // Create the friend request
-    const requestRef = db.collection('users').doc(receiverId).collection('friendship_requests').doc();
+    if (senderFriendDoc.exists) {
+      return NextResponse.json({ 
+        message: 'Users are already friends',
+        friendId: receiverId
+      });
+    }
+
+    // Check for incoming requests (receiver to sender)
+    const senderRequestsRef = dbAdmin.collection('users').doc(senderId).collection('friendship_requests');
+    const incomingRequestsSnapshot = await senderRequestsRef
+      .where('senderId', '==', receiverId)
+      .where('status', '==', 'pending')
+      .get();
     
-    await requestRef.set({
-      senderId: senderId,
-      senderUsername: senderData.username || '',
-      senderPhotoURL: senderData.photoURL || null,
-      senderFirstName: senderData.firstName || '',
-      senderLastName: senderData.lastName || '',
-      receiverId: receiverId,
-      receiverUsername: receiverData.username || '',
-      receiverPhotoURL: receiverData.photoURL || null,
-      receiverFirstName: receiverData.firstName || '',
-      receiverLastName: receiverData.lastName || '',
+    if (!incomingRequestsSnapshot.empty) {
+      return NextResponse.json({ 
+        message: 'There is already an incoming request from this user',
+        requestId: incomingRequestsSnapshot.docs[0].id
+      });
+    }
+
+    // Create the friend request data
+    const requestData = {
+      senderId,
+      receiverId,
       status: 'pending',
-      relationshipType: relationshipType || 'other',
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
-    });
-    
-    return NextResponse.json({
-      success: true,
-      requestId: requestRef.id
+      relationshipType: relationshipType || 'support',
+      createdAt: new Date(),
+      senderUsername: senderUsername || '',
+      senderPhotoURL: senderPhotoURL || '',
+      receiverUsername: receiverUsername || ''
+    };
+
+    // Add the request to the receiver's requests subcollection
+    const docRef = await receiverRequestsRef.add(requestData);
+
+    return NextResponse.json({ 
+      message: 'Friend request sent successfully',
+      requestId: docRef.id
     });
   } catch (error) {
     console.error('Error creating friend request:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create friend request', message: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH endpoint to update a friend request (accept/decline)
+export async function PATCH(request: NextRequest) {
+  try {
+    // Verify authentication
+    const auth = await verifyAuthToken(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    
+    // Get the authenticated user's ID from the token
+    const authenticatedUserId = auth.uid;
+    
+    // Parse request body
+    const body = await request.json();
+    const { requestId, userId, action } = body;
+
+    // Validate required fields
+    if (!requestId || !userId || !action) {
+      return NextResponse.json({ 
+        error: 'Request ID, user ID, and action are required' 
+      }, { status: 400 });
+    }
+
+    // Verify that the userId matches the authenticated user's ID
+    if (userId !== authenticatedUserId) {
+      console.error(`User ID mismatch: ${userId} vs authenticated ${authenticatedUserId}`);
+      return NextResponse.json({ 
+        error: 'Unauthorized - User ID does not match authenticated user' 
+      }, { status: 403 });
+    }
+
+    if (action !== 'accept' && action !== 'decline') {
+      return NextResponse.json({ 
+        error: 'Action must be either "accept" or "decline"' 
+      }, { status: 400 });
+    }
+
+    // Use admin DB for all operations
+    const dbAdmin = adminDb();
+    
+    // Get the request document
+    const requestRef = dbAdmin.collection('users').doc(userId).collection('friendship_requests').doc(requestId);
+    const requestDoc = await requestRef.get();
+    
+    if (!requestDoc.exists) {
+      return NextResponse.json({ error: 'Friend request not found' }, { status: 404 });
+    }
+
+    const requestData = requestDoc.data();
+    
+    // Verify the request is pending and the user is the receiver
+    if (requestData.status !== 'pending') {
+      return NextResponse.json({ 
+        error: 'This request has already been processed' 
+      }, { status: 400 });
+    }
+
+    if (requestData.receiverId !== userId) {
+      return NextResponse.json({ 
+        error: 'You do not have permission to update this request' 
+      }, { status: 403 });
+    }
+
+    // Process the action
+    if (action === 'accept') {
+      // Update request status
+      await requestRef.update({
+        status: 'accepted',
+        updatedAt: new Date()
+      });
+
+      // Add each user to the other's friends collection
+      const senderId = requestData.senderId;
+      const senderData = {
+        uid: senderId,
+        username: requestData.senderUsername || '',
+        photoURL: requestData.senderPhotoURL || '',
+        relationshipType: requestData.relationshipType || 'support',
+        createdAt: new Date()
+      };
+
+      const receiverData = {
+        uid: userId,
+        username: requestData.receiverUsername || '',
+        relationshipType: requestData.relationshipType || 'support',
+        createdAt: new Date()
+      };
+
+      // Get receiver data to fill in missing fields
+      const receiverUserRef = dbAdmin.collection('users').doc(userId);
+      const receiverUserDoc = await receiverUserRef.get();
+      
+      if (receiverUserDoc.exists) {
+        const userData = receiverUserDoc.data();
+        receiverData.photoURL = userData.photoURL || '';
+        if (!receiverData.username) {
+          receiverData.username = userData.username || '';
+        }
+      }
+
+      // Add each user to the other's friends collection
+      const senderFriendsRef = dbAdmin.collection('users').doc(senderId).collection('friends').doc(userId);
+      const receiverFriendsRef = dbAdmin.collection('users').doc(userId).collection('friends').doc(senderId);
+      
+      // Use a batch to ensure both operations succeed or fail together
+      const batch = dbAdmin.batch();
+      batch.set(senderFriendsRef, receiverData);
+      batch.set(receiverFriendsRef, senderData);
+      await batch.commit();
+
+      return NextResponse.json({ message: 'Friend request accepted' });
+    } else {
+      // Decline request
+      await requestRef.update({
+        status: 'declined',
+        updatedAt: new Date()
+      });
+
+      return NextResponse.json({ message: 'Friend request declined' });
+    }
+  } catch (error) {
+    console.error('Error updating friend request:', error);
+    return NextResponse.json(
+      { error: 'Failed to update friend request', message: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
