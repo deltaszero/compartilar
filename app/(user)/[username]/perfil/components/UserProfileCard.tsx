@@ -14,7 +14,7 @@ import { useRef, useState, useEffect } from 'react';
 import { storage, getUserChildren } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
-import { Smartphone, Cake, Quote, Users, User } from "lucide-react";
+import { Smartphone, Cake, Quote, Users, User, Baby } from "lucide-react";
 import IconCamera from '@/app/assets/icons/camera.svg';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -438,8 +438,8 @@ export const UserProfileCard = ({
 
                         {displayData?.about && (
                             <div className="flex flex-row gap-1 items-start mt-3 mb-4 p-3 text-sm text-left">
-                                <Quote className='text-main w-6 h-6' /> 
-                                <p>
+                                <Quote className='text-main w-6 h-6' />                                 
+                                <p className="italic">
                                     {displayData.about}
                                 </p>
                             </div>
@@ -447,9 +447,9 @@ export const UserProfileCard = ({
 
                         {/* Children section - only show for own profile */}
                         {isOwnProfile && loadingChildren ? (
-                            <div className="w-full mt-3 border-t border-border pt-4">
+                            <div className="w-full mt-3 pt-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Users className="text-main w-5 h-5" />
+                                    <Baby className="text-main w-5 h-5" />
                                     <h3 className="font-semibold text-sm">Crianças</h3>
                                 </div>
                                 <div className="flex justify-center py-4">
@@ -457,15 +457,15 @@ export const UserProfileCard = ({
                                 </div>
                             </div>
                         ) : isOwnProfile && (
-                            <div className="w-full mt-3 border-t border-border pt-4">
+                            <div className="w-full mt-3 pt-4">
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="flex items-center gap-2">
-                                        <Users className="text-main w-5 h-5" />
+                                        <Baby className="text-main w-5 h-5" />
                                         <h3 className="font-semibold text-sm">Crianças</h3>
                                     </div>
                                     
                                     <Link href={`/${username}/criancas`}>
-                                        <Button variant="default" size="sm" className="text-xs">
+                                        <Button variant="default" size="sm" className="text-xs bg-mainStrongGreen">
                                             {children.length > 0 ? 'Ver todas' : 'Adicionar'}
                                         </Button>
                                     </Link>
