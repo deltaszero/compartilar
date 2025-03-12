@@ -16,8 +16,11 @@ export function initAdminApp() {
     // If we already have an initialized app, return it
     if (getApps().length > 0) {
       console.log('Returning existing Firebase Admin app');
-      adminApp = getApps()[0];
-      return adminApp;
+      const existingApp = getApps()[0];
+      if (existingApp) {
+        adminApp = existingApp;
+        return adminApp;
+      }
     }
     
     // Need to initialize a new app
@@ -40,10 +43,13 @@ export function initAdminApp() {
       
       console.log('Firebase Admin initialized with admin.initializeApp');
       return adminApp;
-    } else {
-      console.log('Using existing admin app:', admin.apps[0].name);
+    } else if (admin.apps.length > 0 && admin.apps[0]) {
+      console.log('Using existing admin app:', admin.apps[0]?.name || 'unknown');
       return admin.apps[0];
     }
+    
+    // Fallback if no app was found or created
+    throw new Error('Could not initialize Firebase Admin app');
   } catch (error) {
     console.error('Error in initAdminApp:', error);
     throw error;
@@ -54,9 +60,13 @@ export function initAdminApp() {
 export const adminAuth = () => {
   try {
     const app = initAdminApp();
-    return getAuth(app);
+    // Only pass app if it's defined
+    if (app) {
+      return getAuth(app);
+    }
+    throw new Error('Firebase Admin app is undefined');
   } catch (error) {
-    console.error('Error getting admin auth:', error);
+    console.error('Error getting admin auth:', error instanceof Error ? error.message : 'Unknown error');
     // For development fallback, return a mock auth object
     if (process.env.NODE_ENV === 'development') {
       console.log('Returning mock auth for development');
@@ -74,9 +84,14 @@ export const adminAuth = () => {
 export const adminDb = () => {
   try {
     const app = initAdminApp();
-    return getFirestore(app);
+    // Only pass app if it's defined
+    if (app) {
+      return getFirestore(app);
+    }
+    throw new Error('Firebase Admin app is undefined');
   } catch (error) {
-    console.error('Error getting admin firestore:', error);
+    console.error('Error getting admin firestore:', error instanceof Error ? error.message : 'Unknown error');
+    // For development, we could potentially provide a mock DB for testing
     throw error;
   }
 };

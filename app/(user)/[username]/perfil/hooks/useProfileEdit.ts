@@ -96,10 +96,19 @@ export function useProfileEdit(initialData: Partial<SignupFormData>, userId: str
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
+      
+      // Handle the error with proper type checking
+      let errorMessage = 'Não foi possível salvar suas alterações. Tente novamente.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar',
-        description: error.message || 'Não foi possível salvar suas alterações. Tente novamente.',
+        description: errorMessage,
       });
     } finally {
       setIsSaving(false);

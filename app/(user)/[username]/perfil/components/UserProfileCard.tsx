@@ -267,7 +267,7 @@ export const UserProfileCard = ({
                 />
             </CardHeader>
             
-            <CardContent className="flex flex-col items-center text-center pt-4 pb-6">
+            <CardContent className="flex flex-col items-center pt-4 pb-6">
                 {isEditing ? (
                     <div className="w-full space-y-4">
                         <div className="grid grid-cols-2 gap-4">

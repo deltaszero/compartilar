@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getFirestore } from 'firebase/firestore';
+import { FieldValue, Firestore as AdminFirestore } from 'firebase-admin/firestore';
+import { Auth as AdminAuth } from 'firebase-admin/auth';
+import { getFirestore, Firestore, collection, query, where, getDocs, DocumentData, CollectionReference, Query } from 'firebase/firestore';
+import { Auth } from 'firebase/auth';
 import { db as clientDb } from '@/app/lib/firebaseConfig';
 
 // Try to get admin instances, but fall back to client if needed
-let auth, db;
+let auth: AdminAuth | Auth | null;
+let db: AdminFirestore | Firestore;
+// Flag to distinguish between admin and client SDK
+let isAdminSDK = true;
 
 try {
   // Get the auth instance
@@ -16,11 +21,14 @@ try {
   
   console.log('Successfully initialized Firebase Admin SDK for relationship API');
 } catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK for relationship API, falling back:', error.message);
+  // Properly handle unknown error type
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  console.error('Failed to initialize Firebase Admin SDK for relationship API, falling back:', errorMessage);
   
   // Fall back to client SDK for development
   auth = null;
   db = clientDb ? clientDb : getFirestore();
+  isAdminSDK = false;
 }
 
 // For debugging
@@ -64,10 +72,20 @@ export async function PUT(request: NextRequest) {
       });
     }
     
+    // Ensure we're using admin SDK for this operation
+    if (!isAdminSDK) {
+      return NextResponse.json({ 
+        error: 'This operation requires the Admin SDK which is not available in this environment' 
+      }, { status: 501 }); // 501 Not Implemented
+    }
+
+    // From here, we know we're using Admin SDK
+    const adminDb = db as AdminFirestore;
+    
     // Get user data for both users
     const [userDoc, friendDoc] = await Promise.all([
-      db.collection('users').doc(userId).get(),
-      db.collection('users').doc(friendId).get()
+      adminDb.collection('users').doc(userId).get(),
+      adminDb.collection('users').doc(friendId).get()
     ]);
     
     if (!userDoc.exists || !friendDoc.exists) {
@@ -75,7 +93,7 @@ export async function PUT(request: NextRequest) {
     }
     
     // Check if they are already friends
-    const friendshipRef = db.collection('users').doc(userId).collection('friends').doc(friendId);
+    const friendshipRef = adminDb.collection('users').doc(userId).collection('friends').doc(friendId);
     const friendshipDoc = await friendshipRef.get();
     
     if (!friendshipDoc.exists) {
@@ -90,7 +108,16 @@ export async function PUT(request: NextRequest) {
     
     // Get the relationship display text based on type and friend's gender
     const friendData = friendDoc.data();
+    
+    // Make sure friendData is defined
+    if (!friendData) {
+      return NextResponse.json({ error: 'Friend data is empty or corrupted' }, { status: 500 });
+    }
+    
+    // Safe access to friend data properties
     const friendGender = friendData.gender || 'other';
+    const firstName = friendData.firstName || '';
+    const lastName = friendData.lastName || '';
     
     let relationshipDisplay = 'Outro'; // Default
     
@@ -112,13 +139,14 @@ export async function PUT(request: NextRequest) {
       relationshipDisplay,
       friend: {
         id: friendId,
-        firstName: friendData.firstName || '',
-        lastName: friendData.lastName || '',
+        firstName: firstName,
+        lastName: lastName,
         gender: friendGender
       }
     });
   } catch (error) {
     console.error('Error updating relationship:', error);
-    return NextResponse.json({ error: 'Internal server error', message: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal server error', message: errorMessage }, { status: 500 });
   }
 }

@@ -59,7 +59,8 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                 `/api/users/search?term=${encodeURIComponent(searchTerm)}&userId=${userData?.uid}&limit=10`,
                 {
                     headers: {
-                        'Authorization': `Bearer ${idToken}`
+                        'Authorization': `Bearer ${idToken}`,
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 }
             );
@@ -124,7 +125,8 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
+                    'Authorization': `Bearer ${idToken}`,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     senderId: userData.uid,

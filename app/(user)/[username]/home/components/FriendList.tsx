@@ -97,7 +97,12 @@ export const FriendList = ({ userId }: { userId: string }) => {
                 const token = await user.getIdToken();
 
                 // Fetch friends data from API - use the actual userId we receive as a prop
-                const friendsResponse = await fetch(`/api/friends?userId=${userId}`);
+                const friendsResponse = await fetch(`/api/friends?userId=${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
 
                 // Log response status for debugging
                 console.log('Friends API response status:', friendsResponse.status, 'for userId:', userId);
@@ -121,7 +126,13 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
                 // Fetch pending requests from API
                 try {
-                    const requestsResponse = await fetch(`/api/friends/requests?userId=${userId}`);
+                    // Use the token we already fetched
+                    const requestsResponse = await fetch(`/api/friends/requests?userId=${userId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
 
                     if (!requestsResponse.ok) {
                         throw new Error('Failed to fetch friend requests');
@@ -157,15 +168,21 @@ export const FriendList = ({ userId }: { userId: string }) => {
         setIsProcessingRequest(prev => ({ ...prev, [requestId]: true }));
 
         try {
-            // Call the API to handle the request - no token needed for now
+            // Get a fresh token
+            const token = await user.getIdToken(true);
+            
+            // Call the API with proper auth headers and correct method (PATCH)
             const response = await fetch('/api/friends/requests', {
-                method: 'POST',
+                method: 'PATCH', // Changed from POST to PATCH as the API endpoint expects
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     requestId,
-                    status
+                    userId: userData.uid,
+                    action: status === 'accepted' ? 'accept' : 'decline'
                 })
             });
 
@@ -176,13 +193,29 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
             const result = await response.json();
 
-            // If accepted, add the new friend to the friends list
-            if (status === 'accepted' && result.friend) {
-                setFriends(prev => [...prev, result.friend]);
-
+            // Handle success response
+            if (status === 'accepted') {
+                // Refresh the friends list by fetching again
+                try {
+                    const refreshToken = await user.getIdToken(true);
+                    const friendsResponse = await fetch(`/api/friends?userId=${userData.uid}`, {
+                        headers: {
+                            'Authorization': `Bearer ${refreshToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (friendsResponse.ok) {
+                        const updatedFriends = await friendsResponse.json();
+                        setFriends(updatedFriends);
+                    }
+                } catch (refreshError) {
+                    console.error('Error refreshing friends list:', refreshError);
+                }
+                
                 toast({
                     title: "Solicitação aceita",
-                    description: `Você e ${result.friend.username} agora são amigos!`
+                    description: "Solicitação de amizade aceita com sucesso!"
                 });
             } else {
                 toast({
@@ -241,7 +274,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                                     )}
                                     {/* {request.relationshipType && (
                     <Badge variant="default" className="mt-1">
-                      {request.relationshipType === 'coparent' ? 'Co-Parent' :
+                      {request.relationshipType === 'coparent' ? 'Mãe/Pai' :
                         request.relationshipType === 'support' ? 'Apoio' : 'Outro'}
                     </Badge>
                   )} */}
@@ -309,11 +342,16 @@ export const FriendList = ({ userId }: { userId: string }) => {
             const friend = friends.find(f => f.id === friendId);
             if (!friend) throw new Error("Friend not found");
 
-            // Call the API to update the relationship - no auth token for now
+            // Get a fresh token
+            const token = await user.getIdToken(true);
+            
+            // Call the API with proper authentication headers
             const response = await fetch('/api/friends/relationship', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     userId: userData.uid,
@@ -357,13 +395,21 @@ export const FriendList = ({ userId }: { userId: string }) => {
         if (!userData?.uid || !user) return [];
 
         try {
+            // Get a fresh token
+            const token = await user.getIdToken(true);
+            
             // Call the API to get children with friend-specific access info
             const friendId = selectedFriend?.id;
             const url = friendId
                 ? `/api/children/access?userId=${userData.uid}&friendId=${friendId}`
                 : `/api/children/access?userId=${userData.uid}`;
 
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
 
             if (!response.ok) {
                 throw new Error('Failed to fetch children');
@@ -411,11 +457,16 @@ export const FriendList = ({ userId }: { userId: string }) => {
         setIsUpdatingChildAccess(prev => ({ ...prev, [childId]: true }));
 
         try {
-            // Call the API to update child access - no auth token for now
+            // Get a fresh token
+            const token = await user.getIdToken(true);
+            
+            // Call the API with proper auth headers
             const response = await fetch('/api/children/access', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                     childId,
@@ -485,7 +536,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                 // Use gender to determine if it's "Pai" or "Mãe"
                 if (gender === 'male') return 'Pai';
                 if (gender === 'female') return 'Mãe';
-                return 'Co-Parent'; // Default if gender is 'other' or null
+                return 'Mãe/Pai'; // Default if gender is 'other' or null
             }
 
             return type === 'support' ? 'Apoio' : 'Outro';
@@ -500,7 +551,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         const getCoparentLabel = () => {
             if (friend.gender === 'male') return 'Pai';
             if (friend.gender === 'female') return 'Mãe';
-            return 'Co-Parent';
+            return 'Mãe/Pai';
         };
 
         const relationshipOptions = [

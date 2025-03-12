@@ -54,6 +54,9 @@ export interface KidInfo {
     // Optional metadata for the frontend
     accessLevel?: AccessLevel; // Not stored in DB, used in frontend
     
+    // Soft deletion flag
+    isDeleted?: boolean;
+    
     createdAt?: Timestamp;
     updatedAt?: Timestamp;
 }

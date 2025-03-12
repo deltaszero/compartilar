@@ -15,10 +15,19 @@ import {
 import { db } from '@/app/lib/firebaseConfig';
 import { adminDb, adminAuth } from '@/app/lib/firebase-admin';
 
-// Verify Firebase auth token
+// Verify Firebase auth token and CSRF protection
 async function verifyAuthToken(request: NextRequest) {
+  // Check CSRF protection header
+  const requestedWith = request.headers.get('x-requested-with');
+  if (requestedWith !== 'XMLHttpRequest') {
+    console.error('Missing CSRF protection header');
+    return { error: 'CSRF verification failed', status: 403 };
+  }
+
+  // Check authorization header
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.error('Missing or invalid authorization header');
     return { error: 'Unauthorized - Missing or invalid authorization header', status: 401 };
   }
 
@@ -50,6 +59,13 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const status = searchParams.get('status') || 'pending';
 
+    // Ensure userId is not null
+    if (!userId) {
+      return NextResponse.json({ 
+        error: 'User ID is required' 
+      }, { status: 400 });
+    }
+
     // Verify that the requested userId matches the authenticated user's ID
     if (userId !== authenticatedUserId) {
       console.error(`User ID mismatch: ${userId} vs authenticated ${authenticatedUserId}`);
@@ -60,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`Fetching friend requests for user: ${userId} with status: ${status}`);
 
-    // Use admin DB for the query
+    // Use admin DB for the query - userId is guaranteed to be a string at this point
     const requestsRef = adminDb().collection('users').doc(userId).collection('friendship_requests');
     const requestsSnapshot = await requestsRef.where('status', '==', status).get();
     
@@ -68,14 +84,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Process the requests
-    const friendRequests = [];
+    // Define the FriendRequest interface
+    interface FriendRequest {
+      id: string;
+      senderId: string;
+      receiverId: string;
+      status: string;
+      relationshipType: string;
+      createdAt: number | null;
+      senderUsername: string;
+      senderPhotoURL: string;
+      receiverUsername: string;
+    }
+    
+    // Process the requests with explicit typing
+    const friendRequests: FriendRequest[] = [];
 
     requestsSnapshot.forEach(doc => {
       const data = doc.data();
       
       // Format the request data
-      const request = {
+      const request: FriendRequest = {
         id: doc.id,
         senderId: data.senderId,
         receiverId: data.receiverId,
@@ -270,6 +299,11 @@ export async function PATCH(request: NextRequest) {
 
     const requestData = requestDoc.data();
     
+    // Check if requestData is undefined
+    if (!requestData) {
+      return NextResponse.json({ error: 'Friend request data is corrupted or missing' }, { status: 500 });
+    }
+    
     // Verify the request is pending and the user is the receiver
     if (requestData.status !== 'pending') {
       return NextResponse.json({ 
@@ -292,6 +326,7 @@ export async function PATCH(request: NextRequest) {
       });
 
       // Add each user to the other's friends collection
+      // requestData is guaranteed to be defined here because of the check above
       const senderId = requestData.senderId;
       const senderData = {
         uid: senderId,
@@ -305,6 +340,7 @@ export async function PATCH(request: NextRequest) {
         uid: userId,
         username: requestData.receiverUsername || '',
         relationshipType: requestData.relationshipType || 'support',
+        photoURL: '', // Initialize photoURL property
         createdAt: new Date()
       };
 
@@ -314,9 +350,11 @@ export async function PATCH(request: NextRequest) {
       
       if (receiverUserDoc.exists) {
         const userData = receiverUserDoc.data();
-        receiverData.photoURL = userData.photoURL || '';
-        if (!receiverData.username) {
-          receiverData.username = userData.username || '';
+        if (userData) {
+          receiverData.photoURL = userData.photoURL || '';
+          if (!receiverData.username) {
+            receiverData.username = userData.username || '';
+          }
         }
       }
 

@@ -104,7 +104,6 @@ export default function RootLayout({
                                     page_path: window.location.pathname,
                                     send_page_view: true
                                 });
-                                console.log('Google Analytics initialized with ID: ${GA_MEASUREMENT_ID}');
                             `}
                         </Script>
                     </>

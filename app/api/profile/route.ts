@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
-import { getFirestore } from 'firebase/firestore';
-import { db as clientDb } from '@/app/lib/firebaseConfig';
+import { initializeFirebase, errorResponse } from '@/app/lib/api-helpers';
+import { Firestore as AdminFirestore } from 'firebase-admin/firestore';
+import { DocumentData } from 'firebase/firestore';
 
-// Try to get admin instances, but fall back to client if needed
-let auth, db;
-
-try {
-  // Get the auth instance
-  auth = adminAuth();
-  
-  // Get the firestore instance
-  db = adminDb();
-  
-  console.log('Successfully initialized Firebase Admin SDK for profile API');
-} catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK for profile API, falling back:', error.message);
-  
-  // Fall back to client SDK for development
-  auth = null;
-  db = clientDb ? clientDb : getFirestore();
-}
+// Initialize Firebase with proper typing
+const { db, isAdminSDK } = initializeFirebase();
 
 // For debugging
 console.log('Initializing profile API route');
@@ -50,8 +34,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
     
+    // Check if we're using Admin SDK (required for this operation)
+    if (!isAdminSDK) {
+      console.error('Admin SDK required but not available');
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+    }
+    
+    // Use type assertion since we know this is AdminFirestore based on isAdminSDK check
+    const adminDb = db as AdminFirestore;
+    
     // Get the user document
-    const userRef = db.collection('users').doc(userId);
+    const userRef = adminDb.collection('users').doc(userId);
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {
@@ -78,12 +71,7 @@ export async function PUT(request: NextRequest) {
       updatedFields: Object.keys(safeUpdateData)
     });
   } catch (error) {
-    console.error('Error in profile update API:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }, { status: 500 });
+    return errorResponse(error);
   }
 }
 
@@ -112,8 +100,17 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Check if we're using Admin SDK (required for this operation)
+    if (!isAdminSDK) {
+      console.error('Admin SDK required but not available');
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+    }
+    
+    // Use type assertion since we know this is AdminFirestore based on isAdminSDK check
+    const adminDb = db as AdminFirestore;
+    
     // Query the Firestore database for the user with this username
-    const usersRef = db.collection('users');
+    const usersRef = adminDb.collection('users');
     const usersQuery = usersRef.where('username', '==', username.toLowerCase());
     const usersSnapshot = await usersQuery.get();
     
@@ -125,6 +122,11 @@ export async function GET(request: NextRequest) {
     // Get the user document
     const userDoc = usersSnapshot.docs[0];
     const userData = userDoc.data();
+    
+    if (!userData) {
+      return NextResponse.json({ error: 'User data is missing or corrupted' }, { status: 500 });
+    }
+    
     const userId = userDoc.id;
     
     console.log(`Found user ${userId} with username ${username}`);
@@ -139,27 +141,41 @@ export async function GET(request: NextRequest) {
       } else {
         try {
           // Check if they are friends by looking in the friends collection
-          const friendshipRef = db.collection('users').doc(currentUserId).collection('friends').doc(userId);
+          const friendshipRef = adminDb.collection('users').doc(currentUserId).collection('friends').doc(userId);
           const friendshipDoc = await friendshipRef.get();
           
           if (friendshipDoc.exists) {
             // They are friends, get relationship type
-            const relationship = friendshipDoc.data().relationshipType || 'friend';
-            friendshipStatus = relationship;
+            const friendshipData = friendshipDoc.data();
+            if (friendshipData) {
+              const relationship = friendshipData.relationshipType || 'friend';
+              friendshipStatus = relationship;
+            }
           } else {
             // Check if there's a pending request
-            const requestsRef = db.collection('users').doc(currentUserId).collection('friendship_requests');
-            const pendingQuery = requestsRef.where('status', '==', 'pending')
-              .where(field => field.where('senderId', '==', userId).or(field.where('receiverId', '==', userId)));
+            const requestsRef = adminDb.collection('users').doc(currentUserId).collection('friendship_requests');
             
-            const pendingSnapshot = await pendingQuery.get();
+            // We need a different approach for complex queries since field function is not properly typed
+            // Check for pending requests where the other user is either sender or receiver
+            const pendingAsSenderQuery = requestsRef
+              .where('status', '==', 'pending')
+              .where('senderId', '==', userId);
+              
+            const pendingAsReceiverQuery = requestsRef
+              .where('status', '==', 'pending')
+              .where('receiverId', '==', userId);
+              
+            const [senderSnapshot, receiverSnapshot] = await Promise.all([
+              pendingAsSenderQuery.get(),
+              pendingAsReceiverQuery.get()
+            ]);
             
-            if (!pendingSnapshot.empty) {
+            if (!senderSnapshot.empty || !receiverSnapshot.empty) {
               friendshipStatus = 'pending';
             }
           }
         } catch (error) {
-          console.error('Error checking friendship status:', error);
+          console.error('Error checking friendship status:', error instanceof Error ? error.message : 'Unknown error');
         }
       }
     }
@@ -178,11 +194,6 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(profileData);
   } catch (error) {
-    console.error('Error in profile API:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }, { status: 500 });
+    return errorResponse(error);
   }
 }

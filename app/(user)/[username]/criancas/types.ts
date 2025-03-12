@@ -18,6 +18,8 @@ export interface KidInfo {
   createdAt?: string | any; // Using any to accommodate Firestore timestamp types
   updatedBy?: string;
   updatedAt?: string | any; // Using any to accommodate Firestore timestamp types
+  // Soft deletion flag
+  isDeleted?: boolean;
   medicalInfo?: {
     allergies?: string[];
     conditions?: string[];

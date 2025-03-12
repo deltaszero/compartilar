@@ -214,10 +214,19 @@ export default function UserProfilePage() {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
+            
+            // Handle error with proper type checking
+            let errorMessage = "Ocorreu um erro ao salvar seu perfil";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'message' in error) {
+                errorMessage = String(error.message);
+            }
+            
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar",
-                description: error.message || "Ocorreu um erro ao salvar seu perfil"
+                description: errorMessage
             });
         } finally {
             setIsSaving(false);

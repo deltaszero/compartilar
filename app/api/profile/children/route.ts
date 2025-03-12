@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
-import { getFirestore } from 'firebase/firestore';
-import { db as clientDb } from '@/app/lib/firebaseConfig';
+import { initializeFirebase, errorResponse } from '@/app/lib/api-helpers';
+import { Firestore as AdminFirestore } from 'firebase-admin/firestore';
+import { DocumentData } from 'firebase/firestore';
 
-// Try to get admin instances, but fall back to client if needed
-let auth, db;
-
-try {
-  // Get the auth instance
-  auth = adminAuth();
-  
-  // Get the firestore instance
-  db = adminDb();
-  
-  console.log('Successfully initialized Firebase Admin SDK for profile children API');
-} catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK for profile children API, falling back:', error.message);
-  
-  // Fall back to client SDK for development
-  auth = null;
-  db = clientDb ? clientDb : getFirestore();
-}
+// Initialize Firebase with proper typing
+const { db, isAdminSDK } = initializeFirebase();
 
 // For debugging
 console.log('Initializing profile/children API route');
+
+// Define the child data interface
+interface ChildData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name?: string;
+  birthDate: string;
+  gender: string | null;
+  photoURL: string | null;
+  accessLevel: 'viewer' | 'editor';
+  editors: string[];
+  viewers: string[];
+  isDeleted?: boolean;
+  [key: string]: any; // For other properties that might be in the data
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,16 +67,25 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
     
+    // Check if we're using Admin SDK (required for this operation)
+    if (!isAdminSDK) {
+      console.error('Admin SDK required but not available');
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 503 });
+    }
+    
+    // Use type assertion since we know this is AdminFirestore based on isAdminSDK check
+    const adminDb = db as AdminFirestore;
+    
     // Determine which children to fetch based on the relationship
-    let childrenData = [];
+    let childrenData: ChildData[] = [];
     
     if (userId === currentUserId) {
       // If viewing own profile, fetch all children the user has access to
       console.log('Fetching all accessible children for current user');
       
       // Query children where user is either a viewer or editor
-      const viewerQuery = db.collection('children').where('viewers', 'array-contains', userId);
-      const editorQuery = db.collection('children').where('editors', 'array-contains', userId);
+      const viewerQuery = adminDb.collection('children').where('viewers', 'array-contains', userId);
+      const editorQuery = adminDb.collection('children').where('editors', 'array-contains', userId);
       
       const [viewerSnapshot, editorSnapshot] = await Promise.all([
         viewerQuery.get(),
@@ -84,44 +93,63 @@ export async function GET(request: NextRequest) {
       ]);
       
       // Process children data into a map to remove duplicates
-      const childrenMap = new Map();
+      const childrenMap = new Map<string, ChildData>();
       
       // Process viewer children
       viewerSnapshot.docs.forEach(doc => {
-        const childData = doc.data();
+        const data = doc.data();
+        if (!data) return;
         
         // Skip deleted children
-        if (childData.isDeleted === true) {
+        if (data.isDeleted === true) {
           console.log(`Skipping deleted child ${doc.id} (viewer access) in profile/children API`);
           return;
         }
         
         childrenMap.set(doc.id, {
           id: doc.id,
-          ...childData,
-          accessLevel: 'viewer'
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          birthDate: data.birthDate || '',
+          gender: data.gender || null,
+          photoURL: data.photoURL || null,
+          editors: data.editors || [],
+          viewers: data.viewers || [],
+          accessLevel: 'viewer',
+          isDeleted: data.isDeleted || false
         });
       });
       
       // Process editor children, overriding accessLevel if needed
       editorSnapshot.docs.forEach(doc => {
-        const childData = doc.data();
+        const data = doc.data();
+        if (!data) return;
         
         // Skip deleted children
-        if (childData.isDeleted === true) {
+        if (data.isDeleted === true) {
           console.log(`Skipping deleted child ${doc.id} (editor access) in profile/children API`);
           return;
         }
         
         if (childrenMap.has(doc.id)) {
           // Update access level to editor
-          childrenMap.get(doc.id).accessLevel = 'editor';
+          const child = childrenMap.get(doc.id);
+          if (child) {
+            child.accessLevel = 'editor';
+          }
         } else {
           // Add new child with editor access
           childrenMap.set(doc.id, {
             id: doc.id,
-            ...childData,
-            accessLevel: 'editor'
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            birthDate: data.birthDate || '',
+            gender: data.gender || null,
+            photoURL: data.photoURL || null,
+            editors: data.editors || [],
+            viewers: data.viewers || [],
+            accessLevel: 'editor',
+            isDeleted: data.isDeleted || false
           });
         }
       });
@@ -136,25 +164,26 @@ export async function GET(request: NextRequest) {
       // that both users have access to
       
       // Query children where both users are editors (strong relationship, full access)
-      const editorQuery = db.collection('children')
+      const editorQuery = adminDb.collection('children')
         .where('editors', 'array-contains', userId);
       
       const editorSnapshot = await editorQuery.get();
       
       // Filter to only include children that the current user also has access to
-      const accessibleChildren = [];
+      const accessibleChildren: ChildData[] = [];
       
       for (const doc of editorSnapshot.docs) {
-        const childData = doc.data();
+        const data = doc.data();
+        if (!data) continue;
         
         // Skip deleted children
-        if (childData.isDeleted === true) {
+        if (data.isDeleted === true) {
           console.log(`Skipping deleted child ${doc.id} in profile view (other user's profile)`);
           continue;
         }
         
-        const editors = childData.editors || [];
-        const viewers = childData.viewers || [];
+        const editors = data.editors || [];
+        const viewers = data.viewers || [];
         
         // Check if current user has access to this child
         if (editors.includes(currentUserId) || viewers.includes(currentUserId)) {
@@ -163,8 +192,15 @@ export async function GET(request: NextRequest) {
           
           accessibleChildren.push({
             id: doc.id,
-            ...childData,
-            accessLevel
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            birthDate: data.birthDate || '',
+            gender: data.gender || null,
+            photoURL: data.photoURL || null,
+            editors: editors,
+            viewers: viewers,
+            accessLevel: accessLevel,
+            isDeleted: data.isDeleted || false
           });
         }
       }
@@ -190,11 +226,6 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(formattedChildren);
   } catch (error) {
-    console.error('Error in profile children API:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }, { status: 500 });
+    return errorResponse(error);
   }
 }

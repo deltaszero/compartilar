@@ -73,13 +73,23 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .get();
     
-    // Process the results
-    let results = [];
+    // Define the interface for search results
+    interface UserSearchResult {
+      uid: string;
+      username: string;
+      firstName: string;
+      lastName: string;
+      photoURL: string;
+      displayName: string;
+    }
+    
+    // Process the results with proper typing
+    let results: UserSearchResult[] = [];
     const processedUids = new Set<string>();
     
     // Process the snapshots
-    const processSnapshot = (snapshot: any) => {
-      snapshot.forEach((doc: any) => {
+    const processSnapshot = (snapshot: FirebaseFirestore.QuerySnapshot) => {
+      snapshot.forEach((doc) => {
         const user = doc.data();
         // Skip current user and already processed users
         if (doc.id !== authenticatedUserId && !processedUids.has(doc.id)) {

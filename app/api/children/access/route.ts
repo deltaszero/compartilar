@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getFirestore } from 'firebase/firestore';
+import { FieldValue, Firestore as AdminFirestore } from 'firebase-admin/firestore';
+import { Auth as AdminAuth } from 'firebase-admin/auth';
+import { getFirestore, Firestore, collection, query, where, getDocs, DocumentData, CollectionReference, Query } from 'firebase/firestore';
+import { Auth } from 'firebase/auth';
 import { db as clientDb } from '@/app/lib/firebaseConfig';
 
 // Try to get admin instances, but fall back to client if needed
-let auth, db;
+let auth: AdminAuth | Auth | null;
+let db: AdminFirestore | Firestore;
+// Flag to distinguish between admin and client SDK
+let isAdminSDK = true;
 
 try {
   // Get the auth instance
@@ -16,11 +21,14 @@ try {
   
   console.log('Successfully initialized Firebase Admin SDK for children access API');
 } catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK for children access API, falling back:', error.message);
+  // Properly handle unknown error type
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  console.error('Failed to initialize Firebase Admin SDK for children access API, falling back:', errorMessage);
   
   // Fall back to client SDK for development
   auth = null;
   db = clientDb ? clientDb : getFirestore();
+  isAdminSDK = false;
 }
 
 // For debugging
@@ -50,77 +58,87 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
     
-    // Query the Firestore database for children that the user has access to
-    const childrenRef = db.collection('children');
+    // Execute queries based on which SDK we're using (admin or client)
+    let viewerSnapshot, editorSnapshot;
     
-    // Create queries for children where the user is either a viewer or editor
-    const viewerQuery = childrenRef.where('viewers', 'array-contains', userId);
-    const editorQuery = childrenRef.where('editors', 'array-contains', userId);
-    
-    // Execute both queries
-    const [viewerSnapshot, editorSnapshot] = await Promise.all([
-      viewerQuery.get(),
-      editorQuery.get()
-    ]);
+    if (isAdminSDK) {
+      // Admin SDK approach
+      const childrenRef = (db as AdminFirestore).collection('children');
+      
+      // Create queries for children where the user is either a viewer or editor
+      const viewerQuery = childrenRef.where('viewers', 'array-contains', userId);
+      const editorQuery = childrenRef.where('editors', 'array-contains', userId);
+      
+      // Execute both queries
+      [viewerSnapshot, editorSnapshot] = await Promise.all([
+        viewerQuery.get(),
+        editorQuery.get()
+      ]);
+    } else {
+      // Client SDK approach
+      const childrenRef = collection(db as Firestore, 'children');
+      
+      // Create queries for children where the user is either a viewer or editor
+      const viewerQuery = query(childrenRef, where('viewers', 'array-contains', userId));
+      const editorQuery = query(childrenRef, where('editors', 'array-contains', userId));
+      
+      // Execute both queries
+      [viewerSnapshot, editorSnapshot] = await Promise.all([
+        getDocs(viewerQuery),
+        getDocs(editorQuery)
+      ]);
+    }
     
     // Process children data
     const childrenMap = new Map();
     
-    // Add children from viewer query (excluding deleted children)
-    viewerSnapshot.docs.forEach(doc => {
-      const childData = doc.data();
-      
-      // Skip deleted children
-      if (childData.isDeleted === true) {
-        console.log(`Skipping deleted child ${doc.id} (viewer access) in API response`);
+    // Process snapshot data with null/undefined checks
+    const processSnapshot = (snapshot: any, accessLevel: 'viewer' | 'editor') => {
+      if (!snapshot || !snapshot.docs) {
+        console.warn(`Empty or undefined ${accessLevel} snapshot`);
         return;
       }
       
-      childrenMap.set(doc.id, {
-        id: doc.id,
-        name: childData.name || `${childData.firstName || ''} ${childData.lastName || ''}`.trim(),
-        firstName: childData.firstName || '',
-        lastName: childData.lastName || '',
-        photoURL: childData.photoURL || null,
-        birthDate: childData.birthDate,
-        gender: childData.gender || null,
-        editors: childData.editors || [],
-        viewers: childData.viewers || [],
-        accessLevel: 'viewer',
-        isDeleted: childData.isDeleted || false // Include this flag for consistency
+      snapshot.docs.forEach((doc: any) => {
+        if (!doc) return;
+        
+        const childData = doc.data ? doc.data() : null;
+        if (!childData) return;
+        
+        // Skip deleted children
+        if (childData.isDeleted === true) {
+          console.log(`Skipping deleted child ${doc.id} (${accessLevel} access) in API response`);
+          return;
+        }
+        
+        const firstName = childData.firstName || '';
+        const lastName = childData.lastName || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        
+        if (accessLevel === 'viewer' || !childrenMap.has(doc.id)) {
+          childrenMap.set(doc.id, {
+            id: doc.id,
+            name: childData.name || fullName,
+            firstName: firstName,
+            lastName: lastName,
+            photoURL: childData.photoURL || null,
+            birthDate: childData.birthDate,
+            gender: childData.gender || null,
+            editors: childData.editors || [],
+            viewers: childData.viewers || [],
+            accessLevel: accessLevel,
+            isDeleted: childData.isDeleted || false // Include this flag for consistency
+          });
+        } else if (accessLevel === 'editor' && childrenMap.has(doc.id)) {
+          // Already in map, update access level to editor
+          childrenMap.get(doc.id)!.accessLevel = 'editor';
+        }
       });
-    });
+    };
     
-    // Add children from editor query, updating access level if needed (excluding deleted children)
-    editorSnapshot.docs.forEach(doc => {
-      const childData = doc.data();
-      
-      // Skip deleted children
-      if (childData.isDeleted === true) {
-        console.log(`Skipping deleted child ${doc.id} (editor access) in API response`);
-        return;
-      }
-      
-      if (childrenMap.has(doc.id)) {
-        // Already in map, update access level to editor
-        childrenMap.get(doc.id).accessLevel = 'editor';
-      } else {
-        // Not in map, add with editor access level
-        childrenMap.set(doc.id, {
-          id: doc.id,
-          name: childData.name || `${childData.firstName || ''} ${childData.lastName || ''}`.trim(),
-          firstName: childData.firstName || '',
-          lastName: childData.lastName || '',
-          photoURL: childData.photoURL || null,
-          birthDate: childData.birthDate,
-          gender: childData.gender || null,
-          editors: childData.editors || [],
-          viewers: childData.viewers || [],
-          accessLevel: 'editor',
-          isDeleted: childData.isDeleted || false // Include this flag for consistency
-        });
-      }
-    });
+    // Process viewer and editor snapshots
+    processSnapshot(viewerSnapshot, 'viewer');
+    processSnapshot(editorSnapshot, 'editor');
     
     // Convert map to array
     let children = Array.from(childrenMap.values());
@@ -143,7 +161,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(children);
   } catch (error) {
     console.error('Error in children/access API:', error);
-    return NextResponse.json({ error: 'Internal server error', message: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal server error', message: errorMessage }, { status: 500 });
   }
 }
 
@@ -166,15 +185,32 @@ export async function PUT(request: NextRequest) {
     
     console.log('Updating child access:', { childId, friendId, accessLevel });
     
-    // Get the child document
-    const childRef = db.collection('children').doc(childId);
-    const childDoc = await childRef.get();
+    let childDoc, childData: DocumentData | undefined;
     
-    if (!childDoc.exists) {
-      return NextResponse.json({ error: 'Child not found' }, { status: 404 });
+    if (isAdminSDK) {
+      // Admin SDK approach
+      const childRef = (db as AdminFirestore).collection('children').doc(childId);
+      childDoc = await childRef.get();
+      
+      if (!childDoc.exists) {
+        return NextResponse.json({ error: 'Child not found' }, { status: 404 });
+      }
+      
+      childData = childDoc.data();
+      
+      // Check if childData is undefined after retrieving it
+      if (!childData) {
+        return NextResponse.json({ error: 'Child data is empty or corrupted' }, { status: 500 });
+      }
+    } else {
+      // Not implemented for client SDK in this function
+      // This would require a different approach with client SDK methods
+      return NextResponse.json({ 
+        error: 'This operation requires the Admin SDK which is not available in this environment' 
+      }, { status: 501 }); // 501 Not Implemented
     }
     
-    const childData = childDoc.data();
+    // TypeScript now knows childData is defined here
     const editors = childData.editors || [];
     const viewers = childData.viewers || [];
     
@@ -204,7 +240,9 @@ export async function PUT(request: NextRequest) {
       };
     }
     
+    // Admin SDK is confirmed at this point based on previous checks
     // Update the child document
+    const childRef = (db as AdminFirestore).collection('children').doc(childId);
     await childRef.update(updateData);
     
     // Get updated child data
@@ -212,28 +250,36 @@ export async function PUT(request: NextRequest) {
     const updatedChildData = updatedChildDoc.data();
     
     // Get friend user data for response
-    const friendRef = db.collection('users').doc(friendId);
+    const friendRef = (db as AdminFirestore).collection('users').doc(friendId);
     const friendDoc = await friendRef.get();
     
     let friendName = friendId;
     if (friendDoc.exists) {
       const friendData = friendDoc.data();
-      friendName = friendData.displayName || 
-        `${friendData.firstName || ''} ${friendData.lastName || ''}`.trim() || 
-        friendData.username || 
-        friendId;
+      if (friendData) {
+        friendName = friendData.displayName || 
+          `${friendData.firstName || ''} ${friendData.lastName || ''}`.trim() || 
+          friendData.username || 
+          friendId;
+      }
     }
+    
+    // Safe access to child data (we already verified childData is defined above)
+    const childFirstName = childData?.firstName || '';
+    const childLastName = childData?.lastName || '';
+    const childName = childData?.name || `${childFirstName} ${childLastName}`.trim();
     
     return NextResponse.json({
       success: true,
       accessLevel,
       childId,
       friendId,
-      childName: childData.name || `${childData.firstName || ''} ${childData.lastName || ''}`.trim(),
+      childName: childName,
       friendName: friendName
     });
   } catch (error) {
     console.error('Error updating child access:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Internal server error', message: errorMessage }, { status: 500 });
   }
 }
