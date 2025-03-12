@@ -275,12 +275,11 @@ export default function UserProfilePage() {
                     )}
 
                     {/* Profile Tabs */}
-                    <div className="mt-8 space-y-6">
+                    {/* <div className="mt-8 space-y-6">
                         <Tabs defaultValue="info" className="w-full">
                             <TabsList className="grid w-full grid-cols-2 mb-6">
                                 <TabsTrigger value="info">Info</TabsTrigger>
                                 <TabsTrigger value="kids">Crianças</TabsTrigger>
-                                {/* <TabsTrigger value="activities">Atividades</TabsTrigger> */}
                             </TabsList>
 
                             <TabsContent value="info" className="space-y-4">
@@ -309,7 +308,7 @@ export default function UserProfilePage() {
                                 <ActivitiesSection />
                             </TabsContent>
                         </Tabs>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

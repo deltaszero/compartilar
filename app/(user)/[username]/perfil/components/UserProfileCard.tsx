@@ -9,13 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { SignupFormData } from '../types';
+import { SignupFormData, KidInfo } from '../types';
 import { useRef, useState, useEffect } from 'react';
-import { storage } from '@/lib/firebaseConfig';
+import { storage, getUserChildren } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
-import { Smartphone, Cake, Quote } from "lucide-react";
+import { Smartphone, Cake, Quote, Users, User } from "lucide-react";
 import IconCamera from '@/app/assets/icons/camera.svg';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -191,9 +193,12 @@ export const UserProfileCard = ({
     onSave?: () => void,
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { name: string, value: string }) => void
 }) => {
+    const { username } = useParams<{ username: string }>();
     const displayData = isEditing ? formData : userData;
     const [completionPercentage, setCompletionPercentage] = useState(0);
     const [missingFields, setMissingFields] = useState<string[]>([]);
+    const [children, setChildren] = useState<KidInfo[]>([]);
+    const [loadingChildren, setLoadingChildren] = useState(true);
 
     // Calculate profile completion
     useEffect(() => {
@@ -235,6 +240,31 @@ export const UserProfileCard = ({
         setMissingFields(missing);
     }, [userData]);
 
+    // Fetch children data
+    useEffect(() => {
+        if (!userData?.uid || !isOwnProfile) {
+            setLoadingChildren(false);
+            return;
+        }
+        
+        const fetchChildren = async () => {
+            try {
+                // Ensure uid is defined before fetching
+                if (userData.uid) {
+                    const childrenData = await getUserChildren(userData.uid);
+                    setChildren(childrenData);
+                }
+            } catch (error) {
+                console.error("Error fetching children:", error);
+                setChildren([]);
+            } finally {
+                setLoadingChildren(false);
+            }
+        };
+        
+        fetchChildren();
+    }, [userData?.uid, isOwnProfile]);
+
     const handlePhotoUpdate = (url: string) => {
         if (onChange) {
             const event = {
@@ -252,6 +282,13 @@ export const UserProfileCard = ({
         if (onChange) {
             onChange({ name, value });
         }
+    };
+    
+    // Calculate statistics for children
+    const childStats = {
+        total: children.length,
+        asEditor: children.filter(child => child.accessLevel === "editor").length,
+        asViewer: children.filter(child => child.accessLevel === "viewer").length
     };
 
     return (
@@ -405,6 +442,86 @@ export const UserProfileCard = ({
                                 <p>
                                     {displayData.about}
                                 </p>
+                            </div>
+                        )}
+
+                        {/* Children section - only show for own profile */}
+                        {isOwnProfile && loadingChildren ? (
+                            <div className="w-full mt-3 border-t border-border pt-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Users className="text-main w-5 h-5" />
+                                    <h3 className="font-semibold text-sm">Crianças</h3>
+                                </div>
+                                <div className="flex justify-center py-4">
+                                    <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                                </div>
+                            </div>
+                        ) : isOwnProfile && (
+                            <div className="w-full mt-3 border-t border-border pt-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="text-main w-5 h-5" />
+                                        <h3 className="font-semibold text-sm">Crianças</h3>
+                                    </div>
+                                    
+                                    <Link href={`/${username}/criancas`}>
+                                        <Button variant="default" size="sm" className="text-xs">
+                                            {children.length > 0 ? 'Ver todas' : 'Adicionar'}
+                                        </Button>
+                                    </Link>
+                                </div>
+                                
+                                {children.length > 0 ? (
+                                    <div className="mt-2">
+                                        <div className="grid grid-cols-2 gap-2 mt-1">
+                                            {children.slice(0, 4).map((child) => (
+                                                <Link 
+                                                    key={child.id} 
+                                                    href={`/${username}/criancas/${child.id}`}
+                                                    className="block"
+                                                >
+                                                    <div className="flex items-center gap-2 p-2 border rounded-md hover:bg-muted/20 transition-colors">
+                                                        <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                                            <span className="text-xs font-bold">
+                                                                {child.firstName[0]}{child.lastName[0]}
+                                                            </span>
+                                                        </div>
+                                                        <div className="overflow-hidden">
+                                                            <p className="text-xs font-medium truncate">{child.firstName}</p>
+                                                            <p className="text-xs text-muted-foreground">{child.accessLevel === 'editor' ? 'Editor' : 'Visualizador'}</p>
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                        
+                                        {children.length > 4 && (
+                                            <p className="text-xs text-center mt-2 text-muted-foreground">
+                                                + {children.length - 4} mais
+                                            </p>
+                                        )}
+                                        
+                                        <div className="flex gap-2 justify-center mt-3">
+                                            {childStats.asEditor > 0 && (
+                                                <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                                                    <User className="w-3 h-3 mr-1" /> {childStats.asEditor} como editor
+                                                </Badge>
+                                            )}
+                                            
+                                            {childStats.asViewer > 0 && (
+                                                <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
+                                                    <User className="w-3 h-3 mr-1" /> {childStats.asViewer} como visualizador
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-4 bg-muted/20 rounded-md">
+                                        <p className="text-sm text-muted-foreground">
+                                            Nenhuma criança cadastrada
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
