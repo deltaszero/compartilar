@@ -82,7 +82,7 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
         
         {/* Child statistics */}
         {/* {!loading && childStats.total > 0 && (
-          <div className="mt-2 text-sm text-muted-foreground">
+          <div className="mt-2 text-sm text-gray-400">
             <span className="font-medium">{childStats.total} criança{childStats.total !== 1 ? 's' : ''}</span>
             {childStats.asEditor > 0 && (
               <span className="ml-1">

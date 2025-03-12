@@ -47,7 +47,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                             <p>Coparentalidade</p>
                             <p>sintonizada</p>
                         </div>
-                        <div className='font-raleway text-muted-foreground'>
+                        <div className='font-raleway text-gray-400'>
                             <p>Plataforma de gerencimento familiar que facilita a convivência em lares alternados.</p>
                         </div>
                     </div>

@@ -315,7 +315,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                 <p>Você ainda não tem amigos adicionados</p>
                 <div className="flex items-center max-w-xs mt-2">
                     <Search />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-400">
                         Adicione amigos através da busca na barra de pesquisa no topo da página.
                     </p>
                 </div>
@@ -587,10 +587,10 @@ export const FriendList = ({ userId }: { userId: string }) => {
                         <h3 className="font-medium">
                             {`${friend.firstName} ${friend.lastName}`.trim() || friend.displayName || friend.username}
                         </h3>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-gray-400">
                             {friend.username ? `@${friend.username}` : ''}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-gray-400">
                             {friend.addedAt && friend.addedAt.toDate ? `Adicionado em ${friend.addedAt.toDate().toLocaleDateString()}` : ''}
                         </span>
                     </div>
@@ -803,7 +803,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                             </div>
                         ) : (
                             <div className="text-center py-6">
-                                <p className="text-muted-foreground">Você não tem nenhuma criança adicionada</p>
+                                <p className="text-gray-400">Você não tem nenhuma criança adicionada</p>
                             </div>
                         )}
                     </div>

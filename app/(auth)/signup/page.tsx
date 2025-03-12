@@ -53,7 +53,7 @@ export default function SignupPage() {
 
         <h1 className="text-2xl font-bold">Redirecionando...</h1>
         
-        {/* <p className="text-lg text-muted-foreground">
+        {/* <p className="text-lg text-gray-400">
           Nosso cadastro acontece diretamente na página de login, onde você pode criar sua conta 
           ou acessar com o Google. Redirecionando você em instantes...
         </p> */}

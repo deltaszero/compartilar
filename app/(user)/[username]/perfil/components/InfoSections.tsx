@@ -32,7 +32,7 @@ export const ProfileInfoSection = ({ email, isEditing, onChange }: InfoProps) =>
                 </div>
             ) : (
                 <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                    <p className="text-sm text-muted-foreground font-medium">Email</p>
+                    <p className="text-sm text-gray-400 font-medium">Email</p>
                     <p className="font-medium">{email || 'Não informado'}</p>
                 </div>
             )}
@@ -59,7 +59,7 @@ export const AboutSection = ({ about, isEditing, onChange }: InfoProps) => (
                     />
                 </div>
             ) : (
-                <p className="text-muted-foreground p-3 rounded-lg bg-muted/30 border border-border">
+                <p className="text-gray-400 p-3 rounded-lg bg-muted/30 border border-border">
                     {about || 'Nenhuma informação disponível.'}
                 </p>
             )}
@@ -73,7 +73,7 @@ export const ActivitiesSection = () => (
             <h3 className="text-xl font-semibold">Atividades Recentes</h3>
         </CardHeader>
         <CardContent>
-            <p className="text-muted-foreground p-3 rounded-lg bg-muted/30 border border-border">
+            <p className="text-gray-400 p-3 rounded-lg bg-muted/30 border border-border">
                 Nenhuma atividade recente.
             </p>
         </CardContent>

@@ -147,7 +147,7 @@ export const CostGroupList: React.FC<CostGroupListProps> = ({
         ) : (
           <div className="mt-4 space-y-3">
             {costGroups.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-gray-400">
                 Você ainda não tem grupos de despesas
               </div>
             ) : (

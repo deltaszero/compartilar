@@ -82,7 +82,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-semibold">Complete seu perfil &nbsp; ({completionPercentage}%)</h3>
           {missingFields.length > 0 && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-400">
               {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -92,7 +92,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
         
         {missingFields.length > 0 && (
           <div className="mt-2 flex justify-between items-center">
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-gray-400">
               {missingFields.slice(0, 2).join(', ')}
               {missingFields.length > 2 && ` e mais ${missingFields.length - 2}...`}
             </div>

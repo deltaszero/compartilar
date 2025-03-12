@@ -27,7 +27,7 @@ const Hero = forwardRef<HTMLDivElement, Omit<HeroProps, 'heroRef'>>((props, ref)
                             Simplifique a coparentalidade organizando tudo em um só lugar
                         </h1>
 
-                        <p className="font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-muted-foreground">
+                        <p className="font-light sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-gray-400">
                             Uma plataforma completa que ajuda pais a coordenar cuidados, despesas e rotinas dos filhos, trazendo harmonia e clareza para a família.
                         </p>
 

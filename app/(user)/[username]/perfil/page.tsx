@@ -251,7 +251,7 @@ export default function UserProfilePage() {
                 <div className="w-full p-4 max-w-3xl mx-auto mt-4 pb-20">
                     {/* <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Conversas</h1>
-                        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                        <p className="text-gray-400 mt-1 text-sm sm:text-base">
                             Converse com sua rede de apoio
                         </p>
                     </div> */}

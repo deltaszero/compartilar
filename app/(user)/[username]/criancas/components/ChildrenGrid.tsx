@@ -107,7 +107,7 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
       {visibleChildren.length === 0 && (
         <div className="bg-muted/30 rounded-xl border border-border p-8 text-center">
           <h3 className="text-xl font-medium mb-2">Nenhuma criança cadastrada</h3>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-gray-400 mb-6">
             {isOwnChildren
               ? "Adicione crianças ao seu perfil para visualizá-las aqui."
               : "Este usuário não possui crianças cadastradas."}
@@ -158,17 +158,17 @@ export const ChildrenGrid = ({ children, isLoading, isOwnChildren }: ChildrenGri
               <CardContent className="flex-1 p-4">
                 <div className="mb-4">
                   <h3 className="text-xl font-bold">{child.firstName} {child.lastName}</h3>
-                  {/* <p className="text-muted-foreground text-sm">{getRelationshipText(child.relationship)}</p> */}
+                  {/* <p className="text-gray-400 text-sm">{getRelationshipText(child.relationship)}</p> */}
                 </div>
 
                 <div className="space-y-2 mb-4">
                   {/* <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                     <span>Nascimento: {formatBirthdate(child.birthDate)}</span>
                   </div> */}
 
                   <div className="flex items-center text-sm">
-                    <Gift className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Gift className="h-4 w-4 mr-2 text-gray-400" />
                     <span>Idade: {calculateAge(child.birthDate)}</span>
                   </div>
                 </div>

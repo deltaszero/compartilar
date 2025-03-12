@@ -284,7 +284,7 @@ export function SignupForm() {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Seu email"
                                         className="pl-10"
@@ -306,7 +306,7 @@ export function SignupForm() {
                             <FormLabel>Nome de usuário</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Seu nome de usuário"
                                         className="pl-10"
@@ -328,7 +328,7 @@ export function SignupForm() {
                             <FormLabel>Senha</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         type={showPassword ? 'text' : 'password'}
                                         placeholder="Crie uma senha"
@@ -364,7 +364,7 @@ export function SignupForm() {
                             <FormLabel>Confirmar senha</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         placeholder="Confirme sua senha"

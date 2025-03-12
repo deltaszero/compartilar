@@ -84,7 +84,7 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
                     <div className="flex justify-between items-start">
                         <div>
                             <h3 className="text-xl font-bold">{child.firstName} {child.lastName}</h3>
-                            <p className="text-sm text-muted-foreground">{getAgeText(child.birthDate)}</p>
+                            <p className="text-sm text-gray-400">{getAgeText(child.birthDate)}</p>
                         </div>
                         {child.accessLevel && (
                             <Badge 
@@ -108,7 +108,7 @@ export const ChildCard = ({ child }: { child: KidInfo }) => {
 export const NoChildrenMessage = () => (
     <div className="text-center p-6 bg-muted/30 rounded-xl border border-border">
         <h3 className="text-lg font-medium mb-2">Nenhuma criança cadastrada</h3>
-        <p className="text-muted-foreground">
+        <p className="text-gray-400">
             Não há crianças vinculadas a este perfil.
         </p>
     </div>
@@ -209,7 +209,7 @@ export const ChildrenGrid = ({
                 <CardContent>
                     <div className="text-center p-6 bg-muted/30 rounded-xl">
                         <h3 className="text-lg font-medium mb-2">Conteúdo restrito</h3>
-                        <p className="text-muted-foreground">
+                        <p className="text-gray-400">
                             Você precisa ser amigo ou fazer parte da rede de apoio para visualizar as crianças.
                         </p>
                     </div>

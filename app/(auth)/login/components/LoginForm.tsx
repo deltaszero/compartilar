@@ -166,7 +166,7 @@ export function LoginForm() {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Seu email"
                                         className="pl-10"
@@ -188,7 +188,7 @@ export function LoginForm() {
                             <FormLabel>Senha</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         type={showPassword ? 'text' : 'password'}
                                         placeholder="Sua senha"

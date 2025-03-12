@@ -7,7 +7,7 @@ export const UserNotFound = () => (
             <p className="text-3xl font-bold text-destructive">
                 Usuário não encontrado
             </p>
-            <p className="text-muted-foreground">
+            <p className="text-gray-400">
                 O perfil que você está procurando não existe ou não está disponível.
             </p>
         </div>
@@ -20,7 +20,7 @@ export const AccessDenied = () => (
             <p className="text-3xl font-bold text-destructive">
                 Acesso Negado
             </p>
-            <p className="text-muted-foreground">
+            <p className="text-gray-400">
                 Você precisa ser amigo ou familiar para visualizar este perfil.
             </p>
             <Button variant="default" className="mt-4">
