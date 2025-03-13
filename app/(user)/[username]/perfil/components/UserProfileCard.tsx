@@ -246,7 +246,7 @@ export const UserProfileCard = ({
             setLoadingChildren(false);
             return;
         }
-        
+
         const fetchChildren = async () => {
             try {
                 // Ensure uid is defined before fetching
@@ -261,7 +261,7 @@ export const UserProfileCard = ({
                 setLoadingChildren(false);
             }
         };
-        
+
         fetchChildren();
     }, [userData?.uid, isOwnProfile]);
 
@@ -283,7 +283,7 @@ export const UserProfileCard = ({
             onChange({ name, value });
         }
     };
-    
+
     // Calculate statistics for children
     const childStats = {
         total: children.length,
@@ -292,8 +292,8 @@ export const UserProfileCard = ({
     };
 
     return (
-        <Card className="mx-auto w-full max-w-md bg-card rounded-2xl border-2 border-border overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-primary/20 to-secondary/30"></div>
+        <Card className="mx-auto w-full max-w-md bg-bw rounded-2xl border-2 border-border overflow-hidden">
+            <div className="h-24"></div>
             <CardHeader className="flex flex-col items-center pb-2 -mt-16">
                 <AvatarSection
                     photoURL={displayData?.photoURL}
@@ -413,7 +413,16 @@ export const UserProfileCard = ({
                             @{displayData?.username}
                         </p>
 
-                        <div className="flex flex-wrap justify-center gap-2 mb-3">
+                        {displayData?.about && (
+                            <div className="flex flex-row gap-1 items-start mb-8 text-sm text-left">
+                                <Quote className='text-main w-1/5' />
+                                <p className="italic">
+                                    {displayData.about}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex flex-wrap justify-center gap-2 mb-8">
                             {/* {displayData?.gender && (
                                 <Badge variant={null} className="mb-1">
                                     {displayData.gender === 'male' ? 'Masculino' :
@@ -422,31 +431,21 @@ export const UserProfileCard = ({
                             )} */}
 
                             {displayData?.birthDate && (
-                                // <Badge variant={null}>
-                                <p className="flex flex-row items-center gap-1 text-sm">
-                                    <Cake className='text-main' />  {new Date(displayData.birthDate).toLocaleDateString('pt-BR')}
-                                </p>
-                                // </Badge>
+                                <Badge className='flex flex-row items-center gap-1 rounded-xl bg-mainStrongGreen bg-blank text-bw text-sm' variant="default" >
+                                    <Cake className='h-4 w-4' />  {new Date(displayData.birthDate).toLocaleDateString('pt-BR')}
+                                </Badge>
                             )}
 
                             {displayData?.phoneNumber && (//{displayData?.phoneNumber && isOwnProfile && (
-                                <p className="flex flex-row items-center gap-1 text-sm">
-                                    <Smartphone className='text-main' /> {displayData.phoneNumber}
-                                </p>
+                                <Badge className='flex flex-row items-center gap-1 rounded-xl bg-mainStrongGreen bg-blank text-bw text-sm' variant="default" >
+                                    <Smartphone className='h-4 w-4' /> {displayData.phoneNumber}
+                                </Badge>
                             )}
                         </div>
 
-                        {displayData?.about && (
-                            <div className="flex flex-row gap-1 items-start mt-3 mb-4 p-3 text-sm text-left">
-                                <Quote className='text-main w-6 h-6' />                                 
-                                <p className="italic">
-                                    {displayData.about}
-                                </p>
-                            </div>
-                        )}
 
                         {/* Children section - only show for own profile */}
-                        {isOwnProfile && loadingChildren ? (
+                        {/* {isOwnProfile && loadingChildren ? (
                             <div className="w-full mt-3 pt-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Baby className="text-main w-5 h-5" />
@@ -523,13 +522,13 @@ export const UserProfileCard = ({
                                     </div>
                                 )}
                             </div>
-                        )}
+                        )} */}
 
-                        {!isOwnProfile && (
+                        {/* {!isOwnProfile && (
                             <Badge variant="default" className="mt-1 px-4 py-1 text-sm">
                                 Perfil Visitante
                             </Badge>
-                        )}
+                        )} */}
                     </>
                 )}
 

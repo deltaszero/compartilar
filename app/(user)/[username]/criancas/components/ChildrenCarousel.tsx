@@ -130,10 +130,11 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
     }
     
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
             {/* Add Child Button - shown above carousel when user has children and it's their own profile */}
             {isOwnChildren && visibleChildren.length > 0 && (
                 <div className="flex justify-end mb-2">
+                    
                     <PremiumFeature feature="unlimited_children">
                         <Link href={`/${username}/criancas/novo`}>
                             <Button variant="default" size="sm" className='bg-mainStrongGreen'>
@@ -142,6 +143,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                             </Button>
                         </Link>
                     </PremiumFeature>
+
                 </div>
             )}
 
@@ -153,7 +155,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                 <Card className="border-none shadow-none bg-transparent">
                                     <CardContent className="p-0">
                                         {/* Full-width photo with overlay content */}
-                                        <div className="relative w-full h-[300px] sm:h-[500px]">
+                                        <div className="relative w-full h-[360px] sm:h-[500px]">
                                             {/* Background image or gradient */}
                                             {child.photoURL ? (
                                                 <Image

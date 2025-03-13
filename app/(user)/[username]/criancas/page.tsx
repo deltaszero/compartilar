@@ -75,7 +75,7 @@ export default function ChildrenPage() {
                 // Fetch children data using the getUserChildren function
                 // This function handles permission logic by querying based on viewers/editors arrays
                 const childrenData = await getUserChildren(targetUserId);
-                
+
                 // Convert the data to match our KidInfo interface
                 const formattedChildrenData = childrenData.map(child => {
                     return {
@@ -112,16 +112,17 @@ export default function ChildrenPage() {
         <div>
             <UserProfileBar pathname={pageTitle} />
             <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
+
+                <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Crianças</h1>
+                    <p className="mt-1 text-sm sm:text-base">
+                        Adicione e edite informações sobre suas filhas e filhos.
+                    </p>
+                </div>
+
+
                 <div className="flex-1 w-full max-w-5xl mx-auto p-4 pb-20">
-                    <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Crianças</h1>
-                        <p className="mt-1 text-sm sm:text-base">
-                            Adicione e edite informações sobre suas filhas e filhos.
-                        </p>
-                        <p className="mt-1 text-sm sm:text-base">
-                            Se você faz parte de uma rede de apoio, pode visualizar as informações das crianças da sua rede.
-                        </p>
-                    </div>
+
 
                     {/* Carousel */}
                     <ChildrenCarousel

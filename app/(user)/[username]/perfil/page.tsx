@@ -257,7 +257,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* PROFILE CONTENT */}
-                <div className="w-full p-4 max-w-3xl mx-auto mt-4 pb-20">
+                <div className="w-full max-w-3xl mx-auto mt-4 pb-20">
 
                     <UserProfileCard
                         userData={profileData}
@@ -271,11 +271,11 @@ export default function UserProfilePage() {
                     />
 
                     {/* Only show relationship badge for other people's profiles */}
-                    {!isOwnProfile && (
+                    {/* {!isOwnProfile && (
                         <div className="flex justify-center mt-6 mb-2">
                             <RelationshipBadge status={friendshipStatus} />
                         </div>
-                    )}
+                    )} */}
 
                     {/* Profile Tabs */}
                     {/* <div className="mt-8 space-y-6">
