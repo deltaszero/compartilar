@@ -451,7 +451,7 @@ export default function AddChildPage() {
                 {/* Back button */}
                 <Link
                     href={`/${username}/criancas`}
-                    className="inline-flex items-center text-sm text-gray-400 hover:text-foreground mb-6"
+                    className="inline-flex items-center text-sm hover:text-foreground mb-6"
                 >
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Voltar para crianças
@@ -460,7 +460,7 @@ export default function AddChildPage() {
                 <Card className="overflow-hidden">
                     <CardHeader>
                         <h1 className="text-2xl font-bold">Adicionar Nova Criança</h1>
-                        <p className="text-gray-400">
+                        <p>
                             Preencha as informações abaixo para adicionar uma nova criança ao seu perfil.
                         </p>
                     </CardHeader>
@@ -608,19 +608,19 @@ export default function AddChildPage() {
                                 </Button>
                             </div>
 
-                            <p className="text-sm text-gray-400 mt-2">
+                            <p className="text-sm mt-2">
                                 Adicione pessoas para compartilhar o acesso a esta criança. Entenda as permissões:
                             </p>
                             <ul className="space-y-2 mt-2">
                                 <li className="flex items-center space-x-2">
                                     <Badge variant="default">Editor</Badge>
-                                    <p className="text-sm text-gray-400">
+                                    <p className="text-sm ">
                                         Pode editar e adicionar informações sobre a criança, eventos e despesas.
                                     </p>
                                 </li>
                                 <li className="flex items-center space-x-2">
                                     <Badge variant="default">Visualizador</Badge>
-                                    <p className="text-sm text-gray-400">
+                                    <p className="text-sm ">
                                         Pode visualizar as informações da criança, mas não pode editar, adicionar ou excluir dados.
                                     </p>
                                 </li>

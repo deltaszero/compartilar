@@ -849,7 +849,7 @@ export default function ChildDetailPage() {
         {/* Back button */}
         <Link
           href={`/${username}/criancas`}
-          className="inline-flex items-center text-sm text-gray-400 hover:text-foreground mb-6"
+          className="inline-flex items-center text-sm hover:text-foreground mb-6"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Voltar para crianças
@@ -968,7 +968,7 @@ export default function ChildDetailPage() {
 
                     <div className="mt-6 space-y-2">
                       <div className="flex items-center text-sm">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        <Calendar className="h-4 w-4 mr-2 " />
                         <span>Nascimento: {formatDate(childData.birthDate)}</span> &nbsp; <span className="text-gray-600">({calculateAge(childData.birthDate)})</span>
                       </div>
                     </div>
@@ -1369,7 +1369,7 @@ export default function ChildDetailPage() {
                     )}
                     
                     {searchTerm.length > 0 && searchResults.length === 0 && !isSearching && (
-                      <div className="mt-4 text-center py-4 text-gray-400">
+                      <div className="mt-4 text-center py-4">
                         Nenhum resultado encontrado
                       </div>
                     )}
@@ -1426,7 +1426,7 @@ export default function ChildDetailPage() {
                     {childData.notes ? (
                       <p>{childData.notes}</p>
                     ) : (
-                      <p className="text-gray-400 italic">
+                      <p className="italic">
                         Nenhuma anotação disponível.
                       </p>
                     )}
@@ -1524,14 +1524,14 @@ export default function ChildDetailPage() {
                                 {userBeingRemoved === editor.uid ? (
                                   <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
                                 ) : (
-                                  <XCircle className="h-3 w-3 text-gray-400 hover:text-destructive" />
+                                  <XCircle className="h-3 w-3 hover:text-destructive" />
                                 )}
                               </Button>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-gray-400 italic">
+                        <p className="text-xs italic">
                           Somente você tem permissão para editar
                         </p>
                       )}
@@ -1591,14 +1591,14 @@ export default function ChildDetailPage() {
                                 {userBeingRemoved === viewer.uid ? (
                                   <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
                                 ) : (
-                                  <XCircle className="h-3 w-3 text-gray-400 hover:text-destructive" />
+                                  <XCircle className="h-3 w-3 hover:text-destructive" />
                                 )}
                               </Button>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-gray-400 italic">
+                        <p className="text-xs italic">
                           Nenhum visualizador adicionado
                         </p>
                       )}
@@ -1616,13 +1616,13 @@ export default function ChildDetailPage() {
                 <h2 className="text-xl font-semibold">Informações Médicas</h2>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-400 mb-4">
+                <p>
                   As informações médicas são utilizadas em casos de emergência e para garantir os cuidados necessários.
                 </p>
 
                 {/* Medical info would be implemented here with edit functionality */}
                 <div className="text-center py-4">
-                  <p className="text-gray-400">
+                  <p>
                     As informações médicas serão implementadas em breve.
                   </p>
                 </div>
@@ -1637,13 +1637,13 @@ export default function ChildDetailPage() {
                 <h2 className="text-xl font-semibold">Informações Educacionais</h2>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-400 mb-4">
+                <p>
                   Registre informações sobre a escola, série e contatos educacionais.
                 </p>
 
                 {/* Education info would be implemented here with edit functionality */}
                 <div className="text-center py-4">
-                  <p className="text-gray-400">
+                  <p>
                     As informações educacionais serão implementadas em breve.
                   </p>
                 </div>
@@ -1669,7 +1669,7 @@ export default function ChildDetailPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-400 mb-3 text-sm">
+                  <p className="mb-3 text-sm">
                     Registro de alterações feitas no perfil da criança, mostrando quem fez cada mudança e quando.
                   </p>
 

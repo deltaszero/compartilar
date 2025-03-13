@@ -41,7 +41,7 @@ export default function HistoryList({
   if (historyEntries.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md bg-muted/30">
-        <p className="text-gray-400">Nenhum histórico de alteração encontrado.</p>
+        <p>Nenhum histórico de alteração encontrado.</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function HistoryList({
                   </div>
                   <div>
                     <h4 className="text-sm font-medium leading-tight">{entry.description}</h4>
-                    <div className="flex items-center text-xs text-gray-400 space-x-2 mt-0.5">
+                    <div className="flex items-center text-xs space-x-2 mt-0.5">
                       <span className="inline-flex items-center">
                         <User className="h-2.5 w-2.5 mr-0.5" />
                         {entry.userName || entry.userId}
@@ -123,7 +123,7 @@ export default function HistoryList({
               {/* Show changed fields if this is an update - in a compact format */}
               {(entry.action === 'update' || entry.action.startsWith('permission_')) && entry.fields && (
                 <details className="mt-1.5 ml-7 text-xs">
-                  <summary className="cursor-pointer text-gray-400 hover:text-foreground">
+                  <summary className="cursor-pointer hover:text-foreground">
                     Detalhes da alteração
                   </summary>
                   <div className="mt-1 space-y-1 pl-2 border-l-2 border-muted">
@@ -135,13 +135,13 @@ export default function HistoryList({
                         </div>
                         <div className="grid grid-cols-2 gap-1 mt-0.5">
                           {entry.oldValues && entry.oldValues[field] !== undefined && (
-                            <div className="text-gray-400">
+                            <div>
                               <span>Antes:</span> {formatFieldValue(field, entry.oldValues?.[field])}
                             </div>
                           )}
                           {entry.newValues && entry.newValues[field] !== undefined && (
                             <div>
-                              <span className="text-gray-400">Depois:</span> {formatFieldValue(field, entry.newValues?.[field])}
+                              <span>Depois:</span> {formatFieldValue(field, entry.newValues?.[field])}
                             </div>
                           )}
                         </div>

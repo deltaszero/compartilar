@@ -22,7 +22,7 @@ export const UserNavbar = ({ pathname, onBackClick, userData, onSignOut }: UserN
                     <Button 
                         variant="default"
                         size="icon" 
-                        className="bg-bw rounded-md w-9 h-9 text-gray-400 hover:bg-muted hover:text-foreground"
+                        className="bg-bw rounded-md w-9 h-9 hover:bg-muted hover:text-foreground"
                         onClick={onBackClick}
                     >
                         <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />

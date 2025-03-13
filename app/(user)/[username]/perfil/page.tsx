@@ -70,20 +70,20 @@ export default function UserProfilePage() {
                 // Fetch profile data using the new API
                 console.log(`Fetching profile data for username: ${username}`);
                 const response = await fetch(`/api/profile?username=${username}&currentUserId=${user.uid}`);
-                
+
                 // Handle user not found
                 if (response.status === 404) {
                     setUserNotFound(true);
                     setIsLoading(false);
                     return;
                 }
-                
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch profile: ${response.status}`);
                 }
-                
+
                 const profileApiData = await response.json();
-                
+
                 // Check if we got a valid response
                 if (!profileApiData || !profileApiData.uid) {
                     console.error('Invalid profile data received:', profileApiData);
@@ -91,22 +91,22 @@ export default function UserProfilePage() {
                     setIsLoading(false);
                     return;
                 }
-                
+
                 // Extract friendship status from the response
                 const status = profileApiData.friendshipStatus || 'none';
                 setFriendshipStatus(status);
-                
+
                 // Type assertion to ensure compatibility with SignupFormData
                 const typedProfileData = {
                     ...profileApiData,
                     // Only add gender cast if gender exists, otherwise use null
                     gender: profileApiData && 'gender' in profileApiData
-                           ? (profileApiData.gender as 'male' | 'female' | 'other' | null)
-                           : null
+                        ? (profileApiData.gender as 'male' | 'female' | 'other' | null)
+                        : null
                 } as Partial<SignupFormData>;
-                
+
                 setProfileData(typedProfileData);
-                
+
                 // Notify user about their relationship status if they're not friends
                 if (status === 'none') {
                     toast({
@@ -185,7 +185,7 @@ export default function UserProfilePage() {
                     updateData: updateData
                 })
             });
-            
+
             if (!response.ok) {
                 // Try to get error details
                 let errorMessage = 'Ocorreu um erro ao salvar seu perfil';
@@ -197,10 +197,10 @@ export default function UserProfilePage() {
                 } catch (e) {
                     // If error parsing fails, just use the default message
                 }
-                
+
                 throw new Error(errorMessage);
             }
-            
+
             // Update local state
             setProfileData(formData);
 
@@ -214,7 +214,7 @@ export default function UserProfilePage() {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
-            
+
             // Handle error with proper type checking
             let errorMessage = "Ocorreu um erro ao salvar seu perfil";
             if (error instanceof Error) {
@@ -222,7 +222,7 @@ export default function UserProfilePage() {
             } else if (typeof error === 'object' && error !== null && 'message' in error) {
                 errorMessage = String(error.message);
             }
-            
+
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar",
@@ -247,14 +247,17 @@ export default function UserProfilePage() {
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
             <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
 
+                <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                        Perfil
+                    </h1>
+                    <p className="mt-1 text-sm sm:text-base">
+                        {isOwnProfile ? "Gerencie suas informações." : "Visualize informações dos seus contatos."}
+                    </p>
+                </div>
+
                 {/* PROFILE CONTENT */}
                 <div className="w-full p-4 max-w-3xl mx-auto mt-4 pb-20">
-                    {/* <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Conversas</h1>
-                        <p className="text-gray-400 mt-1 text-sm sm:text-base">
-                            Converse com sua rede de apoio
-                        </p>
-                    </div> */}
 
                     <UserProfileCard
                         userData={profileData}

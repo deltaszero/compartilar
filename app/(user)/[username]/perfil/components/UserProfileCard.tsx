@@ -292,7 +292,7 @@ export const UserProfileCard = ({
     };
 
     return (
-        <Card className="mx-auto w-full max-w-md bg-card shadow-xl rounded-2xl border-2 border-border overflow-hidden">
+        <Card className="mx-auto w-full max-w-md bg-card rounded-2xl border-2 border-border overflow-hidden">
             <div className="h-24 bg-gradient-to-r from-primary/20 to-secondary/30"></div>
             <CardHeader className="flex flex-col items-center pb-2 -mt-16">
                 <AvatarSection
@@ -429,7 +429,7 @@ export const UserProfileCard = ({
                                 // </Badge>
                             )}
 
-                            {displayData?.phoneNumber && isOwnProfile && (
+                            {displayData?.phoneNumber && (//{displayData?.phoneNumber && isOwnProfile && (
                                 <p className="flex flex-row items-center gap-1 text-sm">
                                     <Smartphone className='text-main' /> {displayData.phoneNumber}
                                 </p>
