@@ -183,7 +183,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                                         <h2 className="text-2xl font-bold drop-shadow-md">
                                                             {child.firstName} {child.lastName}
                                                         </h2>
-                                                        <Badge variant="default" className="mt-1">
+                                                        <Badge className='my-1 rounded-xl bg-mainStrongGreen bg-blank text-bw text-sm' variant="default" >
                                                             {calculateAge(child.birthDate)}
                                                         </Badge>
                                                     </div>
