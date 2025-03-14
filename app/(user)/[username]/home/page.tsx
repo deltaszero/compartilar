@@ -78,12 +78,12 @@ export default function HomePage() {
     useEffect(() => {
         const loadFinancialData = async () => {
             if (!userData || !userData.uid) return;
-            
+
             // Simulate loading complete without actually querying Firestore
             setTimeout(() => {
                 setLoadingExpenses(false);
             }, 1000);
-            
+
             // All Firestore queries commented out temporarily
             /*
             // Wait a moment to ensure authentication is complete
@@ -200,14 +200,9 @@ export default function HomePage() {
                 <div className="flex flex-col relative sm:rounded-none">
                     <section className="flex flex-col ">
                         <UserProfileCard userData={userData} />
-                        {/* Profile completion tracker */}
                         <div className="p-4">
                             <ProfileCompletion userData={userData} />
                         </div>
-                        {/* Premium features showcase */}
-                        {/* <div className="px-4 sm:px-0">
-                            <PremiumFeatureShowcase />
-                        </div> */}
                     </section>
                 </div>
 
@@ -288,10 +283,10 @@ export default function HomePage() {
                                     <div className="flex flex-col gap-2 pb-2">
                                         <div className="flex items-center justify-between px-2 rounded-lg relative mx-auto">
                                             <div className="flex flex-col gap-0">
-                                                <h2 className="text-3xl text-warning font-black">
-                                                    Peça ajuda
+                                                <h2 className="text-3xl font-black font-raleway">
+                                                    Rede de Apoio
                                                 </h2>
-                                                <p className="text-xs">
+                                                <p className="text-sm font-nunito">
                                                     Entre em contato com pessoas queridas que estão com você em todos os momentos.
                                                 </p>
                                             </div>
@@ -300,11 +295,11 @@ export default function HomePage() {
                                 ) : (
                                     <div>
                                         <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
-                                            <div className="flex flex-col gap-2 z-10 max-w-[66%]">
-                                                <h2 className="text-2xl sm:text-3xl font-black">
+                                            <div className="flex flex-col gap-2 max-w-[66%]">
+                                                <h2 className="text-3xl font-black font-raleway">
                                                     Rede de Apoio
                                                 </h2>
-                                                <p className="text-xs">
+                                                <p className="text-xs font-nunito">
                                                     Pessoas queridas que provam que juntos somos mais fortes!
                                                 </p>
                                             </div>
@@ -315,13 +310,15 @@ export default function HomePage() {
                                 <div className="bg-white overflow-hidden border-2 border-black shadow-brutalist">
                                     <div className="p-4">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-lg font-bold tracking-tight">Amigos e Família</h3>
+                                            <h3 className="text-lg font-black tracking-tight font-raleway">
+                                                Amigos e Família
+                                            </h3>
                                         </div>
                                         <FriendList userId={userData.uid} />
                                     </div>
 
                                     {isMobile && (
-                                        <div className="h-0"/>
+                                        <div className="h-0" />
                                     )}
                                 </div>
                             </section>

@@ -3,19 +3,19 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, LogIn, Camera, LogOut } from 'lucide-react';
+import { Menu, LogIn, CameraOff, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+    SheetTitle
 } from '@/components/ui/sheet';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/app/lib/utils';
@@ -28,9 +28,9 @@ import { useToast } from '@/hooks/use-toast';
  * navItems is an array of objects containing the label and href of each navigation item.
  */
 const navItems = [
-    { label: 'Descomplique',   href: '#descomplique' },
-    { label: 'Organize',       href: '#organize' },
-    { label: 'Proteja',        href: '#proteja' },
+    { label: 'Descomplique', href: '#descomplique' },
+    { label: 'Organize', href: '#organize' },
+    { label: 'Proteja', href: '#proteja' },
     { label: 'Despreocupe-se', href: '#despreocupe-se' }
 ];
 
@@ -38,53 +38,54 @@ const navItems = [
  * MobileNav is a component that renders the mobile navigation menu.
  */
 const MobileNav = () => (
-  <Sheet>
-    <SheetTrigger asChild>
-      <Button variant={null} className="lg:hidden px-0 ">
-        <div className="flex flex-row items-center gap-2">
-          <Menu className="h-6 w-6" />
-          <h1 className="text-2xl font-bold uppercase">CompartiLar</h1>
-        </div>
-      </Button>
-    </SheetTrigger>
-    <SheetContent side="left" className="w-[250px] sm:w-[300px] z-[999]">
-      <SheetTitle className="text-2xl font-bold uppercase">CompartiLar</SheetTitle>
-      <div className="flex flex-col gap-4 mt-8">
-        <nav className="flex flex-col gap-2">
-          {navItems.map((item) => (
-            <Link 
-              key={item.label} 
-              href={item.href}
-              className="py-2 px-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </SheetContent>
-  </Sheet>
+    <Sheet>
+        <SheetTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer lg:hidden">
+                <div className="flex items-center">
+                    <Menu size={24} className="min-w-[24px] min-h-[24px]" />
+                </div>
+                <h1 className="text-2xl font-black font-raleway uppercase">
+                    CompartiLar
+                </h1>
+            </div>
+        </SheetTrigger>
+        <SheetContent side="left" className="bg-main w-[250px] sm:w-[300px]">
+            <SheetTitle className="text-2xl font-bold uppercase">CompartiLar</SheetTitle>
+            <div className="flex flex-col gap-4 mt-8">
+                <nav className="flex flex-col gap-2">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className="py-2 px-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
+                </nav>
+            </div>
+        </SheetContent>
+    </Sheet>
 );
 
 /**
  * DesktopNav is a component that renders the desktop navigation menu.
  */
 const DesktopNav = () => (
-  <nav className="hidden lg:flex space-x-4">
-    {navItems.map((item) => (
-      <Link 
-        key={item.label} 
-        href={item.href}
-        className={cn(
-          "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "px-3 py-2 hover:bg-accent hover:text-accent-foreground z-[99]"
-        )}
-      >
-        {item.label}
-      </Link>
-    ))}
-  </nav>
+    <nav className="hidden lg:flex space-x-4">
+        {navItems.map((item) => (
+            <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                    "inline-flex items-center justify-center px-3 py-2 font-bold font-raleway",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+            >
+                {item.label}
+            </Link>
+        ))}
+    </nav>
 );
 
 /**
@@ -94,52 +95,52 @@ const UserMenu = ({ userData, onSignOut }: {
     userData: { username: string; photoURL?: string },
     onSignOut: () => void
 }) => (
-  <div className="flex items-center gap-2 relative">
-    {/* username */}
-    <Link href={`/${userData.username}/home`} className="hidden sm:block text-lg">
-      {userData.username}
-    </Link>
-    
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant={null} className="relative h-9 w-9 rounded-full p-0">
-          <Avatar className="h-9 w-9">
-            {userData.photoURL ? (
-              <AvatarImage src={userData.photoURL} alt="Avatar" />
-            ) : (
-              <AvatarFallback>
-                <Camera className="h-5 w-5" />
-              </AvatarFallback>
-            )}
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 z-[1000]" forceMount>
-        <DropdownMenuItem asChild>
-          <Link href={`/${userData.username}/home`}>Perfil</Link>
-        </DropdownMenuItem>
-        {/* <DropdownMenuItem asChild>
+    <div className="flex items-center gap-2 relative">
+        {/* username */}
+        <Link href={`/${userData.username}/home`} className="hidden sm:block text-lg font-nunito">
+            @{userData.username}
+        </Link>
+
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant={null} className="relative h-9 w-9 rounded-full p-0">
+                    <Avatar className="h-9 w-9">
+                        {userData.photoURL ? (
+                            <AvatarImage src={userData.photoURL} alt="Avatar" />
+                        ) : (
+                            <AvatarFallback className="bg-blank text-bw">
+                                <CameraOff className="h-5 w-5" />
+                            </AvatarFallback>
+                        )}
+                    </Avatar>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 z-[10]" forceMount>
+                <DropdownMenuItem asChild>
+                    <Link href={`/${userData.username}/home`}>Perfil</Link>
+                </DropdownMenuItem>
+                {/* <DropdownMenuItem asChild>
           <Link href={`/${userData.username}/settings`}>Configurações</Link>
         </DropdownMenuItem> */}
-        <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 flex items-center gap-2">
-          <LogOut className="h-4 w-4" />
-          Sair
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </div>
+                <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 flex items-center gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    </div>
 );
 
 /**
  * LoginButton is a component that renders the login button.
  */
 const LoginButton = () => (
-  <Button asChild variant="default" className="bg-mainStrongGreen">
-    <Link href="/login" className="font-bold gap-2 flex items-center">
-      <span>Entrar</span>
-      <LogIn className="h-4 w-4 ml-2" />
-    </Link>
-  </Button>
+    <Button asChild variant="default" className="bg-mainStrongGreen">
+        <Link href="/login" className="font-bold gap-2 flex items-center">
+            <span>Entrar</span>
+            <LogIn className="h-4 w-4 ml-2" />
+        </Link>
+    </Button>
 );
 
 /**
@@ -154,15 +155,15 @@ const Header = () => {
         try {
             // Mark listeners as inactive to prevent further updates
             markFirestoreListenersInactive();
-            
+
             // Navigate away from protected routes immediately
             router.push('/');
-            
+
             if (user) {
                 try {
                     // Get the current ID token
                     const idToken = await user.getIdToken();
-                    
+
                     // Call the logout API to revoke tokens server-side
                     const response = await fetch('/api/auth/logout', {
                         method: 'POST',
@@ -172,17 +173,17 @@ const Header = () => {
                             'X-Requested-With': 'XMLHttpRequest' // CSRF protection
                         }
                     });
-                    
+
                     // Sign out client-side regardless of server response
                     await signOut(auth);
-                    
+
                     toast({
                         title: "Logout realizado",
                         description: "Você foi desconectado com sucesso",
                     });
                 } catch (innerError) {
                     console.error('Error in sign out process:', innerError);
-                    
+
                     // Still attempt to sign out client-side
                     try {
                         await signOut(auth);
@@ -202,11 +203,13 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[99]">
+        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[10]">
             <div className="flex items-center">
                 <MobileNav />
                 <div className="hidden lg:block">
-                    <h1 className="text-2xl font-bold uppercase">CompartiLar</h1>
+                    <h1 className="text-2xl font-black font-raleway uppercase">
+                        CompartiLar
+                    </h1>
                 </div>
             </div>
 

@@ -16,7 +16,7 @@ import {
 import { RelationshipType } from "@/types/friendship.types";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, Users, Heart, UserCog, UserCheck, Edit, Eye, X, Search } from "lucide-react";
+import { ChevronDown, Users, Heart, UserCog, UserCheck, Edit, Eye, X, Search, CameraOff } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -25,7 +25,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import IconCamera from '@/app/assets/icons/camera.svg';
+// import IconCamera from '@/app/assets/icons/camera.svg';
 interface Friend {
     id: string;
     username: string;
@@ -170,7 +170,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         try {
             // Get a fresh token
             const token = await user.getIdToken(true);
-            
+
             // Call the API with proper auth headers and correct method (PATCH)
             const response = await fetch('/api/friends/requests', {
                 method: 'PATCH', // Changed from POST to PATCH as the API endpoint expects
@@ -204,7 +204,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-                    
+
                     if (friendsResponse.ok) {
                         const updatedFriends = await friendsResponse.json();
                         setFriends(updatedFriends);
@@ -212,7 +212,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                 } catch (refreshError) {
                     console.error('Error refreshing friends list:', refreshError);
                 }
-                
+
                 toast({
                     title: "Solicitação aceita",
                     description: "Solicitação de amizade aceita com sucesso!"
@@ -344,7 +344,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
 
             // Get a fresh token
             const token = await user.getIdToken(true);
-            
+
             // Call the API with proper authentication headers
             const response = await fetch('/api/friends/relationship', {
                 method: 'PUT',
@@ -397,7 +397,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         try {
             // Get a fresh token
             const token = await user.getIdToken(true);
-            
+
             // Call the API to get children with friend-specific access info
             const friendId = selectedFriend?.id;
             const url = friendId
@@ -459,7 +459,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         try {
             // Get a fresh token
             const token = await user.getIdToken(true);
-            
+
             // Call the API with proper auth headers
             const response = await fetch('/api/children/access', {
                 method: 'PUT',
@@ -561,7 +561,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         ];
 
         return (
-            <div key={friend.id} className="flex flex-row gap-4 items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-muted rounded-lg">
+            <div key={friend.id} className="flex flex-row gap-4 items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-muted rounded-lg font-nunito">
                 <Link
                     href={`/${friend.username}/perfil`}
                     className="flex items-center flex-1 space-x-2 sm:space-x-3 hover:text-accent-foreground transition-colors"
@@ -576,15 +576,12 @@ export const FriendList = ({ userId }: { userId: string }) => {
                             />
                         </div>
                     ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-overlay flex items-center justify-center text-bw">
-                            {/* <span className="text-sm sm:text-xl">
-                                {(friend.displayName || friend.username)?.[0]?.toUpperCase() || "?"}
-                            </span> */}
-                            <IconCamera width={28} height={28} />
+                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blank text-bw">
+                            <CameraOff />
                         </div>
                     )}
                     <div className="flex flex-col flex-1">
-                        <h3 className="font-medium">
+                        <h3 className="text-lg font-semibold">
                             {`${friend.firstName} ${friend.lastName}`.trim() || friend.displayName || friend.username}
                         </h3>
                         <span className="text-sm text-gray-400">
@@ -803,7 +800,9 @@ export const FriendList = ({ userId }: { userId: string }) => {
                             </div>
                         ) : (
                             <div className="text-center py-6">
-                                <p className="text-gray-400">Você não tem nenhuma criança adicionada</p>
+                                <p className="text-gray-400">
+                                    Você não tem nenhuma criança adicionada
+                                </p>
                             </div>
                         )}
                     </div>

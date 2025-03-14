@@ -431,13 +431,13 @@ export const UserProfileCard = ({
                             )} */}
 
                             {displayData?.birthDate && (
-                                <Badge className='flex flex-row items-center gap-1 rounded-xl bg-mainStrongGreen bg-blank text-bw text-sm' variant="default" >
+                                <Badge className='flex flex-row items-center gap-1 rounded-xl  bg-blank text-bw text-sm' variant="default" >
                                     <Cake className='h-4 w-4' />  {new Date(displayData.birthDate).toLocaleDateString('pt-BR')}
                                 </Badge>
                             )}
 
                             {displayData?.phoneNumber && (//{displayData?.phoneNumber && isOwnProfile && (
-                                <Badge className='flex flex-row items-center gap-1 rounded-xl bg-mainStrongGreen bg-blank text-bw text-sm' variant="default" >
+                                <Badge className='flex flex-row items-center gap-1 rounded-xl  bg-blank text-bw text-sm' variant="default" >
                                     <Smartphone className='h-4 w-4' /> {displayData.phoneNumber}
                                 </Badge>
                             )}

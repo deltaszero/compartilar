@@ -135,7 +135,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
 
             {/* Subpages with Subtle Style */}
             {hasSubpages && (
-                <div className="pl-12">
+                <div className="pl-12 font-nunito">
                     {subpages.map(subpage => {
                         const isSubActive = currentPath === subpage.path;
 
@@ -200,7 +200,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
 
     return (
         <nav className={cn(
-            "flex flex-col w-full font-raleway",
+            "flex flex-col w-full",
             isMobile ? "py-2" : "h-full"//"h-full border-r border-border/30"
         )}>
             {!isMobile && (

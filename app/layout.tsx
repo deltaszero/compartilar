@@ -12,23 +12,30 @@ import { UserProvider } from "@context/userContext";
 import type { Metadata } from "next";
 import "@app/globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+    subsets: ["latin"],
+    display: 'swap',
+});
 const raleway = Raleway({
     subsets: ["latin"],
     variable: "--font-raleway",
+    display: 'swap',
 });
 const playfair = Playfair_Display({
     subsets: ["latin"],
     variable: "--font-playfair",
+    display: 'swap',
 });
 const nunito = Nunito({
     subsets: ["latin"],
     variable: "--font-nunito",
+    display: 'swap',
 });
 const cinzel = Cinzel_Decorative({
     subsets: ["latin"],
     variable: "--font-cinzel",
     weight: ["400", "700", "900"],
+    display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -91,6 +98,16 @@ export const metadata: Metadata = {
     },
 };
 
+// Hidden component to force all fonts to load
+const FontPreloader = () => (
+    <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }}>
+        <span className="font-raleway">Raleway</span>
+        <span className="font-nunito">Nunito</span>
+        <span className="font-playfair">Playfair</span>
+        <span className="font-cinzel">Cinzel</span>
+    </div>
+);
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -132,6 +149,8 @@ export default function RootLayout({
             </head>
             <body className={`${inter.className}`}>
                 <UserProvider>
+                    {/* Font preloader to ensure fonts are loaded */}
+                    <FontPreloader />
                     <main>
                         {/* Only include Analytics component here, not in individual pages */}
                         <Analytics />
