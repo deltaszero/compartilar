@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // importing assets
-import IconCalendar from '@assets/icons/bottom_bar_calendar.svg';
-import IconMaplocation from '@assets/icons/bottom_bar_maplocation.svg';
+import IconCalendar from '@assets/icons/bottom_bar_calendar_v2.svg';
+import IconMaplocation from '@assets/icons/bottom_bar_geolocation_v2.svg';
 import IconHouse from '@assets/icons/bottom_bar_house.svg';
-import IconMore from '@assets/icons/bottom_bar_more.svg';
+import IconMore from '@assets/icons/bottom_bar_more_v2.svg';
 import IconChat from '@assets/icons/bottom_bar_chat.svg';
 
 /**
@@ -53,7 +53,7 @@ const NavItem = ({
                     <div className="flex items-center justify-center">
                         {icon}
                     </div>
-                    <span className="text-[10px] sm:text-xs font-heading mt-0.5">
+                    <span className="text-[12px] mt-1 font-raleway font-bold">
                         {label}
                     </span>
                 </motion.div>
@@ -80,7 +80,7 @@ const NavItem = ({
                 <div className="flex items-center justify-center">
                     {icon}
                 </div>
-                <span className="text-[10px] sm:text-xs font-heading mt-0.5">
+                <span className="text-[12px] mt-1 font-raleway font-bold">
                     {label}
                 </span>
             </motion.div>

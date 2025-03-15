@@ -115,7 +115,7 @@ const UserMenu = ({ userData, onSignOut }: {
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 z-[10]" forceMount>
+            <DropdownMenuContent align="end" className="w-52 z-[50]" forceMount>
                 <DropdownMenuItem asChild>
                     <Link href={`/${userData.username}/home`}>Perfil</Link>
                 </DropdownMenuItem>
@@ -203,7 +203,7 @@ const Header = () => {
     };
 
     return (
-        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[10]">
+        <header className="flex items-center justify-between bg-bg py-4 px-2 sm:px-6 lg:fixed lg:inset-x-0 lg:top-0 z-[50]">
             <div className="flex items-center">
                 <MobileNav />
                 <div className="hidden lg:block">
