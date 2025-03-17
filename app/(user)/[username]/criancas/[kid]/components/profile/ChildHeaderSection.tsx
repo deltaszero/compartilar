@@ -12,7 +12,7 @@ export function ChildHeaderSection({ username, childName }: ChildHeaderSectionPr
     <div className="flex flex-col space-y-2 mb-6">
       <div className="flex items-center">
         <Link href={`/${username}/criancas`}>
-          <Button variant="ghost" className="p-0 mr-2">
+          <Button variant="default" className="p-0 mr-2" type="button">
             <ChevronLeft className="h-5 w-5" />
           </Button>
         </Link>

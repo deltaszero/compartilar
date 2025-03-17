@@ -39,18 +39,20 @@ export function DeleteConfirmDialog({
         
         <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button
-            variant="outline"
+            variant="default"
             onClick={() => onOpenChange(false)}
             disabled={isDeleting}
             className="sm:flex-1"
+            type="button"
           >
             Cancelar
           </Button>
           <Button
-            variant="destructive"
+            variant="default"
             onClick={onDelete}
             disabled={isDeleting}
             className="sm:flex-1"
+            type="button"
           >
             {isDeleting ? 'Excluindo...' : 'Excluir'}
           </Button>

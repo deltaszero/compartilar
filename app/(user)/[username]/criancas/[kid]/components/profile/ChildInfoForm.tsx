@@ -122,22 +122,24 @@ export function ChildInfoForm({
           {isEditing ? (
             <>
               <Button
-                variant="outline"
+                variant="default"
                 onClick={onEditToggle}
                 disabled={isSaving}
+                type="button"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={onSave}
                 disabled={isSaving || uploadProgress !== null}
+                type="button"
               >
                 {isSaving ? 'Salvando...' : 'Salvar'}
                 {!isSaving && <Save className="ml-2 h-4 w-4" />}
               </Button>
             </>
           ) : (
-            <Button onClick={onEditToggle}>
+            <Button onClick={onEditToggle} type="button">
               Editar
               <Edit className="ml-2 h-4 w-4" />
             </Button>

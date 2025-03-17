@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
+type Params = { params: { id: string } };
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -64,7 +66,12 @@ export async function GET(
       .get();
     
     // Process the history entries
-    const historyEntries = [];
+    const historyEntries: Array<{
+      id: string;
+      timestamp: string | null;
+      [key: string]: any;
+    }> = [];
+    
     historySnapshot.forEach(doc => {
       const entry = doc.data();
       
@@ -88,7 +95,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');

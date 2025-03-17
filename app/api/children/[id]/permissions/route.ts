@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
+type Params = { params: { id: string } };
+
 // Handle adding users to editors or viewers list
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -61,7 +63,7 @@ export async function POST(
     
     // Check if the target user already has this permission
     const targetField = type === 'editor' ? 'editors' : 'viewers';
-    if (childData[targetField] && childData[targetField].includes(targetUserId)) {
+    if (childData && childData[targetField] && childData[targetField].includes(targetUserId)) {
       return NextResponse.json({ 
         error: `User is already an ${type}`,
         success: false  
@@ -77,7 +79,7 @@ export async function POST(
     updateData[targetField] = FieldValue.arrayUnion(targetUserId);
     
     // If adding as editor, remove from viewers if present
-    if (type === 'editor' && childData.viewers && childData.viewers.includes(targetUserId)) {
+    if (type === 'editor' && childData && childData.viewers && childData.viewers.includes(targetUserId)) {
       updateData['viewers'] = FieldValue.arrayRemove(targetUserId);
     }
     
@@ -110,7 +112,7 @@ export async function POST(
 // Handle removing users from editors or viewers list
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -165,7 +167,7 @@ export async function DELETE(
     }
     
     // Can't remove the owner
-    if (targetUserId === childData.owner) {
+    if (childData && targetUserId === childData.owner) {
       return NextResponse.json({ error: 'Cannot remove owner from editors' }, { status: 400 });
     }
     

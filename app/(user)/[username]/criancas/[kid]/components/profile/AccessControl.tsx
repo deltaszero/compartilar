@@ -73,16 +73,18 @@ export function AccessControl({
       {isOwner && (
         <div className="flex flex-wrap gap-3">
           <Button 
-            variant="outline" 
+            variant="default" 
             onClick={() => setShowEditorsDialog(true)}
+            type="button"
           >
             <Users className="h-4 w-4 mr-2" />
             Gerenciar Editores
           </Button>
           
           <Button 
-            variant="outline" 
+            variant="default" 
             onClick={() => setShowViewersDialog(true)}
+            type="button"
           >
             <Users className="h-4 w-4 mr-2" />
             Gerenciar Visualizadores
@@ -136,7 +138,7 @@ export function AccessControl({
                     {result.id !== user?.uid && (
                       <Button 
                         size="sm" 
-                        variant="ghost"
+                        variant="default"
                         onClick={() => onAddAccess(result.id, 'editor')}
                       >
                         <UserPlus className="h-4 w-4" />
@@ -170,14 +172,14 @@ export function AccessControl({
                         <p className="text-sm font-medium">{editor.displayName || 'Sem nome'}</p>
                         <p className="text-xs text-muted-foreground">{editor.email}</p>
                         {editor.id === user?.uid && (
-                          <Badge variant="outline" className="text-xs">Você</Badge>
+                          <Badge variant="default" className="text-xs">Você</Badge>
                         )}
                       </div>
                     </div>
                     {editor.id !== user?.uid && (
                       <Button 
                         size="sm" 
-                        variant="ghost" 
+                        variant="default" 
                         className="text-destructive hover:text-destructive"
                         onClick={() => setUserBeingRemoved(editor.id)}
                       >
@@ -191,7 +193,7 @@ export function AccessControl({
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditorsDialog(false)}>
+            <Button variant="default" onClick={() => setShowEditorsDialog(false)} type="button">
               Fechar
             </Button>
           </DialogFooter>
@@ -244,7 +246,7 @@ export function AccessControl({
                     {result.id !== user?.uid && (
                       <Button 
                         size="sm" 
-                        variant="ghost"
+                        variant="default"
                         onClick={() => onAddAccess(result.id, 'viewer')}
                       >
                         <UserPlus className="h-4 w-4" />
@@ -281,7 +283,7 @@ export function AccessControl({
                     </div>
                     <Button 
                       size="sm" 
-                      variant="ghost" 
+                      variant="default" 
                       className="text-destructive hover:text-destructive"
                       onClick={() => setUserBeingRemoved(viewer.id)}
                     >
@@ -294,7 +296,7 @@ export function AccessControl({
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowViewersDialog(false)}>
+            <Button variant="default" onClick={() => setShowViewersDialog(false)} type="button">
               Fechar
             </Button>
           </DialogFooter>
@@ -316,13 +318,13 @@ export function AccessControl({
           
           <DialogFooter className="flex justify-between sm:justify-between">
             <Button
-              variant="outline"
+              variant="default"
               onClick={() => setUserBeingRemoved(null)}
             >
               Cancelar
             </Button>
             <Button
-              variant="destructive"
+              variant="default"
               onClick={() => {
                 if (userBeingRemoved) {
                   // Check if the user is in editors or viewers list

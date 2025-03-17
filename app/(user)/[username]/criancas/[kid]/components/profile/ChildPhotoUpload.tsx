@@ -69,6 +69,7 @@ export function ChildPhotoUpload({
     reader.readAsDataURL(file);
 
     // Upload to Firebase Storage
+    if (!storage) throw new Error('Storage not initialized');
     const storageRef = ref(storage, `children/${childId}/profile-${Date.now()}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -94,7 +95,7 @@ export function ChildPhotoUpload({
           onProgressChange(null);
           
           // Delete old photo if exists
-          if (photoUrl && photoUrl !== downloadURL) {
+          if (photoUrl && photoUrl !== downloadURL && storage) {
             try {
               const oldPhotoRef = ref(storage, photoUrl);
               await deleteObject(oldPhotoRef);

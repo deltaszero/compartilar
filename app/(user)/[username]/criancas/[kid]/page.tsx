@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Trash, History, Users } from 'lucide-react';
 import { ChangeHistoryEntry } from '@/lib/firebaseConfig';
 import Link from 'next/link';
+import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
 // Custom components
 import { 
@@ -633,6 +634,8 @@ export default function ChildDetailPage() {
     }
 
     return (
+        <div>
+        <UserProfileBar pathname='Conversas' />
         <div className="p-4 max-w-4xl mx-auto">
             {/* Header with back link and title */}
             <ChildHeaderSection
@@ -738,5 +741,6 @@ export default function ChildDetailPage() {
                 onDelete={handleDeleteChild}
             />
         </div>
+    </div>
     );
 }

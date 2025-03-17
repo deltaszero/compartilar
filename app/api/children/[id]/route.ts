@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
+type Params = { params: { id: string } };
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -63,7 +65,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -150,7 +152,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
