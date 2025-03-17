@@ -28,65 +28,105 @@ import { useToast } from '@/hooks/use-toast';
  * navItems is an array of objects containing the label and href of each navigation item.
  */
 const navItems = [
-    { label: 'Descomplique', href: '#descomplique' },
-    { label: 'Organize', href: '#organize' },
-    { label: 'Proteja', href: '#proteja' },
-    { label: 'Despreocupe-se', href: '#despreocupe-se' }
+    { label: 'Sobre', href: '#descomplique' },
+    { label: 'Funcionalidades', href: '#organize' },
+    { label: 'Planos', href: '#proteja' },
+    // { label: 'Despreocupe-se', href: '#despreocupe-se' }
 ];
 
 /**
  * MobileNav is a component that renders the mobile navigation menu.
  */
-const MobileNav = () => (
-    <Sheet>
-        <SheetTrigger asChild>
-            <div className="flex items-center gap-2 cursor-pointer lg:hidden">
-                <div className="flex items-center">
-                    <Menu size={24} className="min-w-[24px] min-h-[24px]" />
+const MobileNav = () => {
+    // Import track event
+    const { trackEvent, AnalyticsEventType } = require('@/app/components/Analytics');
+    
+    const handleNavClick = (label: string) => {
+        trackEvent(AnalyticsEventType.NAVIGATION_CLICK, {
+            element: label,
+            location: 'mobile_menu',
+            device_type: 'mobile',
+            menu_type: 'sidebar'
+        });
+    };
+    
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <div 
+                    className="flex items-center gap-2 cursor-pointer lg:hidden"
+                    onClick={() => {
+                        trackEvent(AnalyticsEventType.NAVIGATION_CLICK, {
+                            element: 'mobile_menu_toggle',
+                            location: 'header',
+                            action: 'open',
+                            device_type: 'mobile'
+                        });
+                    }}
+                >
+                    <div className="flex items-center">
+                        <Menu size={24} className="min-w-[24px] min-h-[24px]" />
+                    </div>
+                    <h1 className="text-2xl font-black font-raleway uppercase">
+                        CompartiLar
+                    </h1>
                 </div>
-                <h1 className="text-2xl font-black font-raleway uppercase">
-                    CompartiLar
-                </h1>
-            </div>
-        </SheetTrigger>
-        <SheetContent side="left" className="bg-main w-[250px] sm:w-[300px]">
-            <SheetTitle className="text-2xl font-bold uppercase">CompartiLar</SheetTitle>
-            <div className="flex flex-col gap-4 mt-8">
-                <nav className="flex flex-col gap-2">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            className="py-2 px-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-            </div>
-        </SheetContent>
-    </Sheet>
-);
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-main w-[250px] sm:w-[300px]">
+                <SheetTitle className="text-2xl font-bold uppercase">CompartiLar</SheetTitle>
+                <div className="flex flex-col gap-4 mt-8">
+                    <nav className="flex flex-col gap-2">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="py-2 px-2 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+                                onClick={() => handleNavClick(item.label)}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
+};
 
 /**
  * DesktopNav is a component that renders the desktop navigation menu.
  */
-const DesktopNav = () => (
-    <nav className="hidden lg:flex space-x-4">
-        {navItems.map((item) => (
-            <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                    "inline-flex items-center justify-center px-3 py-2 font-bold font-raleway",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-            >
-                {item.label}
-            </Link>
-        ))}
-    </nav>
-);
+const DesktopNav = () => {
+    // Import track event
+    const { trackEvent, AnalyticsEventType } = require('@/app/components/Analytics');
+    
+    const handleNavClick = (label: string) => {
+        trackEvent(AnalyticsEventType.NAVIGATION_CLICK, {
+            element: label,
+            location: 'desktop_header',
+            device_type: 'desktop',
+            menu_type: 'horizontal'
+        });
+    };
+    
+    return (
+        <nav className="hidden lg:flex space-x-4">
+            {navItems.map((item) => (
+                <Link
+                    key={item.label}
+                    href={item.href}
+                    className={cn(
+                        "inline-flex items-center justify-center px-3 py-2 font-bold font-raleway",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                    onClick={() => handleNavClick(item.label)}
+                >
+                    {item.label}
+                </Link>
+            ))}
+        </nav>
+    );
+};
 
 /**
  * UserMenu is a component that renders the user menu.
@@ -134,14 +174,32 @@ const UserMenu = ({ userData, onSignOut }: {
 /**
  * LoginButton is a component that renders the login button.
  */
-const LoginButton = () => (
-    <Button asChild variant="default" className="bg-mainStrongGreen">
-        <Link href="/login" className="font-bold gap-2 flex items-center">
-            <span>Entrar</span>
-            <LogIn className="h-4 w-4 ml-2" />
-        </Link>
-    </Button>
-);
+const LoginButton = () => {
+    // Import track event
+    const { trackEvent, AnalyticsEventType } = require('@/app/components/Analytics');
+    
+    const handleLoginClick = () => {
+        trackEvent(AnalyticsEventType.NAVIGATION_CLICK, {
+            element: 'login_button',
+            location: 'header',
+            destination: '/login',
+            action: 'login_nav'
+        });
+    };
+    
+    return (
+        <Button asChild variant="default" className="bg-mainStrongGreen">
+            <Link 
+                href="/login" 
+                className="font-bold gap-2 flex items-center"
+                onClick={handleLoginClick}
+            >
+                <span>Entrar</span>
+                <LogIn className="h-4 w-4 ml-2" />
+            </Link>
+        </Button>
+    );
+};
 
 /**
  * Header is a component that renders the website header.

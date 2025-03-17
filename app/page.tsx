@@ -54,7 +54,7 @@ export default function LandingPage() {
             feature_id: featureId,
             section: 'features'
         });
-        
+
         // Navigate to the corresponding section
         const sectionElement = document.getElementById(featureId);
         if (sectionElement) {
@@ -86,6 +86,12 @@ export default function LandingPage() {
                 isMobile={isMobile}
             />
 
+            {/* PLANO PARENTAL SCIENTIFIC CONCEPT SECTION */}
+            <ConceptSection
+                onGetStartedClick={handleGetStartedClick}
+                openImageModal={openImageModal}
+            />
+
             {/* FEATURES SECTION */}
             <Features
                 ref={featuresRef}
@@ -96,14 +102,8 @@ export default function LandingPage() {
             {/* FEATURE SCREENSHOTS SECTION */}
             {/* <FeatureScreenshots/> */}
 
-            {/* PLANO PARENTAL SCIENTIFIC CONCEPT SECTION */}
-            <ConceptSection
-                onGetStartedClick={handleGetStartedClick}
-                openImageModal={openImageModal}
-            />
-
             {/* FEATURE SCREENSHOTS SECTION */}
-            <Pricing/>
+            <Pricing />
 
 
             {/* FOOTER */}

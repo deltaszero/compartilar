@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/app/lib/utils';
+import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
 // assets
 import DSZeroLogo from '@/app/assets/icons/landing_dszero-logo-02.svg';
 import social_media from "@assets/images/social-media.webp";
@@ -38,17 +39,29 @@ interface SocialLinkProps {
     href: string;
 }
 
-const SocialLink = ({ Icon, label, href }: SocialLinkProps) => (
-    <Link
-        href={href}
-        className="flex items-center gap-2 justify-center"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        <Icon className="w-6 h-6" />
-        <span className="md:hidden lg:inline">{label}</span>
-    </Link>
-);
+const SocialLink = ({ Icon, label, href }: SocialLinkProps) => {
+    const handleSocialClick = () => {
+        trackEvent(AnalyticsEventType.SOCIAL_CLICK, {
+            platform: label.replace('@', ''),
+            link_url: href,
+            location: 'footer',
+            element: 'social_link'
+        });
+    };
+    
+    return (
+        <Link
+            href={href}
+            className="flex items-center gap-2 justify-center"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleSocialClick}
+        >
+            <Icon className="w-6 h-6" />
+            <span className="md:hidden lg:inline">{label}</span>
+        </Link>
+    );
+};
 
 export default function Footer() {
     const [isMobile, setIsMobile] = useState(false);

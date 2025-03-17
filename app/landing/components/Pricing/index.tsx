@@ -1,9 +1,48 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { CheckIcon, Puzzle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
 
 export default function Pricing() {
+    // Track section view
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        trackEvent(AnalyticsEventType.SECTION_VIEW, {
+                            section_name: 'pricing',
+                            section_position: 'bottom',
+                            is_visible: true
+                        });
+                        
+                        // Once tracked, disconnect observer
+                        observer.disconnect();
+                    }
+                });
+            },
+            { threshold: 0.3 } // Track when 30% of the section is visible
+        );
+        
+        // Get the element to observe
+        const plansElement = document.getElementById('planos');
+        if (plansElement) {
+            observer.observe(plansElement);
+        }
+        
+        return () => observer.disconnect();
+    }, []);
+    
+    const handlePlanClick = (planName: string, planPrice: string) => {
+        trackEvent(AnalyticsEventType.PRICING_CLICK, {
+            plan_name: planName,
+            plan_price: planPrice,
+            element: 'plan_button',
+            action: 'select_plan'
+        });
+    };
+    
     const plans = [
         {
             icon: <Puzzle className="h-8 w-8" />,
@@ -142,6 +181,7 @@ export default function Pricing() {
                                             ? "bg-white text-main border-2 border-black"
                                             : "bg-bw"
                                     )}
+                                    onClick={() => handlePlanClick(plan.name, plan.price)}
                                 >
                                     {plan.cta}
                                 </Button>

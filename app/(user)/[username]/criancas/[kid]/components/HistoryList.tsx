@@ -12,16 +12,24 @@ import {
 } from 'lucide-react';
 
 interface HistoryListProps {
-  historyEntries: ChangeHistoryEntry[];
-  historyLoading: boolean;
-  historyError: string | null;
+  entries: ChangeHistoryEntry[];
+  isLoading: boolean;
+  error: string | null;
+  noDataMessage?: string;
+  onRefresh?: () => void;
 }
 
 export default function HistoryList({ 
-  historyEntries, 
-  historyLoading,
-  historyError 
+  entries, 
+  isLoading,
+  error,
+  noDataMessage = "Nenhum histórico de alteração encontrado.",
+  onRefresh
 }: HistoryListProps) {
+  // For backward compatibility
+  const historyEntries = entries;
+  const historyLoading = isLoading;
+  const historyError = error;
   if (historyLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -38,10 +46,18 @@ export default function HistoryList({
     );
   }
   
-  if (historyEntries.length === 0) {
+  if (!historyEntries || historyEntries.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md bg-muted/30">
-        <p>Nenhum histórico de alteração encontrado.</p>
+        <p>{noDataMessage}</p>
+        {onRefresh && (
+          <button 
+            onClick={onRefresh}
+            className="mt-3 text-xs text-primary underline hover:text-primary/80"
+          >
+            Tentar novamente
+          </button>
+        )}
       </div>
     );
   }

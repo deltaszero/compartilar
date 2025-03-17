@@ -28,6 +28,7 @@ import { InvitationDialog } from "./components/InvitationDialog";
 import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
 import ProfileCompletion from "./components/ProfileCompletion";
 import { PremiumFeatureShowcase } from "./components/PremiumFeatureShowcase";
+import FeatureCardMenu from "./components/FeatureCardMenu";
 
 // Financial analytics
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -204,6 +205,9 @@ export default function HomePage() {
                             <ProfileCompletion userData={userData} />
                         </div>
                     </section>
+
+                    {/* Mobile Feature Card Menu */}
+                    {isMobile && <FeatureCardMenu username={userData.username} />}
                 </div>
 
                 <article className="flex flex-col sm:rounded-none z-[10]">
@@ -401,6 +405,7 @@ export default function HomePage() {
                         </div>
                     </section>
                     */}
+                    <div className="h-[5em]"/>
                 </article>
             </div>
             <Toaster />

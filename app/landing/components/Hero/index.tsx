@@ -1,13 +1,39 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useEffect } from "react";
 import Image from "next/image";
 import { cn } from '@/app/lib/utils';
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import hero_image from "@assets/images/landing_compartilar-hero-01.png";
 import { HeroProps } from "./types";
+import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
 
 const Hero = forwardRef<HTMLDivElement, Omit<HeroProps, 'heroRef'>>((props, ref) => {
     const { onLearnMoreClick, onGetStartedClick, isMobile } = props;
+
+    // Track hero section view
+    useEffect(() => {
+        // Track a section view when the hero loads
+        trackEvent(AnalyticsEventType.SECTION_VIEW, {
+            section_name: 'hero',
+            section_position: 'top',
+            is_visible: true,
+            device_type: isMobile ? 'mobile' : 'desktop'
+        });
+        
+        // Track engagement with the hero section
+        const trackHeroEngagement = () => {
+            trackEvent(AnalyticsEventType.LANDING_HERO_ENGAGEMENT, {
+                engagement_type: 'time_spent',
+                section_name: 'hero',
+                device_type: isMobile ? 'mobile' : 'desktop'
+            });
+        };
+        
+        // Track engagement after 3 seconds
+        const engagementTimer = setTimeout(trackHeroEngagement, 3000);
+        
+        return () => clearTimeout(engagementTimer);
+    }, [isMobile]);
 
     return (
         <section className="bg-bg" ref={ref}>

@@ -114,6 +114,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+    // const FIREBASE_MEASUREMENT_ID = process.env.NEXT_PUBLIC_MEASUREMENT_ID;
     
     return (
         <html

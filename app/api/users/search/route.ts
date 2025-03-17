@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Search term is required' }, { status: 400 });
     }
 
-    // Verify that the requested userId matches the authenticated user's ID
-    if (userId !== authenticatedUserId) {
+    // If userId is provided, verify it matches the authenticated user
+    if (userId && userId !== authenticatedUserId) {
       console.error(`User ID mismatch: ${userId} vs authenticated ${authenticatedUserId}`);
       return NextResponse.json({ 
         error: 'Unauthorized - User ID in query does not match authenticated user' 
@@ -75,11 +75,12 @@ export async function GET(request: NextRequest) {
     
     // Define the interface for search results
     interface UserSearchResult {
-      uid: string;
+      id: string;
       username: string;
       firstName: string;
       lastName: string;
       photoURL: string;
+      email: string;
       displayName: string;
     }
     
@@ -97,11 +98,12 @@ export async function GET(request: NextRequest) {
           
           // Only include necessary fields for security
           results.push({
-            uid: doc.id,
+            id: doc.id, // Using id instead of uid to match client expectations
             username: user.username || '',
             firstName: user.firstName || '',
             lastName: user.lastName || '',
             photoURL: user.photoURL || '',
+            email: user.email || '', // Include email for display purposes
             // Don't include email for privacy/security
             displayName: user.displayName || user.username || ''
           });
@@ -114,8 +116,8 @@ export async function GET(request: NextRequest) {
 
     // Sort results by relevance
     results.sort((a, b) => {
-      const aUsername = a.username.toLowerCase();
-      const bUsername = b.username.toLowerCase();
+      const aUsername = (a.username || '').toLowerCase();
+      const bUsername = (b.username || '').toLowerCase();
       const aDisplayName = a.displayName ? a.displayName.toLowerCase() : aUsername;
       const bDisplayName = b.displayName ? b.displayName.toLowerCase() : bUsername;
       
