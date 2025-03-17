@@ -9,32 +9,33 @@ import { ptBR } from 'date-fns/locale';
 import LoadingPage from '@/app/components/LoadingPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Trash, History, Users } from 'lucide-react';
 import { ChangeHistoryEntry } from '@/lib/firebaseConfig';
 import Link from 'next/link';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
 
 // Custom components
-import { 
-  ChildHeaderSection, 
-  ChildPhotoUpload, 
-  ChildInfoForm, 
-  AccessControl, 
-  DeleteConfirmDialog 
+import {
+    ChildHeaderSection,
+    ChildPhotoUpload,
+    ChildInfoForm,
+    AccessControl,
+    DeleteConfirmDialog
 } from './components/profile';
 import HistoryList from './components/HistoryList';
 import { createSampleHistory } from './components/HistoryUtils';
 
 // API services
 import {
-  fetchChildData,
-  updateChildData,
-  deleteChild,
-  fetchChildHistory,
-  fetchUsersDetails,
-  searchUsers,
-  addUserAccess as apiAddUserAccess,
-  removeUserAccess as apiRemoveUserAccess
+    fetchChildData,
+    updateChildData,
+    deleteChild,
+    fetchChildHistory,
+    fetchUsersDetails,
+    searchUsers,
+    addUserAccess as apiAddUserAccess,
+    removeUserAccess as apiRemoveUserAccess
 } from './services/child-api';
 
 export default function ChildDetailPage() {
@@ -77,10 +78,10 @@ export default function ChildDetailPage() {
 
             try {
                 setIsLoading(true);
-                
+
                 // Get auth token
                 const token = await user.getIdToken(true);
-                
+
                 // Fetch child data using API service
                 const childInfo = await fetchChildData(kid as string, token);
 
@@ -99,7 +100,7 @@ export default function ChildDetailPage() {
                 // Determine access level
                 const editors = childInfo.editors || [];
                 const viewers = childInfo.viewers || [];
-                
+
                 // Check if user is the owner/creator
                 if (childInfo.createdBy === user.uid || childInfo.owner === user.uid) {
                     setIsOwner(true);
@@ -115,7 +116,7 @@ export default function ChildDetailPage() {
                     try {
                         const editorDetails = await fetchUsersDetails(editors, token);
                         const viewerDetails = await fetchUsersDetails(viewers, token);
-                        
+
                         setEditorsList(editorDetails);
                         setViewersList(viewerDetails);
                     } catch (error) {
@@ -124,11 +125,11 @@ export default function ChildDetailPage() {
                 }
 
                 setIsLoading(false);
-                
+
                 // The history data will be loaded by the useEffect hook
             } catch (error) {
                 console.error('Error fetching child data:', error);
-                
+
                 if (error instanceof Error) {
                     if (error.message === 'child_not_found') {
                         toast({
@@ -158,7 +159,7 @@ export default function ChildDetailPage() {
                         description: 'Ocorreu um erro ao carregar os dados. Tente novamente.'
                     });
                 }
-                
+
                 router.push(`/${username}/criancas`);
             }
         };
@@ -167,45 +168,45 @@ export default function ChildDetailPage() {
             loadChildData();
         }
     }, [user, userData, kid, username, router, loading]);
-    
+
     // Fetch history data via API - memoize to prevent infinite re-renders
     const fetchHistoryData = useCallback(async () => {
         if (!user || !childData?.id) {
             console.log('Cannot fetch history: no user or child ID', { user: !!user, childId: childData?.id });
             return;
         }
-        
+
         setHistoryLoading(true);
         setHistoryError(null);
-        
+
         try {
             console.log('Fetching history data for child:', childData.id);
-            
+
             // Get fresh token
             const token = await user.getIdToken(true);
-            
+
             // Fetch history entries using API service
             const historyData = await fetchChildHistory(childData.id, token);
             console.log('History data received:', { count: historyData?.length || 0 });
-            
+
             if (!historyData || historyData.length === 0) {
                 console.log('No history entries found');
                 setHistoryEntries([]);
                 setHistoryLoading(false);
                 return;
             }
-            
+
             // Format and sort entries
             const formattedHistory = historyData.map((entry: any) => ({
                 ...entry,
                 timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date()
             }));
-            
+
             // Sort by timestamp (newest first)
             formattedHistory.sort((a: ChangeHistoryEntry, b: ChangeHistoryEntry) => {
                 return b.timestamp.getTime() - a.timestamp.getTime();
             });
-            
+
             console.log('Processed history entries:', formattedHistory.length);
             setHistoryEntries(formattedHistory);
         } catch (error) {
@@ -215,7 +216,7 @@ export default function ChildDetailPage() {
             setHistoryLoading(false);
         }
     }, [user, childData]);
-    
+
     // Fetch history data when childData changes
     useEffect(() => {
         if (childData?.id && user) {
@@ -235,7 +236,7 @@ export default function ChildDetailPage() {
     // Handle searching for users to add as editors or viewers 
     const handleUserSearch = async (term: string) => {
         console.log(`Searching users with term: "${term}"`);
-        
+
         if (!term || term.length < 3) {
             toast({
                 title: 'Termo muito curto',
@@ -253,12 +254,12 @@ export default function ChildDetailPage() {
             if (!token) {
                 throw new Error('User not authenticated');
             }
-            
+
             console.log('Calling user search API');
             // Search users via API
             const results = await searchUsers(term, token);
             console.log('Search results:', results);
-            
+
             // Filter out current user and users already with access
             const filteredResults = results.filter((userData: any) => {
                 // Skip the current user
@@ -266,11 +267,11 @@ export default function ChildDetailPage() {
                     console.log(`Filtering out current user: ${userData.id}`);
                     return false;
                 }
-                
+
                 // Skip users who are already editors or viewers
                 const childEditors = childData?.editors || [];
                 const childViewers = childData?.viewers || [];
-                
+
                 // Check both arrays to be extra safe
                 if (childEditors.includes(userData.id) ||
                     childViewers.includes(userData.id) ||
@@ -279,13 +280,13 @@ export default function ChildDetailPage() {
                     console.log(`Filtering out user already with access: ${userData.id}`);
                     return false;
                 }
-                
+
                 return true;
             });
 
             console.log('Filtered results:', filteredResults);
             setSearchResults(filteredResults);
-            
+
             if (filteredResults.length === 0) {
                 toast({
                     title: 'Nenhum resultado',
@@ -307,28 +308,28 @@ export default function ChildDetailPage() {
     // Handle adding user access via API
     const handleAddUserAccess = async (userId: string, type: 'editor' | 'viewer') => {
         if (!childData || !user || !isOwner) return;
-        
+
         try {
             // Get fresh auth token
             const token = await user.getIdToken(true);
-            
+
             // Add user access using API service
             await apiAddUserAccess(childData.id, userId, type, token);
-            
+
             // Get user details for UI update
             const userData = searchResults.find(user => user.id === userId);
-            
+
             // Update local state based on role
             if (type === 'editor') {
                 // Add to editors list
                 if (userData) {
                     setEditorsList(prev => [...prev, userData]);
                 }
-                
+
                 // Update child data
                 setChildData(prev => {
                     if (!prev) return prev;
-                    
+
                     return {
                         ...prev,
                         editors: [...(prev.editors || []), userId]
@@ -339,32 +340,32 @@ export default function ChildDetailPage() {
                 if (userData) {
                     setViewersList(prev => [...prev, userData]);
                 }
-                
+
                 // Update child data
                 setChildData(prev => {
                     if (!prev) return prev;
-                    
+
                     return {
                         ...prev,
                         viewers: [...(prev.viewers || []), userId]
                     };
                 });
             }
-            
+
             // Reset search
             setSearchTerm('');
             setSearchResults([]);
-            
+
             // Close dialogs
             setShowEditorsDialog(false);
             setShowViewersDialog(false);
-            
+
             // Show success message
             toast({
                 title: 'Acesso adicionado',
                 description: `Usuário agora tem acesso como ${type === 'editor' ? 'editor' : 'visualizador'}.`
             });
-            
+
         } catch (error) {
             console.error('Error adding user access:', error);
             toast({
@@ -378,23 +379,23 @@ export default function ChildDetailPage() {
     // Handle removing user access via API
     const handleRemoveUserAccess = async (userId: string, type: 'editor' | 'viewer') => {
         if (!childData || !user || !isOwner || userId === childData.createdBy) return;
-        
+
         try {
             // Get fresh auth token
             const token = await user.getIdToken(true);
-            
+
             // Remove user access using API service
             await apiRemoveUserAccess(childData.id, userId, type, token);
-            
+
             // Update local state based on role
             if (type === 'editor') {
                 // Remove from editors list
                 setEditorsList(prev => prev.filter(editor => editor.id !== userId));
-                
+
                 // Update child data
                 setChildData(prev => {
                     if (!prev) return prev;
-                    
+
                     return {
                         ...prev,
                         editors: (prev.editors || []).filter(id => id !== userId)
@@ -403,27 +404,27 @@ export default function ChildDetailPage() {
             } else {
                 // Remove from viewers list
                 setViewersList(prev => prev.filter(viewer => viewer.id !== userId));
-                
+
                 // Update child data
                 setChildData(prev => {
                     if (!prev) return prev;
-                    
+
                     return {
                         ...prev,
                         viewers: (prev.viewers || []).filter(id => id !== userId)
                     };
                 });
             }
-            
+
             // Show success message
             toast({
                 title: 'Acesso removido',
                 description: `Usuário não tem mais acesso como ${type === 'editor' ? 'editor' : 'visualizador'}.`
             });
-            
+
             // Refresh history
             fetchHistoryData();
-            
+
         } catch (error) {
             console.error('Error removing user access:', error);
             toast({
@@ -468,7 +469,7 @@ export default function ChildDetailPage() {
 
             // Get fresh auth token
             const token = await user.getIdToken(true);
-            
+
             // Field name mapping for human-readable field names
             const fieldNameMapping: Record<string, string> = {
                 firstName: "Nome",
@@ -481,12 +482,12 @@ export default function ChildDetailPage() {
                 schoolName: "Escola",
                 interests: "Interesses"
             };
-            
+
             // Create a description for the history log
             const humanReadableFields = changedFields.map(field =>
                 fieldNameMapping[field] || field
             );
-            
+
             const readableDescription = `Atualizou ${humanReadableFields.length === 1
                 ? humanReadableFields[0]
                 : `${humanReadableFields.length} campos: ${humanReadableFields.join(', ')}`}`;
@@ -497,19 +498,19 @@ export default function ChildDetailPage() {
                 fields: changedFields,
                 description: readableDescription
             };
-            
+
             // Use API service to update child data
             await updateChildData(childData.id, cleanEditedData, historyEntry, token);
-            
+
             // Update the local state to reflect the changes
-            setChildData({...childData, ...cleanEditedData} as KidInfo);
+            setChildData({ ...childData, ...cleanEditedData } as KidInfo);
             setIsEditing(false);
-            
+
             toast({
                 title: 'Dados salvos',
                 description: 'As informações foram atualizadas com sucesso!'
             });
-            
+
             // Refresh the history data
             fetchHistoryData();
         } catch (error) {
@@ -531,20 +532,20 @@ export default function ChildDetailPage() {
         setIsDeleting(true);
         try {
             const childName = `${childData.firstName} ${childData.lastName}`;
-            
+
             // Get fresh auth token
             const token = await user.getIdToken(true);
-            
+
             // First add a history entry for the deletion
             const historyEntry = {
                 action: 'delete',
                 fields: ['entire_record'],
                 description: `Excluiu o registro de ${childName}`
             };
-            
+
             // Use API service to delete the child
             await deleteChild(childData.id, token);
-            
+
             // Show success message
             toast({
                 title: 'Criança removida',
@@ -553,7 +554,7 @@ export default function ChildDetailPage() {
 
             // Navigate back to the children list
             router.push(`/${username}/criancas`);
-            
+
         } catch (error) {
             console.error('Error deleting child:', error);
 
@@ -562,7 +563,7 @@ export default function ChildDetailPage() {
 
             if (error instanceof Error) {
                 errorMessage = error.message;
-                
+
                 if (error.message.includes('permission') || error.message.includes('insufficient')) {
                     errorMessage = 'Você não tem permissão para excluir esta criança.';
                 }
@@ -593,14 +594,14 @@ export default function ChildDetailPage() {
         try {
             const birthDate = new Date(birthDateStr);
             const today = new Date();
-            
+
             let age = today.getFullYear() - birthDate.getFullYear();
             const monthDiff = today.getMonth() - birthDate.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-            
+
             return `${age} ${age === 1 ? 'ano' : 'anos'}`;
         } catch (e) {
             return 'Idade indisponível';
@@ -635,112 +636,173 @@ export default function ChildDetailPage() {
 
     return (
         <div>
-        <UserProfileBar pathname='Perfil de Criança' />
-        <div className="p-4 max-w-4xl mx-auto">
-            {/* Header with back link and title */}
-            {/* <ChildHeaderSection
-                username={username as string}
-                childName={`${childData.firstName} ${childData.lastName}`}
-            /> */}
-            
-            {/* Photo Upload Component */}
-            <ChildPhotoUpload
-                childId={kid as string}
-                photoUrl={childData?.photoURL}
-                previewUrl={previewPhoto}
-                isEditing={isEditing}
-                isOwnerOrEditor={isOwner || isEditor}
-                onPhotoChange={(url) => setEditedData(prev => ({ ...prev, photoURL: url }))}
-                onPreviewChange={setPreviewPhoto}
-                onProgressChange={setUploadProgress}
-            />
-            
-            {/* Child Info Form */}
-            <ChildInfoForm
-                childData={childData}
-                editedData={editedData}
-                isEditing={isEditing}
-                isOwnerOrEditor={isOwner || isEditor}
-                isSaving={isSaving}
-                uploadProgress={uploadProgress}
-                onEditToggle={() => {
-                    if (isEditing) {
-                        setIsEditing(false);
-                        setEditedData(childData as KidInfo);
-                        setPreviewPhoto(null);
-                    } else {
-                        setIsEditing(true);
-                    }
-                }}
-                onSave={handleSaveChanges}
-                onInputChange={handleInputChange}
-            />
-            
-            {/* Tabs for History and Access Control */}
-            <Tabs 
-                defaultValue="history" 
-                className="mt-6"
-                onValueChange={(value) => {
-                    if (value === "history") {
-                        // Refresh history data when this tab is activated
-                        fetchHistoryData();
-                    }
-                }}
-            >
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="history">
-                        <History className="h-4 w-4 mr-2" />
-                        Histórico
-                    </TabsTrigger>
-                    <TabsTrigger value="access" disabled={!isOwner}>
-                        <Users className="h-4 w-4 mr-2" />
-                        Gerenciar Acesso
-                    </TabsTrigger>
-                </TabsList>
+            <UserProfileBar pathname='Perfil de Criança' />
+            <div className="p-4 max-w-4xl mx-auto">
+                <div className="mt-4">
+                    {/* Profile Header with Photo and Basic Info */}
+                    <div className="flex flex-col items-center text-center">
+                        {/* Photo with ring border */}
+                        <div className="relative w-48 h-48 rounded-full border-4 border-primary overflow-hidden">
+                            <ChildPhotoUpload
+                                childId={kid as string}
+                                photoUrl={childData?.photoURL}
+                                previewUrl={previewPhoto}
+                                isEditing={isEditing}
+                                isOwnerOrEditor={isOwner || isEditor}
+                                onPhotoChange={(url) => setEditedData(prev => ({ ...prev, photoURL: url }))}
+                                onPreviewChange={setPreviewPhoto}
+                                onProgressChange={setUploadProgress}
+                            />
+                        </div>
+
+                        {/* Name and Basic Info */}
+                        <h1 className="text-2xl font-bold mt-4">{childData.firstName} {childData.lastName}</h1>
+
+                        {/* Info Badges */}
+                        <div className="flex flex-wrap justify-center gap-2 mt-2">
+                            {childData.birthDate && (
+                                <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                                    {calculateAge(childData.birthDate)}
+                                </span>
+                            )}
+                            {/* {childData.gender && (
+                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                                {childData.gender === 'male' ? 'Masculino' : 
+                                childData.gender === 'female' ? 'Feminino' : 'Outro'}
+                            </span>
+                        )} */}
+
+                            
+                            
+                        </div>
+                        {/* Additional Info */}
+                        {!isEditing && childData.notes && (
+                                <div>
+                                    <p className="whitespace-pre-wrap mt-1">{childData.notes}</p>
+                                </div>
+                            )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 mt-6">
+                            {(isOwner || isEditor) && !isEditing && (
+                                <Button
+                                    type="button"
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex-1"
+                                >
+                                    Editar Perfil
+                                </Button>
+                            )}
+
+                            {isOwner && (
+                                <Button
+                                    variant="default"
+                                    type="button"
+                                    onClick={() => setShowDeleteDialog(true)}
+                                    className="flex-1"
+                                >
+                                    <Trash className="h-4 w-4 mr-2" />
+                                    Excluir
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Edit Form - Only visible when editing */}
+                    {isEditing && (
+                        <div className="mt-6 border-t pt-6">
+                            <h2 className="text-xl font-semibold mb-4">Editar Informações</h2>
+                            <ChildInfoForm
+                                childData={childData}
+                                editedData={editedData}
+                                isEditing={isEditing}
+                                isOwnerOrEditor={isOwner || isEditor}
+                                isSaving={isSaving}
+                                uploadProgress={uploadProgress}
+                                onEditToggle={() => {
+                                    setIsEditing(false);
+                                    setEditedData(childData as KidInfo);
+                                    setPreviewPhoto(null);
+                                }}
+                                onSave={handleSaveChanges}
+                                onInputChange={handleInputChange}
+                            />
+                        </div>
+                    )}
+
+
+                </div>
+
+                {/* Tabs for History and Access Control */}
                 
-                <TabsContent value="history" className="mt-4">
-                    <HistoryList
-                        entries={historyEntries}
-                        isLoading={historyLoading}
-                        error={historyError}
-                        noDataMessage="Nenhuma alteração registrada ainda"
-                        onRefresh={fetchHistoryData}
-                    />
-                </TabsContent>
-                
-                <TabsContent value="access" className="mt-4">
-                    <AccessControl
-                        childId={childData.id}
-                        user={user}
-                        isOwner={isOwner}
-                        editorsList={editorsList}
-                        viewersList={viewersList}
-                        onSearch={handleUserSearch}
-                        onAddAccess={handleAddUserAccess}
-                        onRemoveAccess={handleRemoveUserAccess}
-                        searchTerm={searchTerm}
-                        setSearchTerm={setSearchTerm}
-                        searchResults={searchResults}
-                        isSearching={isSearching}
-                        userBeingRemoved={userBeingRemoved}
-                        setUserBeingRemoved={setUserBeingRemoved}
-                        showEditorsDialog={showEditorsDialog}
-                        setShowEditorsDialog={setShowEditorsDialog}
-                        showViewersDialog={showViewersDialog}
-                        setShowViewersDialog={setShowViewersDialog}
-                    />
-                </TabsContent>
-            </Tabs>
-            
-            {/* Delete Confirmation Dialog */}
-            <DeleteConfirmDialog
-                isOpen={showDeleteDialog}
-                isDeleting={isDeleting}
-                childName={`${childData.firstName} ${childData.lastName}`}
-                onOpenChange={setShowDeleteDialog}
-                onDelete={handleDeleteChild}
-            />
+                <div className="mt-8">
+                <h2 className="text-xl font-black">
+                    Gerenciamento
+                </h2>
+                    <Tabs
+                        defaultValue="history"
+                        onValueChange={(value) => {
+                            if (value === "history") {
+                                // Refresh history data when this tab is activated
+                                fetchHistoryData();
+                            }
+                        }}
+                    >
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="history">
+                                <History className="h-4 w-4 mr-2" />
+                                Histórico
+                            </TabsTrigger>
+                            <TabsTrigger value="access" disabled={!isOwner}>
+                                <Users className="h-4 w-4 mr-2" />
+                                Gerenciar Acesso
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="history" className="mt-4">
+                            <HistoryList
+                                entries={historyEntries}
+                                isLoading={historyLoading}
+                                error={historyError}
+                                noDataMessage="Nenhuma alteração registrada ainda"
+                                onRefresh={fetchHistoryData}
+                            />
+                        </TabsContent>
+
+                        <TabsContent value="access" className="mt-4">
+                            <AccessControl
+                                childId={childData.id}
+                                user={user}
+                                isOwner={isOwner}
+                                editorsList={editorsList}
+                                viewersList={viewersList}
+                                onSearch={handleUserSearch}
+                                onAddAccess={handleAddUserAccess}
+                                onRemoveAccess={handleRemoveUserAccess}
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
+                                searchResults={searchResults}
+                                isSearching={isSearching}
+                                userBeingRemoved={userBeingRemoved}
+                                setUserBeingRemoved={setUserBeingRemoved}
+                                showEditorsDialog={showEditorsDialog}
+                                setShowEditorsDialog={setShowEditorsDialog}
+                                showViewersDialog={showViewersDialog}
+                                setShowViewersDialog={setShowViewersDialog}
+                            />
+                        </TabsContent>
+                    </Tabs>
+                </div>
+
+                {/* Delete Confirmation Dialog */}
+                <DeleteConfirmDialog
+                    isOpen={showDeleteDialog}
+                    isDeleting={isDeleting}
+                    childName={`${childData.firstName} ${childData.lastName}`}
+                    onOpenChange={setShowDeleteDialog}
+                    onDelete={handleDeleteChild}
+                />
+            </div>
         </div>
-    </div>
     );
 }

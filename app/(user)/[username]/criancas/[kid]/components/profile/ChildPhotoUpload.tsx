@@ -120,10 +120,10 @@ export function ChildPhotoUpload({
   const displayUrl = previewUrl || photoUrl;
   
   return (
-    <div className="flex justify-center mb-6">
+    <div className="w-full h-full">
       <div 
-        className={`relative w-32 h-32 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 
-                    ${isEditing && isOwnerOrEditor ? 'cursor-pointer border-primary' : 'border-muted'}`}
+        className={`relative w-full h-full rounded-full overflow-hidden bg-muted flex items-center justify-center
+                    ${isEditing && isOwnerOrEditor ? 'cursor-pointer' : ''}`}
         onClick={handlePhotoClick}
       >
         {displayUrl ? (
