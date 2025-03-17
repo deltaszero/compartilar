@@ -635,13 +635,13 @@ export default function ChildDetailPage() {
 
     return (
         <div>
-        <UserProfileBar pathname='Conversas' />
+        <UserProfileBar pathname='Perfil de Criança' />
         <div className="p-4 max-w-4xl mx-auto">
             {/* Header with back link and title */}
-            <ChildHeaderSection
+            {/* <ChildHeaderSection
                 username={username as string}
                 childName={`${childData.firstName} ${childData.lastName}`}
-            />
+            /> */}
             
             {/* Photo Upload Component */}
             <ChildPhotoUpload

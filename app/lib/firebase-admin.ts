@@ -2,9 +2,14 @@ import { getApps, initializeApp, cert, App, AppOptions } from 'firebase-admin/ap
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Initialize Firebase Admin if it hasn't been initialized yet
 let adminApp: App | undefined;
+
+// Path to service account file
+const serviceAccountPath = '/home/dusoudeth/Downloads/compartilar-firebase-app-firebase-adminsdk-7yjqp-4c09ff6f0e.json';
 
 // For debugging
 console.log('Firebase Admin module loaded, apps count:', admin.apps.length);
@@ -23,25 +28,28 @@ export function initAdminApp() {
       }
     }
     
-    // Need to initialize a new app
-    console.log('Initializing new Firebase Admin app with environment:',
-      {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'not set',
-        hasCredentials: !!process.env.FIREBASE_ADMIN_CREDENTIALS,
-        hasAdminProjectId: !!process.env.FIREBASE_ADMIN_PROJECT_ID
-      }
+    // Check if service account file exists
+    if (!fs.existsSync(serviceAccountPath)) {
+      console.error('Service account file not found at:', serviceAccountPath);
+      throw new Error('Service account file not found');
+    }
+    
+    // Load service account from file
+    const serviceAccount = JSON.parse(
+      fs.readFileSync(serviceAccountPath, 'utf8')
     );
     
     // For Firebase Admin SDK v11+ in Next.js 13+, use the v11 admin SDK (imported as * as admin)
     if (admin.apps.length === 0) {
-      console.log('Using top-level admin.initializeApp');
+      console.log('Using top-level admin.initializeApp with service account');
       
-      // Create the app with a simple configuration
+      // Create the app with service account credentials
       adminApp = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       });
       
-      console.log('Firebase Admin initialized with admin.initializeApp');
+      console.log('Firebase Admin initialized with admin.initializeApp and service account');
       return adminApp;
     } else if (admin.apps.length > 0 && admin.apps[0]) {
       console.log('Using existing admin app:', admin.apps[0]?.name || 'unknown');
