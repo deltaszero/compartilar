@@ -10,6 +10,7 @@ import { fetchChildData } from './services/child-api';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
 import Image from 'next/image';
+import { Badge } from "@/components/ui/badge";
 
 /**
  * SimplifiedChildProfile component
@@ -124,10 +125,10 @@ export default function SimplifiedChildProfile() {
     return (
         <div>
             <UserProfileBar pathname='Perfil de Criança' />
-            <div className="p-4 max-w-lg mx-auto">
-                <div className="flex flex-col items-center bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-4">
+            <div className="p-4 max-w-lg mx-auto ">
+                <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-6 mt-4 border-2 border-black shadow-brutalist">
                     {/* Child Photo */}
-                    <div className="relative w-32 h-32 rounded-full border-4 border-primary overflow-hidden mb-4">
+                    <div className="relative w-48 h-48 rounded-full border-4 border-primary overflow-hidden mb-4">
                         {childData.photoURL ? (
                             <Image
                                 src={childData.photoURL}
@@ -151,22 +152,15 @@ export default function SimplifiedChildProfile() {
 
                     {/* Child Age */}
                     {childData.birthDate && (
-                        <div className="mt-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                        <Badge className='flex flex-row items-center gap-1 rounded-xl  bg-blank text-bw text-sm' variant="default" >
                             {calculateAge(childData.birthDate)}
-                        </div>
-                    )}
-
-                    {/* Child Description/Notes */}
-                    {childData.notes && (
-                        <div className="mt-4 text-center text-gray-600 dark:text-gray-300">
-                            <p className="whitespace-pre-wrap">{childData.notes}</p>
-                        </div>
+                        </Badge>
                     )}
 
                     {/* Edit Button - only if user has permission */}
                     {(isOwner || isEditor) && (
                         <Button 
-                            className="mt-6 w-full sm:w-auto"
+                            className="mt-6 sm:w-auto bg-mainStrongGreen"
                             onClick={handleEditProfile}
                         >
                             <Edit className="h-4 w-4 mr-2" />

@@ -292,7 +292,7 @@ export const UserProfileCard = ({
     };
 
     return (
-        <Card className={`mx-auto w-full ${isEditing ? 'max-w-2xl bg-main' : 'max-w-md bg-bw' } rounded-2xl border-2 border-border overflow-hidden`}>
+        <Card className={`mx-auto w-full ${isEditing ? 'max-w-2xl bg-main' : 'max-w-md bg-bw' } rounded-none border-2 border-border overflow-hidden`}>
             <div className="h-24"></div>
             <CardHeader className="flex flex-col items-center pb-2 -mt-16">
                 <AvatarSection
