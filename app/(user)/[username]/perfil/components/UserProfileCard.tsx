@@ -538,7 +538,9 @@ export const UserProfileCard = ({
                         {completionPercentage < 100 && (
                             <div className="w-full mt-4 mb-2 p-3 border rounded-md">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-sm font-semibold">Complete seu perfil - {completionPercentage}%</h3>
+                                    <h3 className="text-sm font-semibold">
+                                        Complete seu perfil - {completionPercentage}%
+                                    </h3>
                                     {missingFields.length > 0 && (
                                         <span className="text-xs text-gray-400">
                                             {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}

@@ -68,7 +68,7 @@ export const FeatureCardMenu = ({ username }: FeatureCardMenuProps) => {
                 <h2 className="text-xl font-black font-raleway">
                     Acesso Rápido
                 </h2>
-                <p className="text-xs text-gray-600 font-nunito">
+                <p className="text-sm font-nunito">
                     Acesse as principais funcionalidades com um clique.
                 </p>
             </div>
