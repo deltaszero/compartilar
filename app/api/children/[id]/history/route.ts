@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
-type Params = { params: { id: string } };
-
-export async function GET(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function GET(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -27,8 +22,9 @@ export async function GET(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get child ID from query params
+    const { searchParams } = new URL(request.url);
+    const childId = searchParams.get('childId');
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
@@ -52,7 +48,6 @@ export async function GET(
     }
 
     // Get query parameters
-    const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
 
@@ -93,10 +88,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function POST(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -116,8 +108,10 @@ export async function POST(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get history entry data from the request
+    const data = await request.json();
+    const { childId } = data;
+    
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
@@ -140,8 +134,9 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Get the history entry data from the request
-    const entryData = await request.json();
+    // Prepare the history entry
+    const entryData = { ...data };
+    delete entryData.childId; // Remove childId from entry data
     
     // Add required fields
     const historyEntry = {

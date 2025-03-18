@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
-type Params = { params: { id: string } };
-
-export async function GET(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function GET(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -27,8 +22,9 @@ export async function GET(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get child ID from query params
+    const { searchParams } = new URL(request.url);
+    const childId = searchParams.get('id');
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
@@ -63,10 +59,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function PATCH(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -86,15 +79,14 @@ export async function PATCH(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get request body
+    const updates = await request.json();
+    const { id: childId } = updates;
+    
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
 
-    // Get request body
-    const updates = await request.json();
-    
     // Get the child document from Firestore
     const childRef = adminDb().collection('children').doc(childId);
     const childDoc = await childRef.get();
@@ -128,7 +120,8 @@ export async function PATCH(
       delete updates.historyEntry;
     }
 
-    // Remove any fields that shouldn't be updated directly
+    // Remove id and fields that shouldn't be updated directly
+    delete updates.id;
     delete updates.owner;
     delete updates.editors;
     delete updates.viewers;
@@ -150,10 +143,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function DELETE(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -173,8 +163,10 @@ export async function DELETE(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get child ID from request parameters
+    const { searchParams } = new URL(request.url);
+    const childId = searchParams.get('id');
+    
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }

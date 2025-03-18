@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 
-type Params = { params: { id: string } };
-
 // Handle adding users to editors or viewers list
-export async function POST(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function POST(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -28,15 +23,13 @@ export async function POST(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get request body
+    const data = await request.json();
+    const { childId, userId: targetUserId, type } = data;
+    
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
-
-    // Get request body
-    const data = await request.json();
-    const { userId: targetUserId, type } = data;
     
     if (!targetUserId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -110,10 +103,7 @@ export async function POST(
 }
 
 // Handle removing users from editors or viewers list
-export async function DELETE(
-  request: NextRequest,
-  { params }: Params
-) {
+export async function DELETE(request: NextRequest) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -133,14 +123,15 @@ export async function DELETE(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get child ID from params
-    const childId = params.id;
+    // Get request body and query parameters
+    const data = await request.json();
+    const { searchParams } = new URL(request.url);
+    const childId = searchParams.get('childId') || data.childId;
+    
     if (!childId) {
       return NextResponse.json({ error: 'Child ID is required' }, { status: 400 });
     }
 
-    // Get request body
-    const data = await request.json();
     const { userId: targetUserId, type } = data;
     
     if (!targetUserId) {

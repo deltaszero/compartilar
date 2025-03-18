@@ -5,7 +5,7 @@ import { ChangeHistoryEntry } from '@/lib/firebaseConfig';
  * Fetch child data from API
  */
 export async function fetchChildData(childId: string, token: string): Promise<KidInfo> {
-  const response = await fetch(`/api/children/${childId}`, {
+  const response = await fetch(`/api/children/[id]?id=${childId}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -103,7 +103,7 @@ export async function updateChildData(
   historyEntry: any | null,
   token: string
 ): Promise<void> {
-  const payload: any = { ...updates };
+  const payload: any = { ...updates, id: childId };
   
   // Add history entry if provided
   if (historyEntry) {
@@ -111,7 +111,7 @@ export async function updateChildData(
   }
   
   try {
-    const response = await fetch(`/api/children/${childId}`, {
+    const response = await fetch(`/api/children/[id]`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export async function updateChildData(
  */
 export async function deleteChild(childId: string, token: string): Promise<void> {
   try {
-    const response = await fetch(`/api/children/${childId}`, {
+    const response = await fetch(`/api/children/[id]?id=${childId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -157,7 +157,7 @@ export async function deleteChild(childId: string, token: string): Promise<void>
  */
 export async function fetchChildHistory(childId: string, token: string): Promise<ChangeHistoryEntry[]> {
   try {
-    const response = await fetch(`/api/children/${childId}/history`, {
+    const response = await fetch(`/api/children/[id]/history?childId=${childId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -188,7 +188,7 @@ export async function addUserAccess(
   try {
     console.log(`Adding user access: user=${userId}, type=${accessType}, child=${childId}`);
     
-    const response = await fetch(`/api/children/${childId}/permissions`, {
+    const response = await fetch(`/api/children/[id]/permissions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -196,6 +196,7 @@ export async function addUserAccess(
         'X-Requested-With': 'XMLHttpRequest' // CSRF protection
       },
       body: JSON.stringify({
+        childId,
         userId,
         type: accessType
       })
@@ -235,7 +236,7 @@ export async function removeUserAccess(
   try {
     console.log(`Removing user access: user=${userId}, type=${accessType}, child=${childId}`);
     
-    const response = await fetch(`/api/children/${childId}/permissions`, {
+    const response = await fetch(`/api/children/[id]/permissions?childId=${childId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -243,6 +244,7 @@ export async function removeUserAccess(
         'X-Requested-With': 'XMLHttpRequest' // CSRF protection
       },
       body: JSON.stringify({
+        childId,
         userId,
         type: accessType
       })

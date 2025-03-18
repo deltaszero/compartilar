@@ -29,7 +29,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 {/* Dark Overlay */}
                 <div className="absolute inset-0 bg-gray-900 opacity-90" />
                 {/* Typing Effect on Top */}
-                <div className="hidden sm:flex sm:flex-col sm:font-playfair sm:relative sm:z-10 sm:justify-center sm:items-center sm:w-full sm:h-full">
+                <div className="hidden sm:flex sm:flex-col sm:font-raleway sm:relative sm:z-10 sm:justify-center sm:items-center sm:w-full sm:h-full">
                     <CustomTypingEffect />
                 </div>
             </div>
@@ -43,11 +43,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 </div>
                 <section className="flex-1 flex flex-col justify-center items-center">
                     <div className='flex flex-col gap-4 my-[2em] max-w-xs sm:max-w-md'>
-                        <div className='font-playfair font-black text-4xl sm:text-6xl'>
+                        <div className='font-raleway font-black text-4xl sm:text-6xl'>
                             <p>Coparentalidade</p>
                             <p>sintonizada</p>
                         </div>
-                        <div className='font-raleway text-gray-400'>
+                        <div className='font-raleway'>
                             <p>Plataforma de gerencimento familiar que facilita a convivência em lares alternados.</p>
                         </div>
                     </div>
