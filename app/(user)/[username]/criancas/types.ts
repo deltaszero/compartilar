@@ -11,6 +11,8 @@ export interface KidInfo {
   // Permission arrays for the new access model
   viewers?: string[];
   editors?: string[];
+  // Owner field (primary permission holder, similar to createdBy)
+  owner?: string;
   // Optional access level for frontend use
   accessLevel?: 'viewer' | 'editor';
   // Creator and update tracking info
@@ -18,6 +20,8 @@ export interface KidInfo {
   createdAt?: string | any; // Using any to accommodate Firestore timestamp types
   updatedBy?: string;
   updatedAt?: string | any; // Using any to accommodate Firestore timestamp types
+  // Soft deletion flag
+  isDeleted?: boolean;
   medicalInfo?: {
     allergies?: string[];
     conditions?: string[];

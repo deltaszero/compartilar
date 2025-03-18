@@ -19,6 +19,7 @@ export interface KidInfo {
   relationship?: "biological" | "adopted" | "guardian" | null;
   photoURL?: string | null;
   accessLevel?: "viewer" | "editor";
+  isDeleted?: boolean;
 }
 
 export interface UserDialogData {

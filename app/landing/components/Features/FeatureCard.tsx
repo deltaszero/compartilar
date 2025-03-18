@@ -1,10 +1,21 @@
 import Image from "next/image";
 import { FeatureCardProps } from "./types";
+import { trackEvent, AnalyticsEventType } from "@/app/components/Analytics";
 
 export default function FeatureCard({ feature, onClick, isMobile }: FeatureCardProps) {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Direct event tracking for better reliability
+    trackEvent(AnalyticsEventType.FEATURE_CLICK, {
+      feature_id: feature.id,
+      feature_name: feature.title,
+      // Remove the non-existent type property
+      card_click: true,
+      section: 'feature_card'
+    });
+    
     onClick(feature.id);
   };
 

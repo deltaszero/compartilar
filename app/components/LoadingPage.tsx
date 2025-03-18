@@ -33,7 +33,8 @@ const LoadingPage: React.FC = () => {
                     alt="Connecting your co-parenting journey"
                     width={250}
                     height={250}
-                    priority
+                    // Remove priority to prevent unused preload warning
+                    // priority
                     className="animate-pulse"
                 />
             </div>

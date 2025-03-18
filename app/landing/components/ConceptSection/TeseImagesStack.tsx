@@ -4,6 +4,7 @@ import tese_01 from "@assets/images/tese-01.png";
 import tese_02 from "@assets/images/tese-02.png";
 import tese_03 from "@assets/images/tese-03.png";
 import { TeseImagesStackProps } from "./types";
+// import { ImageSource } from "@/types/imageTypes";
 
 export default function TeseImagesStack({ openImageModal }: TeseImagesStackProps) {
   return (
@@ -12,8 +13,8 @@ export default function TeseImagesStack({ openImageModal }: TeseImagesStackProps
         <div className="relative h-[400px] w-[300px] sm:h-[500px] sm:w-[380px] md:h-[550px] md:w-[420px] lg:h-[600px] lg:w-[450px]">
           {/* Third page - bottom of the stack */}
           <div 
-            onClick={() => openImageModal(tese_03, "Terceira página da tese sobre Plano Parental")}
-            className="cursor-pointer absolute top-4 sm:top-6 left-6 sm:left-8 rotate-[-4deg] z-10 group"
+            onClick={() => openImageModal({ src: tese_03, alt: "Terceira página da tese sobre Plano Parental" })}
+            className="cursor-pointer absolute top-4 sm:top-6 left-6 sm:left-8 rotate-[-8deg] z-10 group"
           >
             <Image 
               src={tese_03} 
@@ -30,7 +31,7 @@ export default function TeseImagesStack({ openImageModal }: TeseImagesStackProps
           
           {/* Second page - middle of the stack */}
           <div 
-            onClick={() => openImageModal(tese_02, "Segunda página da tese sobre Plano Parental")}
+            onClick={() => openImageModal({ src: tese_02, alt: "Segunda página da tese sobre Plano Parental" })}
             className="cursor-pointer absolute top-2 sm:top-3 left-2 rotate-[-2deg] z-20 group"
           >
             <Image 
@@ -48,8 +49,8 @@ export default function TeseImagesStack({ openImageModal }: TeseImagesStackProps
           
           {/* First page - top of the stack */}
           <div 
-            onClick={() => openImageModal(tese_01, "Primeira página da tese sobre Plano Parental")}
-            className="cursor-pointer absolute top-0 left-0 rotate-[2deg] z-30 group"
+            onClick={() => openImageModal({ src: tese_01, alt: "Primeira página da tese sobre Plano Parental" })}
+            className="cursor-pointer absolute top-0 left-0 rotate-[8deg] z-30 group"
           >
             <div className="hover:rotate-1 hover:translate-y-[-5px] transition-all duration-300">
               <Image 

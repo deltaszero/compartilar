@@ -7,6 +7,12 @@ const nextConfig = {
     images: {
         domains: ['firebasestorage.googleapis.com'],
     },
+    // Remove console.* calls in production
+    compiler: {
+        removeConsole: process.env.NODE_ENV === 'production' 
+            ? { exclude: ['error'] } // Keep only console.error in production
+            : false,
+    },
     // rules to handle svg imports
     webpack(config) {
         // get the existing rule that handles svg imports

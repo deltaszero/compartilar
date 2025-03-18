@@ -6,7 +6,7 @@ import { ConceptContentProps } from "./types";
 export default function ConceptContent({ onGetStartedClick }: ConceptContentProps) {
     return (
         <div className="w-full lg:w-1/2 space-y-6">
-            <div className="bg-white p-6 border-2 border-black shadow-brutalist">
+            <div className="bg-white p-6 border-2 border-black shadow-brutalist font-nunito">
                 <p className="text-sm sm:text-lg">
                     O <strong>CompartiLar</strong> foi idealizado em 2020 pela <Link href="http://lattes.cnpq.br/7746942732180282" target="_blank" rel="noopener noreferrer" className="text-main font-semibold">Dra. Isadora Urel</Link>, advogada especialista em Direito das Famílias, durante sua pesquisa de doutorado <strong>&quot;Plano Parental, Um Plano de Amor&quot;</strong>, orientada pelo <Link href="http://lattes.cnpq.br/4853414754033726" target="_blank" rel="noopener noreferrer" className="text-main font-semibold">Dr. Oswaldo Peregrina Rodrigues</Link>.
                 </p>
@@ -22,10 +22,10 @@ export default function ConceptContent({ onGetStartedClick }: ConceptContentProp
                     <li>✅ <strong>Gerenciamento compartilhado de despesas</strong></li>
                     <li>✅ <strong>Sistema de check-in baseado em geolocalização</strong></li>
                 </ul>
-                <div className="mt-6">
+                <div className="mt-6 flex justify-end">
                     <Button
                         variant="default"
-                        className="bg-mainStrongGreen text-lg flex items-center"
+                        className="bg-mainStrongGreen text-lg flex items-center font-raleway font-bold"
                         onClick={onGetStartedClick}
                     >
                         <span>

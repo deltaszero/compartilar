@@ -177,7 +177,7 @@ export function LocationHistory() {
         return (
           <div>
             <div className="font-medium">{format(timestamp.toDate(), 'dd/MM/yyyy', { locale: ptBR })}</div>
-            <div className="text-xs text-muted-foreground">{format(timestamp.toDate(), 'HH:mm', { locale: ptBR })}</div>
+            <div className="text-xs text-gray-400">{format(timestamp.toDate(), 'HH:mm', { locale: ptBR })}</div>
           </div>
         );
       },
@@ -192,7 +192,7 @@ export function LocationHistory() {
             <div>Lat: {coordinates.latitude.toFixed(5)}</div>
             <div>Lng: {coordinates.longitude.toFixed(5)}</div>
             {coordinates.accuracy && (
-              <div className="text-muted-foreground">Precisão: {coordinates.accuracy.toFixed(0)}m</div>
+              <div className="text-gray-400">Precisão: {coordinates.accuracy.toFixed(0)}m</div>
             )}
           </div>
         );
@@ -204,7 +204,7 @@ export function LocationHistory() {
       cell: ({ row }) => {
         const note = row.getValue("note") as string;
         if (!note) {
-          return <span className="text-muted-foreground text-xs">-</span>;
+          return <span className="text-gray-400 text-xs">-</span>;
         }
         return (
           <div className="max-w-[200px] truncate text-sm">{note}</div>
@@ -222,7 +222,7 @@ export function LocationHistory() {
         };
         
         if (!deviceInfo) {
-          return <span className="text-muted-foreground text-xs">-</span>;
+          return <span className="text-gray-400 text-xs">-</span>;
         }
         
         return (
@@ -352,7 +352,7 @@ export function LocationHistory() {
       <div className="text-center py-8">
         <MapPinOff className="mx-auto h-12 w-12 mb-4" />
         <h3 className="text-lg font-medium mb-2">Nenhuma localização salva</h3>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-gray-400 text-sm">
           Suas localizações salvas aparecerão aqui.
         </p>
       </div>
@@ -515,7 +515,7 @@ export function LocationHistory() {
               
               {/* Pagination */}
               <div className="flex items-center justify-between space-x-2 py-4">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-400">
                   Mostrando {table.getRowModel().rows.length} de {filteredLocations.length} local(is)
                 </div>
                 <div className="space-x-2">
@@ -548,7 +548,7 @@ export function LocationHistory() {
                       <div className="font-medium">
                         {format(row.original.timestamp.toDate(), 'PPP', { locale: ptBR })}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-gray-400">
                         {format(row.original.timestamp.toDate(), 'HH:mm', { locale: ptBR })}
                       </div>
                       
@@ -607,7 +607,7 @@ export function LocationHistory() {
                   >
                     Anterior
                   </Button>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-gray-400">
                     Página {table.getState().pagination.pageIndex + 1}
                   </div>
                   <Button

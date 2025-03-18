@@ -4,10 +4,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/context/userContext';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
-import { checkFriendshipStatus, FriendshipStatus, getUserByUsername } from '@/lib/firebaseConfig';
+import { FriendshipStatus } from '@/lib/firebaseConfig';
 import { toast } from '@/hooks/use-toast';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
 
 // Components
 import UserProfileCard from './components/UserProfileCard';
@@ -42,7 +40,7 @@ export default function UserProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        const checkAccess = async () => {
+        const fetchProfileData = async () => {
             if (!user) {
                 // Not logged in
                 router.push('/login');
@@ -68,40 +66,47 @@ export default function UserProfilePage() {
                 return;
             }
 
-            // Fetch the other user's profile data
             try {
-                const otherUserData = await getUserByUsername(username as string);
+                // Fetch profile data using the new API
+                console.log(`Fetching profile data for username: ${username}`);
+                const response = await fetch(`/api/profile?username=${username}&currentUserId=${user.uid}`);
 
-                if (!otherUserData) {
+                // Handle user not found
+                if (response.status === 404) {
                     setUserNotFound(true);
                     setIsLoading(false);
                     return;
                 }
 
-                try {
-                    // Check friendship status
-                    const status = await checkFriendshipStatus(user.uid, otherUserData.uid);
-                    console.log(`Friendship status for ${username}: ${status}`);
-                    setFriendshipStatus(status);
-                } catch (error) {
-                    console.error('Error checking friendship status:', error);
-                    // Default to 'none' if there's an error checking friendship status
-                    // This ensures the user can still view the public profile
-                    setFriendshipStatus('none');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch profile: ${response.status}`);
                 }
 
-                // We'll allow viewing profiles even if not friends, but with limited information
-                // This provides a more user-friendly experience
+                const profileApiData = await response.json();
+
+                // Check if we got a valid response
+                if (!profileApiData || !profileApiData.uid) {
+                    console.error('Invalid profile data received:', profileApiData);
+                    setUserNotFound(true);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Extract friendship status from the response
+                const status = profileApiData.friendshipStatus || 'none';
+                setFriendshipStatus(status);
+
                 // Type assertion to ensure compatibility with SignupFormData
-                const typedOtherUserData = {
-                    ...otherUserData,
+                const typedProfileData = {
+                    ...profileApiData,
                     // Only add gender cast if gender exists, otherwise use null
-                    gender: otherUserData && 'gender' in otherUserData
-                           ? (otherUserData.gender as 'male' | 'female' | 'other' | null)
-                           : null
+                    gender: profileApiData && 'gender' in profileApiData
+                        ? (profileApiData.gender as 'male' | 'female' | 'other' | null)
+                        : null
                 } as Partial<SignupFormData>;
-                setProfileData(typedOtherUserData);
-                
+
+                setProfileData(typedProfileData);
+
                 // Notify user about their relationship status if they're not friends
                 if (status === 'none') {
                     toast({
@@ -115,11 +120,11 @@ export default function UserProfilePage() {
                     });
                 }
             } catch (error) {
-                console.error('Error checking access:', error);
+                console.error('Error fetching profile data:', error);
                 toast({
                     variant: "destructive",
                     title: "Erro",
-                    description: "Erro ao verificar acesso ao perfil"
+                    description: "Erro ao carregar dados do perfil"
                 });
                 router.push('/home');
             } finally {
@@ -128,7 +133,7 @@ export default function UserProfilePage() {
         };
 
         if (!loading) {
-            checkAccess();
+            fetchProfileData();
         }
     }, [user, userData, loading, username, router]);
 
@@ -160,24 +165,42 @@ export default function UserProfilePage() {
         }
     };
 
-    // Handle saving profile changes
+    // Handle saving profile changes using the API
     const saveProfileChanges = async () => {
         if (!user?.uid) return;
 
         setIsSaving(true);
         try {
             // Exclude sensitive fields from update
-            const { password, confirmPassword, uid, username, ...updateData } = formData;
+            const { password, confirmPassword, uid, username: usernameField, ...updateData } = formData;
 
-            const updates = {
-                ...updateData,
-                updatedAt: new Date()
-            };
-            
-            // Since we now use only the users collection, simply update it directly
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, updates);
-            
+            // Call the API to update the profile
+            const response = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    updateData: updateData
+                })
+            });
+
+            if (!response.ok) {
+                // Try to get error details
+                let errorMessage = 'Ocorreu um erro ao salvar seu perfil';
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (e) {
+                    // If error parsing fails, just use the default message
+                }
+
+                throw new Error(errorMessage);
+            }
+
             // Update local state
             setProfileData(formData);
 
@@ -191,10 +214,19 @@ export default function UserProfilePage() {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
+
+            // Handle error with proper type checking
+            let errorMessage = "Ocorreu um erro ao salvar seu perfil";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'message' in error) {
+                errorMessage = String(error.message);
+            }
+
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar",
-                description: "Ocorreu um erro ao salvar seu perfil"
+                description: errorMessage
             });
         } finally {
             setIsSaving(false);
@@ -215,14 +247,17 @@ export default function UserProfilePage() {
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
             <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
 
+                <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                        Perfil
+                    </h1>
+                    <p className="mt-1 text-sm sm:text-base">
+                        {isOwnProfile ? "Gerencie suas informações." : "Visualize informações dos seus contatos."}
+                    </p>
+                </div>
+
                 {/* PROFILE CONTENT */}
-                <div className="w-full p-4 max-w-3xl mx-auto mt-4 pb-20">
-                    {/* <div className="w-full mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Conversas</h1>
-                        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                            Converse com sua rede de apoio
-                        </p>
-                    </div> */}
+                <div className="w-full max-w-3xl mx-auto mt-4 pb-20">
 
                     <UserProfileCard
                         userData={profileData}
@@ -236,19 +271,18 @@ export default function UserProfilePage() {
                     />
 
                     {/* Only show relationship badge for other people's profiles */}
-                    {!isOwnProfile && (
+                    {/* {!isOwnProfile && (
                         <div className="flex justify-center mt-6 mb-2">
                             <RelationshipBadge status={friendshipStatus} />
                         </div>
-                    )}
+                    )} */}
 
                     {/* Profile Tabs */}
-                    <div className="mt-8 space-y-6">
+                    {/* <div className="mt-8 space-y-6">
                         <Tabs defaultValue="info" className="w-full">
                             <TabsList className="grid w-full grid-cols-2 mb-6">
                                 <TabsTrigger value="info">Info</TabsTrigger>
                                 <TabsTrigger value="kids">Crianças</TabsTrigger>
-                                {/* <TabsTrigger value="activities">Atividades</TabsTrigger> */}
                             </TabsList>
 
                             <TabsContent value="info" className="space-y-4">
@@ -277,7 +311,7 @@ export default function UserProfilePage() {
                                 <ActivitiesSection />
                             </TabsContent>
                         </Tabs>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

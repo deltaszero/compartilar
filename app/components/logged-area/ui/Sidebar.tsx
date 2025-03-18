@@ -113,7 +113,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                 className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-base transition-colors",
                     isActive
-                        ? "bg-main/70 text-main"
+                        ? "bg-main/70 text-main font-black hover:bg-main hover:text-white"
                         : isSubpageActive
                             ? "bg-main/20 text-main"
                             : "text-white hover:bg-main"
@@ -126,7 +126,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                     {icon}
                 </div>
                 <span className={cn(
-                    "text-sm",
+                    "text-md",
                     isActive ? "font-bold" : ""
                 )}>
                     {children}
@@ -135,7 +135,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
 
             {/* Subpages with Subtle Style */}
             {hasSubpages && (
-                <div className="mt-1 space-y-1 pl-11">
+                <div className="pl-12 font-nunito">
                     {subpages.map(subpage => {
                         const isSubActive = currentPath === subpage.path;
 
@@ -173,7 +173,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
     // If userData is not available yet, don't try to construct nav items with undefined values
     const navItems = (userData && userData.username) ? [
         {
-            path: `/${userData.username}/home`, label: 'CompartiLar', icon: <IconMeuLar width={28} height={28} />,
+            path: `/${userData.username}/home`, label: 'Meu Lar', icon: <IconMeuLar width={28} height={28} />,
             subpages: [
                 { path: `/${userData.username}/perfil`, label: 'Perfil' },
                 { path: `/${userData.username}/criancas`, label: 'Crianças' }
@@ -201,7 +201,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
     return (
         <nav className={cn(
             "flex flex-col w-full",
-            isMobile ? "py-2" : "h-full border-r border-border/30"
+            isMobile ? "py-2" : "h-full"//"h-full border-r border-border/30"
         )}>
             {!isMobile && (
                 <div className="py-4 px-4 mb-8 flex flex-row items-center justify-center">
@@ -256,7 +256,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
             </motion.div>
 
             {/* Subscription Button at the bottom of sidebar */}
-            {!isMobile && !loading && !hasActiveSubscription && (
+            {/* {!isMobile && !loading && !hasActiveSubscription && (
                 <div className="mt-auto px-4 py-4 border-t border-border/30">
                     <div className="flex flex-col space-y-2">
                         <div className="flex items-center justify-between mb-1">
@@ -266,7 +266,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                         <SubscriptionButton />
                     </div>
                 </div>
-            )}
+            )} */}
         </nav>
     );
 }

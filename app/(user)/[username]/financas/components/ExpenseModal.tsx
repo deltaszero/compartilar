@@ -85,7 +85,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             )}
           </DialogTitle>
           <DialogDescription asChild>
-            <div className="flex items-center gap-1 mt-1 text-muted-foreground text-sm">
+            <div className="flex items-center gap-1 mt-1 text-gray-400 text-sm">
               <CalendarIcon className="h-4 w-4" />
               <span>{formatDate(expense.date)}</span>
             </div>
@@ -96,7 +96,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Valor e Categoria */}
           <div className="grid grid-cols-2 gap-4">
             <div className="border rounded-lg p-3 bg-background">
-              <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 mb-1 text-sm text-gray-400">
                 <BanknoteIcon className="h-4 w-4" />
                 <span>Valor</span>
               </div>
@@ -113,7 +113,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </div>
             
             <div className="border rounded-lg p-3 bg-background">
-              <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 mb-1 text-sm text-gray-400">
                 <Tag className="h-4 w-4" />
                 <span>Categoria</span>
               </div>
@@ -129,7 +129,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           <div className="border rounded-lg p-3 bg-background">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 mb-1 text-sm text-gray-400">
                   <CalendarIcon className="h-4 w-4" />
                   <span>Criado em</span>
                 </div>
@@ -138,7 +138,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               
               {expense.updatedAt && expense.createdAt && expense.updatedAt.toMillis() > expense.createdAt.toMillis() && (
                 <div>
-                  <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 mb-1 text-sm text-gray-400">
                     <CalendarIcon className="h-4 w-4" />
                     <span>Atualizado em</span>
                   </div>
@@ -150,16 +150,16 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           
           {/* ID da despesa */}
           <div className="border rounded-lg p-3 bg-background">
-            <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 mb-1 text-sm text-gray-400">
               <Hash className="h-4 w-4" />
               <span>ID da despesa</span>
             </div>
-            <p className="text-xs text-muted-foreground truncate">{expense.id}</p>
+            <p className="text-xs text-gray-400 truncate">{expense.id}</p>
           </div>
           
           {/* Pago por */}
           <div className="border rounded-lg p-3 bg-background">
-            <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
               <Users2 className="h-4 w-4" />
               <span>Pago por</span>
             </div>
@@ -177,7 +177,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Método de divisão */}
           {expense.members && expense.members.length > 0 && (
             <div className="border rounded-lg p-3 bg-background">
-              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
                 <SplitSquareVertical className="h-4 w-4" />
                 <span>Método de divisão</span>
               </div>
@@ -189,7 +189,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               {/* Visualização de porcentagens */}
               {expense.members[0].splitType === 'percentage' && expense.members.length > 1 && (
                 <div className="mt-3 space-y-1">
-                  <div className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                  <div className="text-xs text-gray-400 flex items-center gap-1 mb-2">
                     <PieChart className="h-3 w-3" />
                     <span>Distribuição</span>
                   </div>
@@ -218,7 +218,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       );
                     })}
                   </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <div className="flex justify-between text-[10px] text-gray-400">
                     <span>0%</span>
                     <span>100%</span>
                   </div>
@@ -230,7 +230,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Crianças relacionadas */}
           {expense.childrenIds && expense.childrenIds.length > 0 && (
             <div className="border rounded-lg p-3 bg-background">
-              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
                 <User className="h-4 w-4" />
                 <span>Crianças relacionadas ({expense.childrenIds.length})</span>
               </div>
@@ -268,7 +268,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           {/* Divisão da despesa */}
           {expense.members && expense.members.length > 0 && (
             <div className="border rounded-lg p-3 bg-background">
-              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 mb-2 text-sm text-gray-400">
                 <Users2 className="h-4 w-4" />
                 <span>Divisão da despesa ({expense.members.length} {expense.members.length === 1 ? 'pessoa' : 'pessoas'})</span>
               </div>
@@ -307,7 +307,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         <DialogFooter>
           <div className="w-full flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-gray-400">
               ID: {expense.id.substring(0, 8)}...
             </div>
             <DialogClose asChild>

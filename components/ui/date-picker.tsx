@@ -25,7 +25,7 @@
 //           variant="noShadow"
 //           className={cn(
 //             "w-[280px] justify-start text-left font-base",
-//             !date && "text-muted-foreground",
+//             !date && "text-gray-400",
 //           )}
 //         >
 //           <CalendarIcon className="mr-2 h-4 w-4 text-text" />

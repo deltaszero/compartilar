@@ -45,7 +45,7 @@ export function DayEvents({
       
       {!selectedDate && (
         <div className="flex flex-col items-center justify-center h-[200px] sm:h-[300px] border-2 border-dashed border-gray-300 p-4">
-          <p className="text-muted-foreground text-center text-sm">
+          <p className="text-gray-400 text-center text-sm">
             Selecione uma data para ver ou criar eventos
           </p>
         </div>
@@ -53,7 +53,7 @@ export function DayEvents({
       
       {selectedDate && events.length === 0 && (
         <div className="flex flex-col items-center justify-center h-[200px] sm:h-[300px] border-2 border-dashed border-gray-300 p-4">
-          <p className="text-muted-foreground text-center text-sm">
+          <p className="text-gray-400 text-center text-sm">
             Nenhum evento para esta data.
           </p>
           <Button 

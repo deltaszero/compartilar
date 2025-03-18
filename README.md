@@ -74,3 +74,30 @@ See `CLAUDE.md` file for development commands and code style guidelines.
 2. Commit your changes: `git commit -m 'Add some amazing feature'`
 3. Push to the branch: `git push origin feature/amazing-feature`
 4. Open a Pull Request
+
+
+# Development Snippets
+
+```sh
+npm run export:admin -- --key=/home/dusoudeth/Downloads/compartilar-firebase-app-firebase-adminsdk-7yjqp-4c09ff6f0e.json --output=/home/dusoudeth/Documentos/github/compartilar/temp/admin-export.json
+```
+
+
+```error
+when running `firebase deploy` i'm getting
+
+```error
+app/api/children/[id]/history/route.ts
+Type error: Route "app/api/children/[id]/history/route.ts" has an invalid "GET" export:
+  Type "Params" is not a valid type for the function's second argument.
+
+
+Next.js build worker exited with code: 1 and signal: null
+```
+
+your children endpoint /home/dusoudeth/Documentos/github/compartilar/app/api/children is causing a lot of trouble, i think because of the dynamic route
+
+please, REFACTOR IT in order to avoid the dynamic routing for now
+
+in case of doubt, check how /home/dusoudeth/Documentos/github/compartilar/app/api/friends is implemented, because is working properly
+```

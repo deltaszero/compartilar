@@ -28,7 +28,7 @@ export const BalanceTable: React.FC<BalanceTableProps> = ({ balances, userData }
       </CardHeader>
       <CardContent>
         {balances.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
+          <div className="text-center py-4 text-gray-400">
             Sem dados para cálculo de saldo
           </div>
         ) : (

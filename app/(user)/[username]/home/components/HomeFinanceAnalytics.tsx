@@ -106,7 +106,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   //       <BanknoteIcon className="h-5 w-5" />
   //     </div>
   //     <p className="text-3xl font-black">R$ {totalAmount.toFixed(2)}</p>
-  //     <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
+  //     <p className="text-sm text-gray-400">Últimos 30 dias</p>
   //   </div>
   // );
 
@@ -117,7 +117,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
   //       <User className="h-5 w-5" />
   //     </div>
   //     <p className="text-3xl font-black">R$ {totalChildExpenses.toFixed(2)}</p>
-  //     <p className="text-sm text-muted-foreground">
+  //     <p className="text-sm text-gray-400">
   //       {totalAmount > 0 ? `${Math.round((totalChildExpenses / totalAmount) * 100)}% do total` : '0% do total'}
   //     </p>
   //   </div>
@@ -178,7 +178,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
           </div>
         ) : (
           <div className="h-48 flex items-center justify-center">
-            <p className="text-muted-foreground text-center">Sem dados disponíveis</p>
+            <p className="text-gray-400 text-center">Sem dados disponíveis</p>
           </div>
         )}
         <div className="mt-4 text-center">
@@ -232,7 +232,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
         </div>
       ) : (
         <div className="h-48 flex items-center justify-center">
-          <p className="text-muted-foreground text-center">Sem despesas infantis</p>
+          <p className="text-gray-400 text-center">Sem despesas infantis</p>
         </div>
       )}
       <div className="mt-4 text-center">
@@ -285,7 +285,7 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
         </div>
       ) : (
         <div className="h-48 flex items-center justify-center">
-          <p className="text-muted-foreground text-center">Sem dados diários suficientes</p>
+          <p className="text-gray-400 text-center">Sem dados diários suficientes</p>
         </div>
       )}
       <div className="mt-4 text-center">
@@ -341,9 +341,9 @@ export const HomeFinanceAnalytics: React.FC<HomeFinanceAnalyticsProps> = ({
         <div className="bg-white p-4 h-full border-2 border-black shadow-brutalist">
           <h3 className="text-lg font-bold mb-2">Resumo Financeiro</h3>
           <div className="p-6 text-center">
-            {/* <BanknoteIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" /> */}
+            {/* <BanknoteIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" /> */}
             <h3 className="text-lg font-bold mb-2">Sem despesas registradas</h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-400 mb-6">
               Comece a registrar suas despesas para visualizar gráficos e análises aqui.
             </p>
             <Link href={`/${username}/financas`}>

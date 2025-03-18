@@ -67,7 +67,7 @@ export const ExpenseAnalytics: React.FC<ExpenseAnalyticsProps> = ({ filteredExpe
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
           {filteredExpenses.length === 0 ? (
-            <div className="col-span-2 text-center py-6 text-muted-foreground font-bold uppercase">
+            <div className="col-span-2 text-center py-6 text-gray-400 font-bold uppercase">
               Sem dados suficientes para análise
             </div>
           ) : (

@@ -162,7 +162,7 @@ export default function CheckInContent() {
                 
                 {/* Additional guidance for mobile */}
                 {/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !location && !error && (
-                    <p className="text-xs text-center text-muted-foreground mt-2">
+                    <p className="text-xs text-center text-gray-400 mt-2">
                         Permita o acesso à sua localização quando solicitado
                     </p>
                 )}

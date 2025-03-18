@@ -174,7 +174,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         const childrenIds = row.original.childrenIds || [];
         
         if (childrenIds.length === 0) {
-          return <div className="text-muted-foreground text-sm">-</div>;
+          return <div className="text-gray-400 text-sm">-</div>;
         }
         
         // Custom avatar display workaround
@@ -324,7 +324,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             <LoadingSpinner />
           </div>
         ) : filteredExpenses.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-400">
             Sem despesas neste período
           </div>
         ) : (
@@ -452,7 +452,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       <div className="font-medium">{row.original.description}</div>
                       <div className="flex space-x-2 text-sm">
                         <Badge variant="default" className="h-5">{row.original.category}</Badge>
-                        <span className="text-muted-foreground">{formatDate(row.original.date)}</span>
+                        <span className="text-gray-400">{formatDate(row.original.date)}</span>
                       </div>
                     </div>
                     <div className="flex -space-x-1">
@@ -490,7 +490,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                   {row.original.childrenIds && row.original.childrenIds.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-dashed">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-muted-foreground">Crianças:</span>
+                        <span className="text-xs text-gray-400">Crianças:</span>
                         <div className="flex -space-x-2 overflow-hidden">
                           {row.original.childrenIds.slice(0, 3).map((childId, index) => {
                             const child = children[childId];

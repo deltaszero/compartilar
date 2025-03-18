@@ -20,10 +20,55 @@ export interface NotificationItemProps {
 
 export const NotificationItem = ({ notification, onRead }: NotificationItemProps) => {
     // Handle notification click - mark as read and navigate if needed
-    const handleClick = () => {
-        onRead(notification.id);
-        if (notification.actionUrl) {
-            window.location.href = notification.actionUrl;
+    const handleClick = async () => {
+        try {
+            // For friend request notifications, we need special handling
+            if (notification.type === 'friend_request') {
+                // Just call the provided onRead handler which will navigate to the right page
+                onRead(notification.id);
+                return;
+            }
+            
+            // For other notification types, use the API to mark as read
+            // Get authentication token from Firebase
+            const auth = (await import('@/app/lib/firebaseConfig')).auth;
+            const user = auth.currentUser;
+            if (!user) {
+                console.error('User not authenticated');
+                throw new Error('User not authenticated');
+            }
+            
+            const token = await user.getIdToken();
+            
+            const response = await fetch('/api/notifications', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    notificationId: notification.id,
+                    userId: notification.userId,
+                    status: 'read'
+                }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error marking notification as read');
+            }
+            
+            // Then call the provided handler for UI updates
+            onRead(notification.id);
+            
+            // Navigate if needed
+            if (notification.actionUrl) {
+                window.location.href = notification.actionUrl;
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+            // Still call onRead for UI consistency
+            onRead(notification.id);
         }
     };
     

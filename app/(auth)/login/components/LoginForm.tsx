@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -42,18 +42,30 @@ export function LoginForm() {
     const handleLogin = async (data: LoginFormValues) => {
         setLoading(true);
         try {
+            // Use Firebase client SDK directly for password authentication
+            // This avoids sending credentials to our server
             await signInWithEmailAndPassword(auth, data.email, data.password);
+            
+            // Get a fresh token after login to ensure we have the latest claims
+            await auth.currentUser?.getIdToken(true);
+            
+            // Redirect to the appropriate page
             router.push('/login/redirect');
         } catch (error: unknown) {
             console.error(error);
             let message = "Erro ao fazer login";
 
+            // Handle Firebase errors
             if (error instanceof FirebaseError) {
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     message = "Email ou senha incorretos";
                 } else if (error.code === 'auth/too-many-requests') {
                     message = "Muitas tentativas. Tente novamente mais tarde";
+                } else {
+                    message = `Erro de autenticação: ${error.message}`;
                 }
+            } else if (error instanceof Error) {
+                message = error.message;
             }
 
             toast({
@@ -81,54 +93,36 @@ export function LoginForm() {
             
             // Sign in with popup
             const result = await signInWithPopup(auth, provider);
-            const user = result.user;
             
-            // Small delay to ensure authentication is fully processed
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Get the ID token to send to our backend for verification
+            const idToken = await result.user.getIdToken();
             
-            try {
-                // Get user reference from Firestore
-                const userRef = doc(db, 'account_info', user.uid);
-                const userSnap = await getDoc(userRef);
-                
-                // Check if user document exists in Firestore
-                if (!userSnap.exists()) {
-                    // Create a new user in Firestore
-                    // First check if the username exists (use email prefix as username)
-                    const emailPrefix = user.email?.split('@')[0] || '';
-                    let username = emailPrefix.toLowerCase();
-                    
-                    // Extract name information from Google
-                    const displayName = user.displayName || '';
-                    const nameParts = displayName.split(' ');
-                    const firstName = nameParts[0] || '';
-                    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-                    
-                    // Create user document
-                    await setDoc(userRef, {
-                        uid: user.uid,
-                        email: user.email,
-                        username: username,
-                        firstName: firstName,
-                        lastName: lastName,
-                        photoURL: user.photoURL,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    });
-                    
-                    // Save username reference for easy lookup
-                    const usernameRef = doc(db, 'usernames', username);
-                    await setDoc(usernameRef, { uid: user.uid });
-                    
-                    toast({
-                        title: "Conta criada",
-                        description: "Sua conta foi criada com sucesso!",
-                    });
-                }
-            } catch (firestoreError) {
-                console.error("Error saving user data to Firestore:", firestoreError);
-                // Continue with login even if Firestore operation fails
-                // The user is still authenticated at this point
+            // Now call our API to verify the token and complete any server-side setup
+            // This API call is necessary to handle new user creation in Firestore
+            const response = await fetch('/api/auth/google-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add CSRF protection header
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    idToken
+                }),
+            });
+            
+            const apiResult = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(apiResult.error || 'Erro ao verificar login com Google');
+            }
+            
+            // If this is a new user, show a welcome message
+            if (apiResult.newUser) {
+                toast({
+                    title: "Conta criada",
+                    description: "Sua conta foi criada com sucesso!",
+                });
             }
             
             // Redirect after successful authentication
@@ -146,9 +140,9 @@ export function LoginForm() {
                     message = "Autenticação com Google não está habilitada. Contate o administrador.";
                 } else if (error.code === 'auth/popup-blocked') {
                     message = "Bloqueador de pop-ups impediu a autenticação. Permita pop-ups e tente novamente.";
-                } else if (error.message && error.message.includes('stream token')) {
-                    message = "Erro de conexão com Firebase. Tente novamente em alguns instantes.";
                 }
+            } else if (error instanceof Error) {
+                message = error.message;
             }
             
             toast({
@@ -172,7 +166,7 @@ export function LoginForm() {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Seu email"
                                         className="pl-10"
@@ -194,7 +188,7 @@ export function LoginForm() {
                             <FormLabel>Senha</FormLabel>
                             <FormControl>
                                 <div className="relative">
-                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
                                         type={showPassword ? 'text' : 'password'}
                                         placeholder="Sua senha"

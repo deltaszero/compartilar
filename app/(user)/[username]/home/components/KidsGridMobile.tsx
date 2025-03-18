@@ -43,7 +43,7 @@ const KidsGridMobile = ({ parentId }: { parentId: string }) => {
           </div> */}
           <div>
             <h3 className="font-medium mb-1">Nenhuma criança cadastrada</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
             </p>
           </div>

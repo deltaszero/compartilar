@@ -33,6 +33,13 @@ export const fetchChildren = async (userId: string): Promise<KidInfo[]> => {
     // Process children where user is an editor
     editorsSnapshot.docs.forEach(doc => {
       const data = doc.data();
+      
+      // Skip deleted children
+      if (data.isDeleted === true) {
+        console.log(`Skipping deleted child ${doc.id} (editor access) in KidsGrid`);
+        return;
+      }
+      
       uniqueChildren.set(doc.id, {
         id: doc.id,
         firstName: data.firstName,
@@ -41,7 +48,8 @@ export const fetchChildren = async (userId: string): Promise<KidInfo[]> => {
         gender: data.gender,
         relationship: data.relationship,
         photoURL: data.photoURL || null,
-        accessLevel: 'editor'
+        accessLevel: 'editor',
+        isDeleted: data.isDeleted || false
       });
     });
     
@@ -49,6 +57,13 @@ export const fetchChildren = async (userId: string): Promise<KidInfo[]> => {
     viewersSnapshot.docs.forEach(doc => {
       if (!uniqueChildren.has(doc.id)) {
         const data = doc.data();
+        
+        // Skip deleted children
+        if (data.isDeleted === true) {
+          console.log(`Skipping deleted child ${doc.id} (viewer access) in KidsGrid`);
+          return;
+        }
+        
         uniqueChildren.set(doc.id, {
           id: doc.id,
           firstName: data.firstName,
@@ -57,7 +72,8 @@ export const fetchChildren = async (userId: string): Promise<KidInfo[]> => {
           gender: data.gender, 
           relationship: data.relationship,
           photoURL: data.photoURL || null,
-          accessLevel: 'viewer'
+          accessLevel: 'viewer',
+          isDeleted: data.isDeleted || false
         });
       }
     });
@@ -80,7 +96,15 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
     const loadChildren = async () => {
       try {
         const data = await fetchChildren(parentId);
-        setKidsArray(data);
+        
+        // Double-check to filter out any deleted children that might have slipped through
+        const filteredData = data.filter(child => !child.isDeleted);
+        
+        if (filteredData.length !== data.length) {
+          console.log(`Filtered out ${data.length - filteredData.length} deleted children in KidsGrid component`);
+        }
+        
+        setKidsArray(filteredData);
       } catch (error) {
         console.error("Error fetching children:", error);
       } finally {
@@ -106,7 +130,7 @@ const KidsGrid = ({ parentId }: { parentId: string }) => {
           </div> */}
           <div>
             <h3 className="font-medium mb-1">Nenhuma criança cadastrada</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               Adicione informações sobre seus filhos para acompanhar seu desenvolvimento
             </p>
           </div>
