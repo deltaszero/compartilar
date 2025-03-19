@@ -247,7 +247,7 @@ export default function UserProfilePage() {
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
             <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
 
-                <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                <div className="p-3 sm:p-4 sm:mx-auto sm:w-3/4 border-4 border-black bg-white shadow-brutalist">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                         Perfil
                     </h1>

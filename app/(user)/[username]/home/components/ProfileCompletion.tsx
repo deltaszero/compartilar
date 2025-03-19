@@ -111,7 +111,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
                             </h3>
                         )}
                         {missingFields.length > 0 && (
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm sm:text-lg text-gray-400">
                                 {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}
                             </span>
                         )}
