@@ -39,10 +39,9 @@ const NavItem = ({
                 key={path}
                 className={cn(
                     "h-full flex flex-col items-center justify-center w-full cursor-pointer",
-                    "border-0 border-t-2",
                     isActive 
-                        ? "border-border bg-main shadow-shadow" 
-                        : "border-transparent bg-bg hover:bg-main/20"
+                        ? "text-main" 
+                        : "text-bw"
                 )}
                 onClick={onClick}
             >
@@ -67,10 +66,9 @@ const NavItem = ({
             href={path}
             className={cn(
                 "h-full flex flex-col items-center justify-center w-full",
-                "border-0 border-t-2 transition-colors",
                 isActive 
-                    ? "border-border bg-main shadow-shadow" 
-                    : "border-transparent bg-bg hover:bg-main/20"
+                    ? "text-main" 
+                    : "text-bw"
             )}
         >
             <motion.div 
@@ -150,7 +148,7 @@ const BottomNav = () => {
     return (
         <>
             {/* Brutalist Bottom Navigation */}
-            <footer className="fixed bottom-0 left-0 right-0 h-16 border-t-2 border-border bg-bg z-[9999] flex items-stretch justify-between">
+            <footer className="fixed bottom-0 left-0 right-0 h-16 border-t-2 border-border bg-blank z-[9999] flex items-stretch justify-between">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
