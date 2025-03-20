@@ -7,7 +7,7 @@ import calendarWebp from '@/app/assets/images/horizontal-menu_calendar.webp';
 import rocketWebp from '@/app/assets/images/horizontal-menu_rocket_2.webp';
 import tasklistWebp from '@/app/assets/images/horizontal-menu_tasklist.webp';
 import profileWebp from '@/app/assets/images/horizontal-menu_profile_2.webp';
-import heartWebp from '@/app/assets/images/horizontal-menu_heart_4.webp';
+import heartWebp from '@/app/assets/images/horizontal-menu_heart_5.webp';
 import geolocationWebp from '@/app/assets/images/horizontal-menu_geolocation.webp';
 import financeWebp from '@/app/assets/images/horizontal-menu_finance_2.webp';
 

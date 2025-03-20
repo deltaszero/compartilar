@@ -1,6 +1,6 @@
 # Parental Agreement Form: Education Section
 
-## Educação Regular<
+## Educação Regular
 
 ```html
 <!DOCTYPE html>

@@ -84,20 +84,21 @@ npm run export:admin -- --key=/home/dusoudeth/Downloads/compartilar-firebase-app
 
 
 ```error
-when running `firebase deploy` i'm getting
+in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plano/README.md there is a draft for a parental plan form
 
-```error
-app/api/children/[id]/history/route.ts
-Type error: Route "app/api/children/[id]/history/route.ts" has an invalid "GET" export:
-  Type "Params" is not a valid type for the function's second argument.
+in terms of frontend the structure i have in mind is
+
++ at /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plano, there is a page with as many parental plans the user created
++ when the user clicks, it opens a beautiful form like the draft
+
+in terms of backend
+
++ create a collection called parental_plan, each document will be a parental plan created by users
++ each parental plan MUST obligatory be linked to one or more kid
++ CRUD operations should be viewed and edited accordingly to editors and viewers of the kid linked to it
++ changes in parental plan should be logged in a subcollection called changelog and must contain timestamp and changed fields before and after
 
 
-Next.js build worker exited with code: 1 and signal: null
-```
+your implementation should be modular, so first create the general structure and add only "1. Educação Regular"
 
-your children endpoint /home/dusoudeth/Documentos/github/compartilar/app/api/children is causing a lot of trouble, i think because of the dynamic route
-
-please, REFACTOR IT in order to avoid the dynamic routing for now
-
-in case of doubt, check how /home/dusoudeth/Documentos/github/compartilar/app/api/friends is implemented, because is working properly
 ```
