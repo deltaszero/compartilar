@@ -4,12 +4,12 @@ import Image from 'next/image';
 
 // Import WebP image for Calendar
 import calendarWebp from '@/app/assets/images/horizontal-menu_calendar.webp';
-import rocketWebp from '@/app/assets/images/horizontal-menu_rocket.webp';
+import rocketWebp from '@/app/assets/images/horizontal-menu_rocket_2.webp';
 import tasklistWebp from '@/app/assets/images/horizontal-menu_tasklist.webp';
-import profileWebp from '@/app/assets/images/horizontal-menu_profile.webp';
-import heartWebp from '@/app/assets/images/horizontal-menu_heart.webp';
+import profileWebp from '@/app/assets/images/horizontal-menu_profile_2.webp';
+import heartWebp from '@/app/assets/images/horizontal-menu_heart_4.webp';
 import geolocationWebp from '@/app/assets/images/horizontal-menu_geolocation.webp';
-import financeWebp from '@/app/assets/images/horizontal-menu_finance.webp';
+import financeWebp from '@/app/assets/images/horizontal-menu_finance_2.webp';
 
 interface FeatureCardMenuProps {
     username: string;
@@ -28,19 +28,19 @@ export const FeatureCardMenu = ({ username }: FeatureCardMenuProps) => {
             name: 'Crianças',
             imageSrc: heartWebp,
             path: `/${username}/criancas`,
-            color: '#FFDC58',
+            color: '#88aaee',
         },
         {
             name: 'Calendário',
             imageSrc: calendarWebp,
             path: `/${username}/calendario`,
-            color: '#88aaee',
+            color: '#FFDC58',
         },
         {
             name: 'Finanças',
             imageSrc: financeWebp,
             path: `/${username}/financas`,
-            color: '#ff6b6b', // mainStrongGreen
+            color: '#A3E636', //'#ff6b6b', // mainStrongGreen
         },
         {
             name: 'Plano Parental',
@@ -58,7 +58,7 @@ export const FeatureCardMenu = ({ username }: FeatureCardMenuProps) => {
             name: 'Plano Duo',
             imageSrc: rocketWebp,
             path: `/${username}/home`,
-            color: '#a388ee',
+            color: '#ff6b6b',
         },
     ];
 

@@ -121,11 +121,6 @@ const BottomNav = () => {
 
     const navItems = [
         {
-            path: `/${userData.username}/home`,
-            label: 'Meu Lar',
-            icon: <IconHouse width={24} height={24} />
-        },
-        {
             path: `/${userData.username}/calendario`,
             label: 'Calendário',
             icon: <IconCalendar width={24} height={24} />
@@ -134,6 +129,11 @@ const BottomNav = () => {
             path: `/${userData.username}/check-in`,
             label: 'Check-in',
             icon: <IconMaplocation width={24} height={24} />
+        },
+        {
+            path: `/${userData.username}/home`,
+            label: 'Meu Lar',
+            icon: <IconHouse width={24} height={24} />
         },
         {
             path: `/${userData.username}/chat`,

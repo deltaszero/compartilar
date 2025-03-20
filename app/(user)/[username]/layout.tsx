@@ -14,6 +14,18 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     const pathname = usePathname();
     const { username } = useParams<{ username: string }>();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Track screen size
+        useEffect(() => {
+            const checkMobileScreen = () => {
+                setIsMobile(window.innerWidth < 768);
+            };
+    
+            checkMobileScreen();
+            window.addEventListener("resize", checkMobileScreen);
+            return () => window.removeEventListener("resize", checkMobileScreen);
+        }, []);
 
     // Check authentication and permissions
     useEffect(() => {
@@ -41,7 +53,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     }
 
     return (
-        <div className="flex flex-col sm:flex-row min-h-screen bg-bg">
+        <div className="flex flex-col sm:flex-row min-h-screen bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-main to-bg">
             {/* Sidebar (Browser) */}
             <div className="hidden xl:block w-full xl:w-1/6 bg-blank text-white">
                 <Sidebar />

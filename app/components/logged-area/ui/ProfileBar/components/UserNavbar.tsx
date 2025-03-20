@@ -14,8 +14,9 @@ import { UserNavbarProps } from '../types';
 export const UserNavbar = ({ pathname, onBackClick, userData, onSignOut }: UserNavbarProps) => {
     return (
         <header className={cn(
-            "flex items-start justify-between bg-bg py-4 px-2 sm:px-6",
-            "border-b sticky top-0 z-[999] w-full gap-2"
+            "flex items-start justify-between py-4 px-2 sm:px-6",
+            // "sticky top-0 z-[999] w-full gap-2"
+            "w-full gap-2"
         )}>
             <div className="flex items-start min-w-[44px]">
                 {onBackClick && (

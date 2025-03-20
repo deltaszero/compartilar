@@ -235,7 +235,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
                     size="icon"
                     className="h-9 w-10 ml-2"
                     onClick={handleSearch}
-                    disabled={isSearching || searchTerm.length < 3}
+                    // disabled={isSearching || searchTerm.length < 3}
                 >
                     {isSearching ? (
                         <span className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
