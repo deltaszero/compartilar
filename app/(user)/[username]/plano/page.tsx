@@ -2,16 +2,26 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { getParentalPlans } from './services/plan-service';
+import { getParentalPlans, deleteParentalPlan } from './services/plan-service';
 import { ParentalPlan, planSections } from './types';
 import { useUser } from '@/context/userContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Eye } from 'lucide-react';
+import { PlusCircle, Pencil, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
 import Image from 'next/image';
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 import missingImage from '@/app/assets/images/plan_00_missing.webp';
@@ -23,6 +33,9 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
     const { toast } = useToast();
     const [plans, setPlans] = useState<ParentalPlan[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [planToDelete, setPlanToDelete] = useState<ParentalPlan | null>(null);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -45,6 +58,35 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
 
         fetchPlans();
     }, [user, toast]);
+    
+    const handleDeletePlan = async () => {
+        if (!user || !planToDelete) return;
+        
+        setIsDeleting(true);
+        
+        try {
+            await deleteParentalPlan(planToDelete.id, user.uid);
+            
+            // Remove the plan from the state
+            setPlans(plans.filter(plan => plan.id !== planToDelete.id));
+            
+            toast({
+                title: "Plano excluído",
+                description: "O plano parental foi excluído com sucesso.",
+            });
+        } catch (error) {
+            console.error('Error deleting plan:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível excluir o plano parental.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteDialog(false);
+            setPlanToDelete(null);
+        }
+    };
 
     const handleCreateNewPlan = () => {
         router.push(`/${resolvedParams.username}/plano/novo`);
@@ -146,7 +188,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-2">
+                                <CardFooter className="flex gap-2 flex-wrap">
                                     <Button
                                         variant="outline"
                                         className="flex-1"
@@ -162,12 +204,47 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Editar
                                     </Button>
+                                    <Button
+                                        variant="destructive"
+                                        className="w-full mt-2"
+                                        onClick={() => {
+                                            setPlanToDelete(plan);
+                                            setShowDeleteDialog(true);
+                                        }}
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Excluir
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         ))}
                     </div>
                 )}
             </div>
+            
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Plano Parental</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tem certeza que deseja excluir o plano "{planToDelete?.title}"?
+                            <br /><br />
+                            Esta ação não pode ser desfeita. O plano parental será permanentemente excluído.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeletePlan}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? 'Excluindo...' : 'Excluir'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

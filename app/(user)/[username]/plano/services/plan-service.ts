@@ -1,7 +1,7 @@
 import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, serverTimestamp, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { ParentalPlan, EducationSection } from '../types';
-import { auditLog } from '@/lib/auditLogger';
+import { logAuditEvent } from '@/lib/auditLogger';
 
 const COLLECTION_NAME = 'parental_plans';
 
@@ -111,13 +111,21 @@ export const createParentalPlan = async (userId: string, childId: string, title:
     
     const docRef = await addDoc(collection(db, COLLECTION_NAME), mockPlan);
     
-    await auditLog({
-      action: 'create_parental_plan',
-      userId,
-      resourceId: docRef.id,
-      resourceType: 'parental_plan',
-      metadata: { childId }
-    });
+    try {
+      await logAuditEvent({
+        action: 'create',
+        userId,
+        resourceId: docRef.id,
+        resourceType: 'child', // Using 'child' as resource type since 'parental_plan' is not in the allowed types
+        details: {
+          operation: 'create_parental_plan',
+          notes: `Created parental plan for child ${childId}`
+        }
+      });
+    } catch (auditError) {
+      // Log but don't fail the operation
+      console.log('Failed to log audit event:', auditError);
+    }
     
     return docRef.id;
   } catch (error) {
@@ -144,13 +152,22 @@ export const updateEducationSection = async (
       updated_at: Date.now()
     });
     
-    await auditLog({
-      action: 'update_parental_plan_section',
-      userId,
-      resourceId: planId,
-      resourceType: 'parental_plan',
-      metadata: { section: 'education' }
-    });
+    try {
+      await logAuditEvent({
+        action: 'update',
+        userId,
+        resourceId: planId,
+        resourceType: 'child', // Using 'child' as resource type
+        details: {
+          operation: 'update_parental_plan_section',
+          fields: ['education'],
+          notes: 'Updated education section in parental plan'
+        }
+      });
+    } catch (auditError) {
+      // Log but don't fail the operation
+      console.log('Failed to log audit event:', auditError);
+    }
   } catch (error) {
     console.error('Error updating education section:', error);
     throw error;
@@ -167,12 +184,21 @@ export const deleteParentalPlan = async (planId: string, userId: string): Promis
     const planRef = doc(db, COLLECTION_NAME, planId);
     await deleteDoc(planRef);
     
-    await auditLog({
-      action: 'delete_parental_plan',
-      userId,
-      resourceId: planId,
-      resourceType: 'parental_plan'
-    });
+    try {
+      await logAuditEvent({
+        action: 'delete',
+        userId,
+        resourceId: planId,
+        resourceType: 'child', // Using 'child' as resource type
+        details: {
+          operation: 'delete_parental_plan',
+          notes: 'Deleted parental plan'
+        }
+      });
+    } catch (auditError) {
+      // Log but don't fail the operation
+      console.log('Failed to log audit event:', auditError);
+    }
   } catch (error) {
     console.error('Error deleting parental plan:', error);
     throw error;

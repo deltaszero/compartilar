@@ -32,21 +32,28 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // In a real implementation, fetch the user's children that they can edit
-        // This is a mock example, which would be replaced with actual API call
         const fetchUserChildren = async () => {
             if (!user) return;
 
             try {
-                // Mock data - in real app, fetch this from API
-                // Let's use a real sample child ID for testing
-                const mockChildren = [
-                    { id: 'child1', name: 'Ana Clara' },
-                    { id: 'child2', name: 'João Pedro' },
-                    { id: 'child3', name: 'Maria Eduarda' },
-                ];
-
-                setChildrenOptions(mockChildren);
+                // Fetch children where the user is an editor
+                const response = await fetch(`/api/profile/children?userId=${user.uid}&currentUserId=${user.uid}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error fetching children: ${response.status}`);
+                }
+                
+                const childrenData = await response.json();
+                
+                // Filter to only include children where the user is an editor
+                const editableChildren = childrenData
+                    .filter((child: any) => child.accessLevel === 'editor')
+                    .map((child: any) => ({
+                        id: child.id,
+                        name: `${child.firstName} ${child.lastName}`.trim()
+                    }));
+                
+                setChildrenOptions(editableChildren);
             } catch (error) {
                 console.error('Error fetching children:', error);
                 toast({
@@ -121,6 +128,65 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
             <div className="p-8">
                 <div className="h-32 w-full flex items-center justify-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        );
+    }
+    
+    // If there are no children where user is an editor, show guidance message
+    if (childrenOptions.length === 0) {
+        return (
+            <div>
+                <UserProfileBar pathname='Plano de Parentalidade' />
+                <div className="p-8 max-w-4xl mx-auto">
+                    <Button
+                        variant={null}
+                        className="mb-4"
+                        onClick={() => router.push(`/${resolvedParams.username}/plano`)}
+                    >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Voltar
+                    </Button>
+                    
+                    <Card className="bg-bw rounded-none">
+                        <CardHeader>
+                            <CardTitle>
+                                <div className='font-raleway'>
+                                    Novo Plano Parental
+                                </div>
+                            </CardTitle>
+                            <CardDescription>
+                                <div className='font-nunito'>
+                                    Crie um novo plano parental para uma criança
+                                </div>
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-yellow-700">
+                                            Você precisa primeiro adicionar uma criança onde você seja editor para criar um plano parental.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-center">
+                                <Button 
+                                    variant="default"
+                                    onClick={() => router.push(`/${resolvedParams.username}/criancas/novo`)}
+                                >
+                                    Adicionar Nova Criança
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
