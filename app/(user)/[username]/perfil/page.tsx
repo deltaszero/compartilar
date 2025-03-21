@@ -247,11 +247,11 @@ export default function UserProfilePage() {
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
             <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
 
-                <div className="p-3 sm:p-4 sm:mx-auto sm:w-3/4 border-4 border-black bg-white shadow-brutalist">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
                         Perfil
                     </h1>
-                    <p className="mt-1 text-sm sm:text-base">
+                    <p className="mt-1 text-sm sm:text-base font-nunito">
                         {isOwnProfile ? "Gerencie suas informações." : "Visualize informações dos seus contatos."}
                     </p>
                 </div>

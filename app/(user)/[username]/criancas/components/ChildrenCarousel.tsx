@@ -118,7 +118,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                 {isOwnChildren ? (
                     // For first child, direct link is used  
                     <Link href={`/${username}/criancas/novo`}>
-                        <Button variant="default" className='bg-mainStrongGreen'>
+                        <Button variant="default" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar criança
                         </Button>
@@ -139,7 +139,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                 <div className="flex justify-end mb-2">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="default" size="sm" className='bg-mainStrongGreen'>
+                            <Button variant="default" size="sm" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Adicionar Criança
                             </Button>
@@ -195,7 +195,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                             <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                                                 <div className="flex justify-between items-end">
                                                     <div>
-                                                        <h2 className="text-2xl font-bold drop-shadow-md">
+                                                        <h2 className="text-2xl font-bold drop-shadow-md font-raleway">
                                                             {child.firstName} {child.lastName}
                                                         </h2>
                                                         <Badge className='my-1 rounded-xl bg-blank text-bw text-sm' variant="default" >
@@ -204,7 +204,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                                     </div>
 
                                                     <Link href={`/${username}/criancas/${child.id}`}>
-                                                        <Button variant="default" size="sm" className="shadow-md">
+                                                        <Button variant="default" size="sm" className="px-4 text-md font-semibold font-raleway">
                                                             Ver Detalhes
                                                         </Button>
                                                     </Link>

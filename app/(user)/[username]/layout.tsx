@@ -48,9 +48,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     }, [user, userData, loading, username, pathname, router]);
 
     // Show loading while checking authentication
-    if (loading || isCheckingAuth) {
-        return <LoadingPage />;
-    }
+    // if (loading || isCheckingAuth) {
+    //     return <LoadingPage />;
+    // }
 
     return (
         <div className="flex flex-col sm:flex-row min-h-screen bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-main to-bg">

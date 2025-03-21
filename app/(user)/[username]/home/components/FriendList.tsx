@@ -4,7 +4,7 @@ import { useUser } from "@/context/userContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/app/components/ui/LoadingSpinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -239,7 +239,25 @@ export const FriendList = ({ userId }: { userId: string }) => {
     };
 
     if (isLoading) {
-        return <LoadingSpinner />;
+        return (
+            <div className="space-y-3">
+                <div className="grid gap-2">
+                    {Array(1).fill(0).map((_, i) => (
+                        <div key={i} className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded-full" />
+                            <div className="space-y-2 flex-1">
+                                <Skeleton className="h-5 w-32" />
+                                <Skeleton className="h-4 w-24" />
+                            </div>
+                            <div className="flex space-x-2">
+                                <Skeleton className="h-8 w-8 rounded-md" />
+                                <Skeleton className="h-8 w-20 rounded-md" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     // Render the pending requests section

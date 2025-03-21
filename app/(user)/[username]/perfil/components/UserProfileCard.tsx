@@ -133,7 +133,7 @@ export const AvatarSection = ({
                     {photoURL ? (
                         <AvatarImage src={photoURL} alt={`${firstName || 'User'}'s avatar`} />
                     ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-4xl font-bold">
+                        <AvatarFallback>
                             {/* {firstName?.charAt(0)}{lastName?.charAt(0)} */}
                             <IconCamera width={64} height={64} />
                         </AvatarFallback>
@@ -560,7 +560,7 @@ export const UserProfileCard = ({
                         )}
 
                         <Button
-                            className="mt-2 gap-2 rounded-md px-6 font-medium bg-secondaryMain"
+                            className="mt-2 bg-secondaryMain px-4 text-md font-semibold font-raleway"
                             variant="default"
                             onClick={onToggleEdit}
                         >
