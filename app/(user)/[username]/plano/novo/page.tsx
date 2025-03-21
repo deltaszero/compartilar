@@ -58,25 +58,31 @@ export default function NewParentalPlanPage() {
       try {
         setIsLoading(true);
         
-        // Here we'd normally fetch all children the user has access to
-        // For this example, we'll use a dummy implementation
-        // In a real implementation, you'd make an API call to get this data
+        // Get user's token and ID
+        const token = await user.getIdToken(true);
+        const userId = user.uid;
         
-        // Example API call:
-        // const token = await user.getIdToken(true);
-        // const response = await fetch('/api/children/access', {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`,
-        //     'X-Requested-With': 'XMLHttpRequest'
-        //   }
-        // });
-        // const children = await response.json();
-        // setAvailableChildren(children);
+        // Fetch children that the user has access to
+        const response = await fetch(`/api/children/access?userId=${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
         
-        // For now, we'll set a loading timeout to simulate API calls
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch children: ${response.status}`);
+        }
+        
+        const children = await response.json();
+        
+        // Filter for children where user is an editor or owner (can't link viewers)
+        const editableChildren = children.filter(
+          (child: KidInfo) => child.accessLevel === 'editor' || child.accessLevel === 'owner'
+        );
+        
+        setAvailableChildren(editableChildren || []);
         
       } catch (err) {
         console.error('Error loading children:', err);
@@ -85,6 +91,7 @@ export default function NewParentalPlanPage() {
           title: 'Erro',
           description: 'Não foi possível carregar as crianças. Tente novamente mais tarde.'
         });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -325,23 +332,60 @@ export default function NewParentalPlanPage() {
                   <div className="space-y-2">
                     <Label>Selecione as crianças para este plano *</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                      {/* Demo data - Replace with your actual children */}
-                      <Button
-                        type="button"
-                        variant={selectedChildren.includes('child1') ? 'default' : 'outline'}
-                        className={`justify-start h-auto py-3 ${selectedChildren.includes('child1') ? 'bg-mainStrongGreen' : ''}`}
-                        onClick={() => handleChildSelection('child1')}
-                      >
-                        João Silva
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={selectedChildren.includes('child2') ? 'default' : 'outline'}
-                        className={`justify-start h-auto py-3 ${selectedChildren.includes('child2') ? 'bg-mainStrongGreen' : ''}`}
-                        onClick={() => handleChildSelection('child2')}
-                      >
-                        Maria Silva
-                      </Button>
+                      {availableChildren.length === 0 ? (
+                        <div className="col-span-2 p-6 text-center border border-dashed border-gray-300 rounded-md">
+                          <p className="text-gray-600 font-medium mb-2">
+                            Nenhuma criança disponível para criar um plano
+                          </p>
+                          <p className="text-gray-500 text-sm">
+                            Para criar um plano parental, você precisa primeiro adicionar crianças e ser editor das mesmas.
+                          </p>
+                          <Button
+                            onClick={() => router.push(`/${username}/criancas/novo`)}
+                            className="mt-4 bg-mainStrongGreen"
+                            size="sm"
+                          >
+                            Adicionar Criança
+                          </Button>
+                        </div>
+                      ) : (
+                        availableChildren.map((child) => (
+                          <Button
+                            key={child.id}
+                            type="button"
+                            variant={selectedChildren.includes(child.id) ? 'default' : 'outline'}
+                            className={`justify-start h-auto py-3 ${selectedChildren.includes(child.id) ? 'bg-mainStrongGreen' : ''}`}
+                            onClick={() => handleChildSelection(child.id)}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              {/* Child avatar */}
+                              {child.photoURL ? (
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                  <img 
+                                    src={child.photoURL} 
+                                    alt={child.firstName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-sm font-bold">
+                                    {child.firstName?.charAt(0) || '?'}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Child info */}
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{child.firstName} {child.lastName}</span>
+                                <span className="text-xs text-gray-500">
+                                  {child.accessLevel === 'owner' ? 'Proprietário' : 'Editor'}
+                                </span>
+                              </div>
+                            </div>
+                          </Button>
+                        ))
+                      )}
                     </div>
                     
                     <p className="text-sm text-gray-500 mt-2">
