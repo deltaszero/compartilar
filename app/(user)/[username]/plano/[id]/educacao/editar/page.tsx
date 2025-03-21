@@ -60,7 +60,7 @@ export default function EditEducationPage({ params }: { params: Promise<{ userna
   return (
     <div className="p-8">
       <Button 
-        variant="ghost" 
+        variant="default" 
         className="mb-4"
         onClick={handleCancel}
       >

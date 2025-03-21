@@ -48,7 +48,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
   return (
     <div className="p-8">
       <Button 
-        variant="ghost" 
+        variant="default" 
         className="mb-4"
         onClick={() => router.push(`/${resolvedParams.username}/plano`)}
       >

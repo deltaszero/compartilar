@@ -79,7 +79,7 @@ export default function EducationPage({ params }: { params: Promise<{ username: 
     return (
       <div className="p-8">
         <Button 
-          variant="ghost" 
+          variant="default" 
           className="mb-4"
           onClick={() => setIsEditing(false)}
         >

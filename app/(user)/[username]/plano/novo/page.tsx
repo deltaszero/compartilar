@@ -131,7 +131,7 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
             <UserProfileBar pathname='Plano de Parentalidade' />
             <div className="p-8 max-w-4xl mx-auto">
                 <Button
-                    variant="ghost"
+                    variant={null}
                     className="mb-4"
                     onClick={() => router.push(`/${resolvedParams.username}/plano`)}
                 >
@@ -139,11 +139,17 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
                     Voltar
                 </Button>
 
-                <Card>
+                <Card className="bg-bw rounded-none">
                     <CardHeader>
-                        <CardTitle>Novo Plano Parental</CardTitle>
+                        <CardTitle>
+                            <div className='font-raleway'>
+                                Novo Plano Parental
+                            </div>
+                        </CardTitle>
                         <CardDescription>
-                            Crie um novo plano parental para uma criança
+                            <div className='font-nunito'>
+                                Crie um novo plano parental para uma criança
+                            </div>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -162,15 +168,17 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
                                 </div>
 
                                 <div className="mb-4">
-                                    <Label htmlFor="child-select" className="block mb-2">Criança</Label>
+                                    <Label htmlFor="child-select" className="block mb-2">
+                                        Criança
+                                    </Label>
                                     <Select
                                         value={selectedChildId}
                                         onValueChange={setSelectedChildId}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="bg-bw">
                                             <SelectValue placeholder="Selecione uma criança" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-bw">
                                             {childrenOptions.map((child) => (
                                                 <SelectItem key={child.id} value={child.id}>
                                                     {child.name}
@@ -178,15 +186,6 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                </div>
-
-                                <div className="flex justify-center my-8">
-                                    <Image
-                                        src="/assets/images/plan_01.webp"
-                                        alt="Plano Parental"
-                                        width={300}
-                                        height={200}
-                                    />
                                 </div>
                             </div>
                         </form>
