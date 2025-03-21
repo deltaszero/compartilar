@@ -97,6 +97,7 @@ in terms of backend
 + each parental plan MUST obligatory be linked to one or more kid
 + CRUD operations should be viewed and edited accordingly to editors and viewers of the kid linked to it
 + changes in parental plan should be logged in a subcollection called changelog and must contain timestamp and changed fields before and after
++ all CRUD operation should be performed via api; use /home/dusoudeth/Documentos/github/compartilar/app/api for reference
 
 
 your implementation should be modular, so first create the general structure and add only "1. Educação Regular"

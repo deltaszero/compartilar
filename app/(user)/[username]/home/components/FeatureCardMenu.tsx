@@ -45,7 +45,7 @@ export const FeatureCardMenu = ({ username }: FeatureCardMenuProps) => {
         {
             name: 'Plano Parental',
             imageSrc: tasklistWebp,
-            path: `/${username}/calendario`,
+            path: `/${username}/plano`,
             color: '#a388ee',
         },
         {

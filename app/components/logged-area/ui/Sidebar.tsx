@@ -180,7 +180,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
             ]
         },
         {
-            path: `/${userData.username}/plan`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
+            path: `/${userData.username}/plano`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
             subpages: [
                 { path: `/${userData.username}/plano/resumo`, label: 'Resumo' },
                 { path: `/${userData.username}/plano/formulario`, label: 'Formulário' },
