@@ -181,10 +181,10 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
         },
         {
             path: `/${userData.username}/plano`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
-            subpages: [
-                { path: `/${userData.username}/plano/resumo`, label: 'Resumo' },
-                { path: `/${userData.username}/plano/formulario`, label: 'Formulário' },
-            ]
+            // subpages: [
+            //     { path: `/${userData.username}/plano/resumo`, label: 'Resumo' },
+            //     { path: `/${userData.username}/plano/formulario`, label: 'Formulário' },
+            // ]
         },
         // { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
         // { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
