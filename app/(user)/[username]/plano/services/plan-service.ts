@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, serverTimestamp, deleteDoc, orderBy, writeBatch, arrayUnion, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, serverTimestamp, deleteDoc, orderBy, writeBatch, arrayUnion, Timestamp, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { ParentalPlan, EducationSection, FieldStatus, ChangelogEntry, PendingChangeNotification } from '../types';
 import { logAuditEvent } from '@/lib/auditLogger';
@@ -223,7 +223,7 @@ export const getParentalPlans = async (userId: string) => {
     let editorPlans = editorSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as ParentalPlan));
     
     // Filter out deleted plans in memory
     editorPlans = editorPlans.filter(plan => !plan.isDeleted);
@@ -238,7 +238,7 @@ export const getParentalPlans = async (userId: string) => {
     let viewerPlans = viewerSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as ParentalPlan));
     
     // Filter out deleted plans in memory
     viewerPlans = viewerPlans.filter(plan => !plan.isDeleted);
@@ -252,7 +252,7 @@ export const getParentalPlans = async (userId: string) => {
     });
     
     // Sort by updated_at in descending order
-    return allPlans.sort((a, b) => b.updated_at - a.updated_at) as ParentalPlan[];
+    return allPlans.sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0));
   } catch (error) {
     console.error('Error fetching parental plans:', error);
     throw error;
@@ -301,11 +301,16 @@ export const getParentalPlanChangeLog = async (planId: string, userId: string, l
     const planRef = doc(db, COLLECTION_NAME, planId);
     const changeLogRef = collection(planRef, 'changelog');
     
-    const changeLogQuery = query(
+    // Create a query with ordering
+    let changeLogQuery = query(
       changeLogRef,
-      orderBy('timestamp', 'desc'),
-      limit > 0 ? query(changeLogRef).limit(limit) : query(changeLogRef)
+      orderBy('timestamp', 'desc')
     );
+    
+    // Add limit if needed
+    if (limit > 0) {
+      changeLogQuery = query(changeLogQuery, firestoreLimit(limit));
+    }
     
     const changeLogSnapshot = await getDocs(changeLogQuery);
     
@@ -503,7 +508,8 @@ export const updateEducationField = async (
     }
     
     const education = planData.sections.education || {};
-    const currentField = education[fieldName];
+    // Safely access field - education might be empty
+    const currentField = education && typeof education === 'object' ? education[fieldName as keyof typeof education] : undefined;
     
     // Check if the field is locked
     if (currentField && typeof currentField === 'object' && (currentField as FieldStatus).isLocked) {
@@ -615,12 +621,14 @@ export const approveEducationField = async (
     
     const education = planData.sections.education || {};
     
-    if (!education[fieldName] || typeof education[fieldName] !== 'object') {
+    const fieldData = education && typeof education === 'object' ? education[fieldName as keyof typeof education] : undefined;
+    
+    if (!fieldData || typeof fieldData !== 'object') {
       throw new Error('Field not found or not in the correct format');
     }
     
     // Get the current field status
-    const fieldStatus = education[fieldName] as FieldStatus;
+    const fieldStatus = fieldData as FieldStatus;
     
     // Prevent user from approving their own changes
     if (fieldStatus.lastUpdatedBy === userId) {
@@ -728,14 +736,20 @@ export const cancelFieldChange = async (
     
     const planData = planSnap.data() as ParentalPlan;
     
-    // Get the section data
-    const sectionData = planData.sections[section];
+    // Safely access the section data
+    const sectionData = planData.sections && section in planData.sections 
+      ? planData.sections[section as keyof typeof planData.sections] 
+      : undefined;
+      
     if (!sectionData) {
       throw new Error(`Section ${section} not found`);
     }
     
-    // Get the field
-    const fieldData = sectionData[fieldName];
+    // Safely access the field
+    const fieldData = sectionData && typeof sectionData === 'object'
+      ? (sectionData as Record<string, any>)[fieldName]
+      : undefined;
+      
     if (!fieldData || typeof fieldData !== 'object') {
       throw new Error(`Field ${fieldName} not found or not in the correct format`);
     }

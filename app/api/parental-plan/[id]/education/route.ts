@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { EducationSection, FieldStatus } from '@/app/(user)/[username]/plano/types';
+import { z } from 'zod';
+
+// Define route params with validation for Next.js App Router
+interface RouteParams {
+  params: {
+    id: string;
+  }
+}
 
 /**
  * GET - Fetch education section of a parental plan
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -80,7 +88,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -140,13 +148,14 @@ export async function PATCH(
     const beforeValues = { education };
     
     // Create changelog entry
-    const changelogEntry = {
+    const changelogEntry: any = {
       planId: planId,
       timestamp: FieldValue.serverTimestamp(),
       userId: userId,
       action: 'update_education',
       description: updateData.changeDescription || 'Seção de educação atualizada',
-      fieldsBefore: beforeValues
+      fieldsBefore: beforeValues,
+      fieldsAfter: {} // Initialize empty object to be filled later
     };
 
     // Update the document based on the request type
@@ -228,7 +237,7 @@ export async function PATCH(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -344,7 +353,7 @@ export async function POST(
     }
     
     // Create changelog entry
-    const changelogEntry = {
+    const changelogEntry: any = {
       planId: planId,
       timestamp: FieldValue.serverTimestamp(),
       userId: userId,
@@ -397,7 +406,7 @@ export async function POST(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -496,7 +505,7 @@ export async function PUT(
     }
     
     // Create changelog entry
-    const changelogEntry = {
+    const changelogEntry: any = {
       planId,
       timestamp: FieldValue.serverTimestamp(),
       userId,
@@ -535,7 +544,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -629,7 +638,7 @@ export async function DELETE(
     console.log(`For field ${fieldName}, reverting to the previous value: ${safeOriginalValue}`);
     
     // Create changelog entry
-    const changelogEntry = {
+    const changelogEntry: any = {
       planId: planId,
       timestamp: FieldValue.serverTimestamp(),
       userId: userId,
@@ -639,7 +648,7 @@ export async function DELETE(
         [fieldName]: fieldValue 
       },
       fieldsAfter: { 
-        [fieldName]: originalValue 
+        [fieldName]: safeOriginalValue 
       }
     };
     

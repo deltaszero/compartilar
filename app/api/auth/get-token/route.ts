@@ -11,7 +11,7 @@ import { adminAuth } from '@/app/lib/firebase-admin';
 export async function GET(request: NextRequest) {
   try {
     // Get the session cookie
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
     
     if (!sessionCookie) {

@@ -22,9 +22,9 @@ interface RegularEducationFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   planId?: string;
-  onFieldChange?: (fieldName: string, value: string) => Promise<void>;
-  onApproveField?: (fieldName: string, approved: boolean, comments?: string) => Promise<void>;
-  onCancelChange?: (fieldName: string) => Promise<void>;
+  onFieldChange?: (fieldName: string, value: string) => Promise<any>;
+  onApproveField?: (fieldName: string, approved: boolean, comments?: string) => Promise<any>;
+  onCancelChange?: (fieldName: string) => Promise<any>;
   currentUserId?: string;
   isEditMode?: boolean;
 }
@@ -69,7 +69,11 @@ export default function RegularEducationForm({
     }
   };
 
-  const handleFieldEdit = (fieldName: string, currentValue: string | FieldStatus) => {
+  const handleFieldEdit = (fieldName: string, currentValue: string | FieldStatus | undefined) => {
+    if (currentValue === undefined) {
+      currentValue = '';
+    }
+    
     // Extract the value to edit based on whether it's a simple string or FieldStatus object
     const valueToEdit = typeof currentValue === 'object' 
       ? (currentValue as FieldStatus).value 
@@ -148,14 +152,14 @@ export default function RegularEducationForm({
   };
 
   // Helper function to check if a field is locked
-  const isFieldLocked = (field: string | FieldStatus): boolean => {
-    if (typeof field !== 'object') return false;
+  const isFieldLocked = (field: string | FieldStatus | undefined): boolean => {
+    if (!field || typeof field !== 'object') return false;
     return field.isLocked === true;
   };
 
   // Helper function to get field status badge
-  const getFieldStatusBadge = (field: string | FieldStatus) => {
-    if (typeof field !== 'object') return null;
+  const getFieldStatusBadge = (field: string | FieldStatus | undefined) => {
+    if (!field || typeof field !== 'object') return null;
     
     switch (field.status) {
       case 'pending':
@@ -206,9 +210,9 @@ export default function RegularEducationForm({
   };
 
   // Helper function to determine if user can modify a field
-  const canEditField = (field: string | FieldStatus): boolean => {
+  const canEditField = (field: string | FieldStatus | undefined): boolean => {
     if (!isEditMode || !currentUserId) return false;
-    if (typeof field !== 'object') return true;
+    if (!field || typeof field !== 'object') return true;
     
     // If field is locked, check if current user is the one who locked it
     if (field.isLocked) {
@@ -219,27 +223,28 @@ export default function RegularEducationForm({
   };
 
   // Helper function to determine if user can approve/reject a field
-  const canApproveField = (field: string | FieldStatus): boolean => {
+  const canApproveField = (field: string | FieldStatus | undefined): boolean => {
     if (!isEditMode || !currentUserId) return false;
-    if (typeof field !== 'object') return false;
+    if (!field || typeof field !== 'object') return false;
     
     // Can approve if field is pending and user is not the one who made the change
     return field.status === 'pending' && field.lastUpdatedBy !== currentUserId;
   };
 
   // Helper function to determine if user can cancel their pending change
-  const canCancelChange = (field: string | FieldStatus): boolean => {
+  const canCancelChange = (field: string | FieldStatus | undefined): boolean => {
     if (!isEditMode || !currentUserId) return false;
-    if (typeof field !== 'object') return false;
+    if (!field || typeof field !== 'object') return false;
     
     // Can cancel if field is pending and user is the one who made the change
     return field.status === 'pending' && field.lastUpdatedBy === currentUserId;
   };
 
   // Get the actual value to display for a field
-  const getDisplayValue = (field: string | FieldStatus): string => {
+  const getDisplayValue = (field: string | FieldStatus | undefined): string => {
+    if (!field) return '';
     if (typeof field === 'object') {
-      return field.value;
+      return field.value || '';
     }
     return field;
   };
