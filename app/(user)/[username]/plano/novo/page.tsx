@@ -102,7 +102,8 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
         setIsSubmitting(true);
 
         try {
-            const planId = await createParentalPlan(user.uid, selectedChildId, planTitle);
+            // Pass the childId as an array to match the new schema
+            const planId = await createParentalPlan(user.uid, [selectedChildId], planTitle);
 
             toast({
                 title: "Sucesso",

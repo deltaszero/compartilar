@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { EducationSection, FieldStatus } from '@/app/(user)/[username]/plano/types';
 
 /**
  * GET - Fetch education section of a parental plan
@@ -50,7 +51,7 @@ export async function GET(
     }
     
     // Check if user has permission to view this plan
-    const isOwner = planData?.owner === userId;
+    const isOwner = planData?.created_by === userId;
     const isEditor = planData?.editors?.includes(userId);
     const isViewer = planData?.viewers?.includes(userId);
     
@@ -65,7 +66,8 @@ export async function GET(
     
   } catch (error) {
     console.error('Error fetching education data:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -124,7 +126,7 @@ export async function PATCH(
     }
     
     // Check if user has permission to edit this plan
-    const isOwner = planData?.owner === userId;
+    const isOwner = planData?.created_by === userId;
     const isEditor = planData?.editors?.includes(userId);
     
     if (!isOwner && !isEditor) {
@@ -152,10 +154,18 @@ export async function PATCH(
       // Updating a single field
       const { fieldName, value } = updateData;
       
-      // Create a field status object
+      // Get current field to preserve previous value if it exists
+      const currentField = education[fieldName];
+      const previousValue = currentField ? 
+        (typeof currentField === 'object' ? (currentField as any).value : currentField) 
+        : undefined;
+      
+      // Create a field status object with the new schema
       const fieldStatus = {
         value: value,
-        approved: false, // Default to not approved
+        previousValue: previousValue?.toString() || "", // Convert to empty string if undefined
+        status: 'pending', // Default to pending status
+        isLocked: true, // Lock the field while changes are pending
         lastUpdatedBy: userId,
         lastUpdatedAt: timestamp
       };
@@ -201,7 +211,8 @@ export async function PATCH(
     
   } catch (error) {
     console.error('Error updating education section:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -272,7 +283,7 @@ export async function POST(
     }
     
     // Check if user has permission to edit this plan
-    const isOwner = planData?.owner === userId;
+    const isOwner = planData?.created_by === userId;
     const isEditor = planData?.editors?.includes(userId);
     
     if (!isOwner && !isEditor) {
@@ -296,14 +307,41 @@ export async function POST(
       }, { status: 403 });
     }
     
-    // Update the field status
-    const updatedField = {
-      ...fieldValue,
-      approved,
-      comments: comments || fieldValue.comments,
-      lastUpdatedBy: userId,
-      lastUpdatedAt: Date.now()
-    };
+    // Prepare updated field status
+    let updatedField;
+    
+    if (approved) {
+      // If approved, update the status and unlock the field
+      // Ensure value is valid (not undefined)
+      const safeValue = fieldValue.value || "";
+      const safePreviousValue = fieldValue.previousValue || "";
+      
+      updatedField = {
+        ...fieldValue,
+        status: 'approved',
+        isLocked: false,
+        value: safeValue, // Ensure value is not undefined
+        previousValue: safePreviousValue, // Ensure previousValue is not undefined
+        approvedBy: userId,
+        approvedAt: Date.now(),
+        comments: comments || fieldValue.comments || ""
+      };
+    } else {
+      // If rejected, roll back to previous value and mark as disagreed
+      // Ensure we have a valid value to use (empty string if both previousValue and value are undefined)
+      const safeValue = fieldValue.previousValue || fieldValue.value || "";
+      
+      updatedField = {
+        ...fieldValue,
+        status: 'disagreed',
+        isLocked: false,
+        value: safeValue, // Rollback to previous value with safety
+        previousValue: safeValue, // Keep previousValue consistent
+        approvedBy: userId,
+        approvedAt: Date.now(),
+        comments: comments || 'Changes rejected' // Include rejection comments
+      };
+    }
     
     // Create changelog entry
     const changelogEntry = {
@@ -337,7 +375,155 @@ export async function POST(
     
   } catch (error) {
     console.error('Error approving/rejecting field:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    
+    // Add more detailed error info for debugging
+    const details = error instanceof Error 
+      ? { message: error.message, stack: error.stack }
+      : { message: 'Unknown error type' };
+    
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ 
+      error: errorMessage,
+      details: details
+    }, { status: 500 });
+  }
+}
+
+/**
+ * PUT - Update the complete education section
+ * 
+ * This endpoint is used when submitting a completely new education section
+ * without going through the field-by-field approval workflow.
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // CSRF protection
+  const requestedWith = request.headers.get('x-requested-with');
+  if (requestedWith !== 'XMLHttpRequest') {
+    return NextResponse.json({ error: 'CSRF verification failed' }, { status: 403 });
+  }
+
+  // Auth verification
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  
+  try {
+    // Verify the Firebase auth token
+    const decodedToken = await adminAuth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+    
+    // Get plan ID from path parameter
+    const planId = params.id;
+    if (!planId) {
+      return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
+    }
+
+    // Get request body
+    const { educationData } = await request.json();
+    
+    if (!educationData) {
+      return NextResponse.json({ error: 'Education data is required' }, { status: 400 });
+    }
+
+    // Get the plan document
+    const planRef = adminDb().collection('parental_plans').doc(planId);
+    const planDoc = await planRef.get();
+    
+    if (!planDoc.exists) {
+      return NextResponse.json({ error: 'Parental plan not found' }, { status: 404 });
+    }
+
+    const planData = planDoc.data();
+    
+    // Check if plan is deleted
+    if (planData?.isDeleted) {
+      return NextResponse.json({ error: 'Parental plan not found' }, { status: 404 });
+    }
+    
+    // Check if user has permission to edit this plan
+    const isOwner = planData?.created_by === userId;
+    const isEditor = planData?.editors?.includes(userId);
+    
+    if (!isOwner && !isEditor) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    // Store original values for changelog
+    const education = planData?.sections?.education || {};
+    const beforeValues = { education };
+    
+    // Process each field to maintain proper structure
+    // If a field is already a FieldStatus object and it's locked, don't overwrite it
+    const processedEducationData: Record<string, any> = {};
+    const timestamp = Date.now();
+    
+    // Get all field names from both current data and submitted data
+    const allFieldNames = new Set([
+      ...Object.keys(education),
+      ...Object.keys(educationData)
+    ]);
+    
+    for (const fieldName of allFieldNames) {
+      const currentValue = education[fieldName];
+      const newValue = educationData[fieldName];
+      
+      // Skip if the field doesn't exist in the new data (not being updated)
+      if (newValue === undefined) {
+        processedEducationData[fieldName] = currentValue;
+        continue;
+      }
+      
+      // If the current field is a FieldStatus object and locked, don't update it
+      if (
+        currentValue && 
+        typeof currentValue === 'object' && 
+        (currentValue as FieldStatus).isLocked === true
+      ) {
+        processedEducationData[fieldName] = currentValue;
+        console.log(`Field ${fieldName} is locked and will not be updated`);
+        continue;
+      }
+      
+      // For new fields, store them as regular values
+      // We'll use field-by-field update for approval workflow
+      processedEducationData[fieldName] = newValue;
+    }
+    
+    // Create changelog entry
+    const changelogEntry = {
+      planId,
+      timestamp: FieldValue.serverTimestamp(),
+      userId,
+      action: 'update',
+      description: 'Seção de educação atualizada completamente',
+      fieldsBefore: beforeValues,
+      fieldsAfter: { education: processedEducationData }
+    };
+    
+    // Update the document
+    await planRef.update({
+      'sections.education': processedEducationData,
+      updated_at: FieldValue.serverTimestamp()
+    });
+    
+    // Add changelog entry
+    await planRef.collection('changelog').add(changelogEntry);
+    
+    return NextResponse.json({ 
+      success: true,
+      message: 'Education section updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating education section:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -400,7 +586,7 @@ export async function DELETE(
     }
     
     // Check if user has permission to edit this plan
-    const isOwner = planData?.owner === userId;
+    const isOwner = planData?.created_by === userId;
     const isEditor = planData?.editors?.includes(userId);
     
     if (!isOwner && !isEditor) {
@@ -424,30 +610,23 @@ export async function DELETE(
       }, { status: 403 });
     }
     
-    // Only allow cancellation of unapproved changes without comments (pending)
-    if (fieldValue.approved || fieldValue.comments) {
+    // Only allow cancellation of pending changes
+    if (fieldValue.status !== 'pending') {
       return NextResponse.json({ 
-        error: 'Cannot cancel changes that are already approved or rejected' 
+        error: 'Only pending changes can be canceled' 
       }, { status: 400 });
     }
     
-    // When we cancel a change, we want to preserve the original field value
-    // However, we need to make sure we don't leave it as a FieldStatus object
+    // When canceling a change, revert to the previous value stored in the field
+    // This is now properly tracked in the previousValue property of FieldStatus
     
-    // Get the current stored value - this will be a FieldStatus object
-    // For the cancellation flow, we want to:
-    // 1. Extract the actual value from the FieldStatus object
-    // 2. Apply it directly as a primitive value (not as a FieldStatus object)
-    // This effectively cancels the approval workflow
-
-    // We can just use the value that was going to be changed
-    const valueToRevert = fieldValue.value;
+    // Get the previous value from the FieldStatus object
+    const originalValue = fieldValue.previousValue || '';
     
-    // For fields that should have a specific format/type, we can check and maintain it
-    // Extract the value from the FieldStatus object 
-    let originalValue = valueToRevert;
+    // Make sure originalValue is a string to avoid undefined errors
+    const safeOriginalValue = originalValue || '';
     
-    console.log(`For field ${fieldName}, reverting to the value: ${originalValue}`);
+    console.log(`For field ${fieldName}, reverting to the previous value: ${safeOriginalValue}`);
     
     // Create changelog entry
     const changelogEntry = {
@@ -466,7 +645,7 @@ export async function DELETE(
     
     // Revert the field to its original value
     await planRef.update({
-      [`sections.education.${fieldName}`]: originalValue,
+      [`sections.education.${fieldName}`]: safeOriginalValue,
       updatedAt: FieldValue.serverTimestamp(),
       updatedBy: userId
     });
@@ -478,11 +657,12 @@ export async function DELETE(
       success: true,
       message: 'Field change cancelled successfully',
       fieldName: fieldName,
-      revertedValue: originalValue
+      revertedValue: safeOriginalValue
     });
     
   } catch (error) {
     console.error('Error cancelling field change:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -3,8 +3,8 @@ export interface ParentalPlan {
   title: string;
   created_at: number;
   updated_at: number;
-  child_id: string;
-  editors: string[];
+  childrenIds: string[]; // Array of child IDs (minimum one)
+  editors: string[]; // Array of editor IDs (minimum one)
   viewers: string[];
   created_by: string;
   sections: {
@@ -19,14 +19,46 @@ export interface ParentalPlan {
     coexistence?: CoexistenceSection;
     consequences?: ConsequencesSection;
   };
+  isLocked?: boolean; // Flag to indicate if the entire plan is locked
+  isDeleted?: boolean; // Flag to indicate if the plan is soft-deleted
+  status?: 'active' | 'archived'; // Status of the plan
 }
 
 export interface FieldStatus {
-  value: string;
-  approved: boolean;
-  lastUpdatedBy: string;
-  lastUpdatedAt: number;
-  comments?: string;
+  value: string; // Current value
+  previousValue?: string; // Previous value for rollback
+  status: 'approved' | 'pending' | 'disagreed'; // Status of the field
+  isLocked?: boolean; // Flag to indicate if the field is locked for editing
+  lastUpdatedBy: string; // ID of user who made the last change
+  lastUpdatedAt: number; // Timestamp of the last change
+  approvedBy?: string; // ID of user who approved/rejected (if applicable)
+  approvedAt?: number; // Timestamp of approval/rejection (if applicable)
+  comments?: string; // Comments for approval/rejection
+}
+
+export interface ChangelogEntry {
+  id?: string;
+  planId: string;
+  timestamp: number;
+  userId: string;
+  action: 'create' | 'update' | 'delete' | 'approve_field' | 'reject_field' | 'cancel_field_change';
+  description: string;
+  fieldsBefore?: Record<string, any>;
+  fieldsAfter?: Record<string, any>;
+  fieldName?: string; // Name of the field that was changed
+  section?: string; // Name of the section containing the field
+}
+
+export interface PendingChangeNotification {
+  id?: string;
+  planId: string;
+  fieldName: string;
+  section: string;
+  timestamp: number;
+  requestedBy: string;
+  targetUsers: string[]; // Users who need to approve
+  status: 'pending' | 'approved' | 'rejected' | 'canceled';
+  read: boolean;
 }
 
 export interface EducationSection {

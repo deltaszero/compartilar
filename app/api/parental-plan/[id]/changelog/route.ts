@@ -47,7 +47,7 @@ export async function GET(
     const planData = planDoc.data();
     
     // Check permissions
-    const isOwner = planData?.owner === userId;
+    const isOwner = planData?.created_by === userId;
     const isEditor = planData?.editors?.includes(userId);
     const isViewer = planData?.viewers?.includes(userId);
     

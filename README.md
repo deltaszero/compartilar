@@ -81,25 +81,3 @@ See `CLAUDE.md` file for development commands and code style guidelines.
 ```sh
 npm run export:admin -- --key=/home/dusoudeth/Downloads/compartilar-firebase-app-firebase-adminsdk-7yjqp-4c09ff6f0e.json --output=/home/dusoudeth/Documentos/github/compartilar/temp/admin-export.json
 ```
-
-
-```error
-in /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plano/README.md there is a draft for a parental plan form
-
-in terms of frontend the structure i have in mind is
-
-+ at /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plano, there is a page with as many parental plans the user created
-+ when the user clicks, it opens a beautiful form like the draft
-
-in terms of backend
-
-+ create a collection called parental_plan, each document will be a parental plan created by users
-+ each parental plan MUST obligatory be linked to one or more kid
-+ CRUD operations should be viewed and edited accordingly to editors and viewers of the kid linked to it
-+ changes in parental plan should be logged in a subcollection called changelog and must contain timestamp and changed fields before and after
-+ all CRUD operation should be performed via api; use /home/dusoudeth/Documentos/github/compartilar/app/api for reference
-
-
-your implementation should be modular, so first create the general structure and add only "1. Educação Regular"
-
-```
