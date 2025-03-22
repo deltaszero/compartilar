@@ -33,24 +33,31 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         if (loading) return;
 
         // If no user is logged in, redirect to login
-        if (!user) {
+        if (user === null) {
             router.push('/login');
             return;
         }
-
-        // If accessing someone else's routes other than profile, redirect
-        if (userData?.username !== username && !pathname.includes('/perfil')) {
-            router.push(`/${username}/home`);
-            return;
+        
+        if (userData) {
+            // If accessing someone else's routes other than profile, redirect
+            // Only redirect if we're viewing someone else's profile AND it's not a profile page
+            const isViewingOtherUser = userData.username !== username;
+            const isProfilePage = pathname.includes(`/${username}/perfil`);
+            
+            if (isViewingOtherUser && !isProfilePage) {
+                router.push(`/${username}/perfil`);
+                return;
+            }
+            
+            // We're authenticated and have proper permissions
+            setIsCheckingAuth(false);
         }
-
-        setIsCheckingAuth(false);
     }, [user, userData, loading, username, pathname, router]);
 
     // Show loading while checking authentication
-    // if (loading || isCheckingAuth) {
-    //     return <LoadingPage />;
-    // }
+    if (loading || isCheckingAuth) {
+        return <LoadingPage />;
+    }
 
     return (
         <div className="flex flex-col sm:flex-row min-h-screen bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-main to-bg">

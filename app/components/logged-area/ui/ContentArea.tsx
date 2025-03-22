@@ -1,11 +1,12 @@
 'use client';
 
-import { UserProvider } from '@/context/userContext';
+// Note: The UserProvider is already applied at a higher level (in the app layout)
+// This component is just a wrapper for styling and organization
 
-export default function UserLayout({
+export default function ContentArea({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <UserProvider>{children}</UserProvider>;
+  return <div className="w-full h-full overflow-auto">{children}</div>;
 }

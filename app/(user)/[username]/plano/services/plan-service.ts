@@ -174,6 +174,138 @@ export const updateEducationSection = async (
   }
 };
 
+export const updateEducationField = async (
+  planId: string,
+  userId: string,
+  fieldName: string,
+  value: string | boolean | number,
+): Promise<void> => {
+  try {
+    // Verify the user has edit permissions
+    if (!(await hasPermissionToPlan(planId, userId))) {
+      throw new Error('User does not have permission to edit this plan');
+    }
+    
+    const planRef = doc(db, COLLECTION_NAME, planId);
+    const planSnap = await getDoc(planRef);
+    
+    if (!planSnap.exists()) {
+      throw new Error('Plan not found');
+    }
+    
+    const plan = planSnap.data() as ParentalPlan;
+    const education = plan.sections.education || {};
+    
+    // Create a field status object
+    const fieldStatus = {
+      value: value,
+      approved: false, // Default to not approved
+      lastUpdatedBy: userId,
+      lastUpdatedAt: Date.now(),
+    };
+    
+    // Update the specific field
+    const updatedEducation = {
+      ...education,
+      [fieldName]: fieldStatus
+    };
+    
+    await updateDoc(planRef, {
+      [`sections.education`]: updatedEducation,
+      updated_at: Date.now()
+    });
+    
+    try {
+      await logAuditEvent({
+        action: 'update',
+        userId,
+        resourceId: planId,
+        resourceType: 'child',
+        details: {
+          operation: 'update_parental_plan_field',
+          fields: [fieldName],
+          notes: `Updated education field: ${fieldName}`
+        }
+      });
+    } catch (auditError) {
+      console.log('Failed to log audit event:', auditError);
+    }
+  } catch (error) {
+    console.error('Error updating education field:', error);
+    throw error;
+  }
+};
+
+export const approveEducationField = async (
+  planId: string,
+  userId: string,
+  fieldName: string,
+  approved: boolean,
+  comments?: string
+): Promise<void> => {
+  try {
+    // Verify the user has edit permissions
+    if (!(await hasPermissionToPlan(planId, userId))) {
+      throw new Error('User does not have permission to edit this plan');
+    }
+    
+    const planRef = doc(db, COLLECTION_NAME, planId);
+    const planSnap = await getDoc(planRef);
+    
+    if (!planSnap.exists()) {
+      throw new Error('Plan not found');
+    }
+    
+    const plan = planSnap.data() as ParentalPlan;
+    const education = plan.sections.education || {};
+    
+    if (!education[fieldName] || typeof education[fieldName] !== 'object') {
+      throw new Error('Field not found or not in the correct format');
+    }
+    
+    // Update approval status
+    const fieldStatus = education[fieldName] as { 
+      value: string; 
+      approved: boolean; 
+      lastUpdatedBy: string; 
+      lastUpdatedAt: number;
+      comments?: string;
+    };
+    
+    const updatedFieldStatus = {
+      ...fieldStatus,
+      approved,
+      comments: comments || fieldStatus.comments,
+      lastUpdatedBy: userId,
+      lastUpdatedAt: Date.now()
+    };
+    
+    await updateDoc(planRef, {
+      [`sections.education.${fieldName}`]: updatedFieldStatus,
+      updated_at: Date.now()
+    });
+    
+    try {
+      await logAuditEvent({
+        action: 'update',
+        userId,
+        resourceId: planId,
+        resourceType: 'child',
+        details: {
+          operation: 'approve_parental_plan_field',
+          fields: [fieldName],
+          notes: `${approved ? 'Approved' : 'Rejected'} education field: ${fieldName}`
+        }
+      });
+    } catch (auditError) {
+      console.log('Failed to log audit event:', auditError);
+    }
+  } catch (error) {
+    console.error('Error approving education field:', error);
+    throw error;
+  }
+};
+
 export const deleteParentalPlan = async (planId: string, userId: string): Promise<void> => {
   try {
     // Verify the user has edit permissions

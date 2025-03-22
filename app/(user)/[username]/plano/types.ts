@@ -21,38 +21,46 @@ export interface ParentalPlan {
   };
 }
 
+export interface FieldStatus {
+  value: string;
+  approved: boolean;
+  lastUpdatedBy: string;
+  lastUpdatedAt: number;
+  comments?: string;
+}
+
 export interface EducationSection {
-  school: string;
-  tuition_responsible: 'pai' | 'mae' | 'publica';
+  school: string | FieldStatus;
+  tuition_responsible: 'pai' | 'mae' | 'publica' | FieldStatus;
   
-  supplies_responsible: 'pai' | 'mae' | 'dividido';
-  supplies_percentage?: string;
+  supplies_responsible: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  supplies_percentage?: string | FieldStatus;
   
-  uniform_responsible: 'pai' | 'mae' | 'dividido';
-  uniform_percentage?: string;
+  uniform_responsible: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  uniform_percentage?: string | FieldStatus;
   
-  books_responsible: 'pai' | 'mae' | 'dividido';
-  books_percentage?: string;
+  books_responsible: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  books_percentage?: string | FieldStatus;
   
-  activities_responsible: 'pai' | 'mae' | 'dividido';
-  activities_percentage?: string;
+  activities_responsible: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  activities_percentage?: string | FieldStatus;
   
-  excursions_responsible: 'pai' | 'mae' | 'dividido';
-  excursions_percentage?: string;
+  excursions_responsible: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  excursions_percentage?: string | FieldStatus;
   
-  emergency_contact: 'pai' | 'mae' | 'outro';
-  emergency_who?: string;
+  emergency_contact: 'pai' | 'mae' | 'outro' | FieldStatus;
+  emergency_who?: string | FieldStatus;
   
-  transport_responsible: 'pai' | 'mae';
+  transport_responsible: 'pai' | 'mae' | FieldStatus;
   
-  tutor_decision: 'conjunto' | 'pai' | 'mae';
-  tutor_payment: 'pai' | 'mae' | 'dividido';
-  tutor_percentage?: string;
+  tutor_decision: 'conjunto' | 'pai' | 'mae' | FieldStatus;
+  tutor_payment: 'pai' | 'mae' | 'dividido' | FieldStatus;
+  tutor_percentage?: string | FieldStatus;
   
-  extended_family_school: 'sim' | 'nao';
-  extended_family_activities: 'sim' | 'nao';
+  extended_family_school: 'sim' | 'nao' | FieldStatus;
+  extended_family_activities: 'sim' | 'nao' | FieldStatus;
   
-  school_events: 'ambos' | 'revezamento';
+  school_events: 'ambos' | 'revezamento' | FieldStatus;
 }
 
 export interface ExtracurricularSection {

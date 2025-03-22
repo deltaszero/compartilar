@@ -91,7 +91,7 @@ function PlanLayoutContent({
       <div className="p-3 flex items-center justify-between border-b bg-white/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center">
           <Button 
-            variant="ghost" 
+            variant={null}
             size="sm"
             className="mr-2"
             onClick={handleBackClick}
@@ -124,7 +124,7 @@ function PlanLayoutContent({
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="font-bold">Seções do Plano</h2>
                 <Button 
-                  variant="ghost" 
+                  variant="default" 
                   size="sm" 
                   className="p-1"
                   onClick={() => setSidebarOpen(false)}
