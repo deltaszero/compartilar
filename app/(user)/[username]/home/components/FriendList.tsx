@@ -705,7 +705,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
             <Dialog open={isManagingChildAccess} onOpenChange={setIsManagingChildAccess}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>
+                        <DialogTitle id="child-permissions-dialog-title">
                             Gerenciar Acesso às Crianças
                         </DialogTitle>
                         <div className="h-[1em]" />
