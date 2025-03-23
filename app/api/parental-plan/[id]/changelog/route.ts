@@ -9,7 +9,7 @@ import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -30,8 +30,8 @@ export async function GET(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }

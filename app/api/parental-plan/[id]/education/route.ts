@@ -4,11 +4,9 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { EducationSection, FieldStatus } from '@/app/(user)/[username]/plano/types';
 import { z } from 'zod';
 
-// Define route params with validation for Next.js App Router
-interface RouteParams {
-  params: {
-    id: string;
-  }
+// Define route params with Promise for Next.js 15 compatibility
+type RouteParams = {
+  params: Promise<{ id: string }>
 }
 
 /**
@@ -37,8 +35,8 @@ export async function GET(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
@@ -109,8 +107,8 @@ export async function PATCH(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
@@ -258,8 +256,8 @@ export async function POST(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
@@ -427,8 +425,8 @@ export async function PUT(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
@@ -565,8 +563,8 @@ export async function DELETE(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    // Get plan ID from path parameter
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
