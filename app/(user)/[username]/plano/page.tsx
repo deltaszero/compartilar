@@ -7,7 +7,7 @@ import { ParentalPlan, planSections } from './types';
 import { useUser } from '@/context/userContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Eye, Trash2 } from 'lucide-react';
+import { PlusCircle, Pencil, Eye, Trash2, NotebookText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
 
 import missingImage from '@/app/assets/images/plan_00_missing.webp';
@@ -167,11 +168,23 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {plans.map((plan) => (
-                            <Card key={plan.id} className="overflow-hidden">
+                            <Card key={plan.id} className="overflow-hidden bg-bw">
                                 <CardHeader className="pb-2">
-                                    <CardTitle>{plan.title}</CardTitle>
+                                    <CardTitle>
+                                        <div className="flex flex-row font-raleway">
+                                            <NotebookText className="mr-2 h-5 w-5" />
+                                            {plan.title}
+                                        </div>
+                                    </CardTitle>
                                     <CardDescription>
-                                        Atualizado em {formatDate(new Date(plan.updated_at))}
+                                        <div className="font-nunito text-sm font-light">
+                                            Atualizado em {new Date(plan.updated_at).toLocaleDateString('pt-BR', { 
+                                                weekday: 'long', 
+                                                year: 'numeric', 
+                                                month: 'long', 
+                                                day: 'numeric' 
+                                            })}
+                                        </div>
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
@@ -180,41 +193,32 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                             <span>Progresso</span>
                                             <span>{getCompletedSectionsCount(plan)}/{planSections.length} seções</span>
                                         </div>
-                                        <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
-                                            <div
-                                                className="bg-primary h-full"
-                                                style={{ width: `${(getCompletedSectionsCount(plan) / planSections.length) * 100}%` }}
-                                            ></div>
+                                        <div className="py-2">
+                                            <Progress value={(getCompletedSectionsCount(plan) / planSections.length) * 100} className="h-3" />
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="flex gap-2 flex-wrap">
-                                    <Button
-                                        variant="outline"
-                                        className="flex-1"
-                                        onClick={() => router.push(`/${resolvedParams.username}/plano/${plan.id}`)}
-                                    >
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        Visualizar
-                                    </Button>
-                                    <Button
-                                        className="flex-1"
-                                        onClick={() => router.push(`/${resolvedParams.username}/plano/${plan.id}/educacao`)}
-                                    >
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        className="w-full mt-2"
-                                        onClick={() => {
-                                            setPlanToDelete(plan);
-                                            setShowDeleteDialog(true);
-                                        }}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Excluir
-                                    </Button>
+                                <CardFooter>
+                                    <div className="w-full flex items-end justify-end gap-4">
+                                        <Button
+                                            variant="default"
+                                            onClick={() => router.push(`/${resolvedParams.username}/plano/${plan.id}`)}
+                                        >
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            Visualizar
+                                        </Button>
+                                        <Button
+                                            variant="default"
+                                            onClick={() => {
+                                                setPlanToDelete(plan);
+                                                setShowDeleteDialog(true);
+                                            }}
+                                            className="bg-mainStrongRed"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Excluir
+                                        </Button>
+                                    </div>
                                 </CardFooter>
                             </Card>
                         ))}
