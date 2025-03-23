@@ -69,7 +69,7 @@ const Features = forwardRef<HTMLDivElement, FeaturesProps>(
                 <div ref={ref}>
                     <SectionTitle title="Soluções que transformam a coparentalidade" />
                 </div>
-                <div className="px-4 pb-12 mx-auto sm:px-[8em]">
+                <div className="px-4 pb-12 mx-auto sm:w-3/4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-8">
                         {features.map((feature) => (
                             <FeatureCard

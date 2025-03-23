@@ -113,9 +113,9 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                 className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-base transition-colors",
                     isActive
-                        ? "bg-main/70 text-main font-black hover:bg-main hover:text-white"
+                        ? "font-black bg-main text-white hover:bg-main"
                         : isSubpageActive
-                            ? "bg-main/20 text-main"
+                            ? ""
                             : "text-white hover:bg-main"
                 )}
             >
@@ -146,7 +146,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                                 className={cn(
                                     "block px-2 py-1.5 text-sm transition-colors rounded-base",
                                     isSubActive
-                                        ? "bg-main/20 text-white font-medium"
+                                        ? "font-black bg-main text-white"
                                         : "text-white/70 hover:text-white hover:bg-main"
                                 )}
                             >
@@ -179,13 +179,13 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
                 { path: `/${userData.username}/criancas`, label: 'Crianças' }
             ]
         },
-        // {
-        //     path: `/${userData.username}/plan`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
-        //     subpages: [
-        //         { path: `/${userData.username}/plan/resumo`, label: 'Resumo' },
-        //         { path: `/${userData.username}/plan/form`, label: 'Formulário' },
-        //     ]
-        // },
+        {
+            path: `/${userData.username}/plano`, label: 'Plano Parental', icon: <IconPlan width={28} height={28} />,
+            // subpages: [
+            //     { path: `/${userData.username}/plano/resumo`, label: 'Resumo' },
+            //     { path: `/${userData.username}/plano/formulario`, label: 'Formulário' },
+            // ]
+        },
         // { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
         // { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
         // // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },

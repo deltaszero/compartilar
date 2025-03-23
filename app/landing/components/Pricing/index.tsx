@@ -144,14 +144,14 @@ export default function Pricing() {
 
                                 {plan.limitations && (
                                     <div className="mt-6">
-                                        <h4 className="font-medium mb-2">
+                                        <h4 className="text-mdmb-2">
                                             Limitações:
                                         </h4>
                                         <ul className="space-y-1">
                                             {plan.limitations.map((limitation) => (
                                                 <li key={limitation} className="flex items-center">
                                                     <span className="mr-2">•</span>
-                                                    <span className="opacity-75">{limitation}</span>
+                                                    <span>{limitation}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -160,12 +160,12 @@ export default function Pricing() {
 
                                 {plan.advantages && (
                                     <div className="mt-6">
-                                        <h4 className="font-medium mb-2">Vantagens:</h4>
+                                        <h4 className="text-mdmb-2">Vantagens:</h4>
                                         <ul className="space-y-1">
                                             {plan.advantages.map((advantage) => (
                                                 <li key={advantage} className="flex items-center">
                                                     <CheckIcon className="h-5 w-5 flex-shrink-0 mr-2" />
-                                                    <span className="opacity-75">{advantage}</span>
+                                                    <span>{advantage}</span>
                                                 </li>
                                             ))}
                                         </ul>

@@ -263,7 +263,7 @@ export default function EditChildProfile() {
                     {/* Action Buttons */}
                     <div className="flex gap-2 mt-6">
                         <Button
-                            variant="neutral"
+                            variant="default"
                             onClick={() => router.push(`/${username}/criancas/${kid}`)}
                             className="flex-1"
                         >

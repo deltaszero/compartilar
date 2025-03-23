@@ -14,8 +14,9 @@ import {
 } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
-import { PremiumFeature } from '@/components/ui/premium-feature';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Sparkles } from 'lucide-react';
+import { SubscriptionButton } from '@/app/components/logged-area/ui/SubscriptionButton';
 
 interface ChildrenCarouselProps {
     children: KidInfo[];
@@ -52,6 +53,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                         : "Este usuário não possui crianças cadastradas."}
                 </p>
                 {isOwnChildren ? (
+                    // For first child, direct link is used
                     <Link href={`/${username}/criancas/novo`}>
                         <Button variant="default" className='bg-mainStrongGreen'>
                             <Plus className="h-4 w-4 mr-2" />
@@ -114,8 +116,9 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                         : "Este usuário não possui crianças cadastradas."}
                 </p>
                 {isOwnChildren ? (
+                    // For first child, direct link is used  
                     <Link href={`/${username}/criancas/novo`}>
-                        <Button variant="default" className='bg-mainStrongGreen'>
+                        <Button variant="default" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
                             <Plus className="h-4 w-4 mr-2" />
                             Adicionar criança
                         </Button>
@@ -134,16 +137,28 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
             {/* Add Child Button - shown above carousel when user has children and it's their own profile */}
             {isOwnChildren && visibleChildren.length > 0 && (
                 <div className="flex justify-end mb-2">
-                    
-                    <PremiumFeature feature="unlimited_children">
-                        <Link href={`/${username}/criancas/novo`}>
-                            <Button variant="default" size="sm" className='bg-mainStrongGreen'>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="default" size="sm" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Adicionar Criança
                             </Button>
-                        </Link>
-                    </PremiumFeature>
-
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center">
+                                    <Sparkles className="w-5 h-5 mr-2 text-yellow-400" />
+                                    Recurso Premium
+                                </DialogTitle>
+                                <DialogDescription>
+                                    Limite gratuito: 1 criança. Faça upgrade para adicionar mais crianças ao seu perfil.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="mt-6 flex flex-col space-y-3">
+                                <SubscriptionButton />
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             )}
 
@@ -180,7 +195,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                             <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                                                 <div className="flex justify-between items-end">
                                                     <div>
-                                                        <h2 className="text-2xl font-bold drop-shadow-md">
+                                                        <h2 className="text-2xl font-bold drop-shadow-md font-raleway">
                                                             {child.firstName} {child.lastName}
                                                         </h2>
                                                         <Badge className='my-1 rounded-xl bg-blank text-bw text-sm' variant="default" >
@@ -189,7 +204,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
                                                     </div>
 
                                                     <Link href={`/${username}/criancas/${child.id}`}>
-                                                        <Button variant="default" size="sm" className="shadow-md">
+                                                        <Button variant="default" size="sm" className="px-4 text-md font-semibold font-raleway">
                                                             Ver Detalhes
                                                         </Button>
                                                     </Link>

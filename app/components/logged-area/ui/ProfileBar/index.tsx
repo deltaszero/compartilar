@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster";
 import { UserNavbar } from './components/UserNavbar';
-import { UserNotFound } from './components/UserNotFound';
 import { signOut } from 'firebase/auth';
 import { auth, markFirestoreListenersInactive, db } from '@/lib/firebaseConfig';
 import { disableNetwork, enableNetwork } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * UserProfileBar is the main exported component
@@ -70,7 +70,24 @@ const UserProfileBar = ({ pathname }: { pathname: string }) => {
         }
     };
     
-    if (!userData) return <UserNotFound />;
+    if (!userData) {
+        return (
+            <header className="flex items-start justify-between py-4 px-2 sm:px-6 w-full gap-2">
+                <div className="flex items-start min-w-[44px]">
+                    <Skeleton className="w-9 h-9 rounded-md" />
+                </div>
+                
+                <div className="mx-2 flex-1">
+                    <Skeleton className="w-full h-10 rounded-md" />
+                </div>
+                
+                <div className="flex items-start gap-4">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <Skeleton className="w-10 h-10 rounded-md" />
+                </div>
+            </header>
+        );
+    }
     
     return (
         <>

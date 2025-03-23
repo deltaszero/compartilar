@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, LogIn, CameraOff, LogOut } from 'lucide-react';
+import { Menu, LogIn, CameraOff, LogOut, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -156,12 +156,10 @@ const UserMenu = ({ userData, onSignOut }: {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 z-[50]" forceMount>
-                <DropdownMenuItem asChild>
-                    <Link href={`/${userData.username}/home`}>Perfil</Link>
+                <DropdownMenuItem>
+                    <Home className="h-4 w-4" />
+                    <Link href={`/${userData.username}/home`}>Meu Lar</Link>
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem asChild>
-          <Link href={`/${userData.username}/settings`}>Configurações</Link>
-        </DropdownMenuItem> */}
                 <DropdownMenuItem onClick={onSignOut} className="focus:text-red-500 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Sair

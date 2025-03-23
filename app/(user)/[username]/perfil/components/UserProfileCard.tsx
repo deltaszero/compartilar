@@ -133,7 +133,7 @@ export const AvatarSection = ({
                     {photoURL ? (
                         <AvatarImage src={photoURL} alt={`${firstName || 'User'}'s avatar`} />
                     ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-4xl font-bold">
+                        <AvatarFallback>
                             {/* {firstName?.charAt(0)}{lastName?.charAt(0)} */}
                             <IconCamera width={64} height={64} />
                         </AvatarFallback>
@@ -538,7 +538,9 @@ export const UserProfileCard = ({
                         {completionPercentage < 100 && (
                             <div className="w-full mt-4 mb-2 p-3 border rounded-md">
                                 <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-sm font-semibold">Complete seu perfil - {completionPercentage}%</h3>
+                                    <h3 className="text-sm font-semibold">
+                                        Complete seu perfil - {completionPercentage}%
+                                    </h3>
                                     {missingFields.length > 0 && (
                                         <span className="text-xs text-gray-400">
                                             {missingFields.length} {missingFields.length === 1 ? 'campo' : 'campos'} faltante{missingFields.length !== 1 ? 's' : ''}
@@ -558,7 +560,7 @@ export const UserProfileCard = ({
                         )}
 
                         <Button
-                            className="mt-2 gap-2 rounded-md px-6 font-medium bg-secondaryMain"
+                            className="mt-2 bg-secondaryMain px-4 text-md font-semibold font-raleway"
                             variant="default"
                             onClick={onToggleEdit}
                         >

@@ -19,18 +19,22 @@ export default function UserRootPage() {
     useEffect(() => {
         if (loading) return;
 
-        if (!user) {
-            // not logged in
+        // Wait for user data to load
+        if (user === null) {
+            // definitely not logged in
             router.push('/login');
             return;
         }
 
-        // if it's the current user, go to their home page
-        // otherwise, go to the profile page
-        if (userData?.username === username) {
-            router.push(`/${username}/home`);
-        } else {
-            router.push(`/${username}/perfil`);
+        // If we have user data and username, handle redirection
+        if (userData && username) {
+            // if it's the current user, go to their home page
+            // otherwise, go to the profile page
+            if (userData.username === username) {
+                router.push(`/${username}/home`);
+            } else {
+                router.push(`/${username}/perfil`);
+            }
         }
     }, [user, userData, loading, username, router]);
 
