@@ -81,24 +81,8 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
     };
 
     return (
-        <div className="p-4 md:p-6 max-w-6xl mx-auto">
+        <div className="px-4 md:px-6 max-w-6xl mx-auto">
             <div className="mb-6">
-                <div className="flex flex-row items-end justify-end gap-4 font-nunito mb-2">
-                    <span className="text-xs">
-                        Última atualização em {new Date(plan.updated_at).toLocaleDateString('pt-BR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}
-                    </span>
-                    {hasPendingChanges() && (
-                        <Badge className="bg-yellow-50 text-yellow-700 border-yellow-100">
-                            Mudanças pendentes
-                        </Badge>
-                    )}
-                </div>
-
                 <div className='bg-bw p-4 border-2 border-black shadow-brutalist'>
                     <div>
                         <h2 className="text-lg md:text-xl font-bold">
@@ -115,17 +99,32 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                         <span className="font-medium">{getCompletedSectionsCount()}</span> de <span className="font-medium">{planSections.length}</span> seções preenchidas
                     </div>
                 </div>
+                <div className="flex flex-row items-end justify-end gap-4 font-nunito my-2">
+                    <span className="text-xs">
+                        Última atualização em {new Date(plan.updated_at).toLocaleDateString('pt-BR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
+                    </span>
+                    {hasPendingChanges() && (
+                        <Badge className="bg-yellow-50 text-yellow-700 border-yellow-100">
+                            Mudanças pendentes
+                        </Badge>
+                    )}
+                </div>
             </div>
 
             <Tabs defaultValue="sections" onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="bg-white border-2 border-gray-200 p-1">
-                    <TabsTrigger value="sections" className="data-[state=active]:bg-main data-[state=active]:text-white">
+                <TabsList className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] rounded-none">
+                    <TabsTrigger value="sections" className="data-[state=active]:bg-main data-[state=active]:font-raleway data-[state=active]:text-bold">
                         <Grid3X3 className="h-4 w-4 mr-2" />
-                        Seções
+                            Seções
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="data-[state=active]:bg-main data-[state=active]:text-white">
+                    <TabsTrigger value="history" className="data-[state=active]:bg-main data-[state=active]:font-raleway data-[state=active]:text-bold">
                         <History className="h-4 w-4 mr-2" />
-                        Histórico
+                            Histórico
                     </TabsTrigger>
                 </TabsList>
 
@@ -133,30 +132,32 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {planSections.map((section) => {
                             const isCompleted = !!plan.sections[section.id as keyof typeof plan.sections];
-
                             return (
                                 <div
                                     key={section.id}
-                                    className={cn(
-                                        "bg-white border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg",
-                                        isCompleted ? "border-main/70" : "border-gray-200"
-                                    )}
+                                    // className={cn(
+                                    //     "bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] rounded-none",//"bg-white border-2 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg",
+                                    //     isCompleted ? "border-main/70" : "border-gray-200"
+                                    // )}
+                                    className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] rounded-none"
                                 >
                                     <div className="p-4 border-b border-gray-100">
                                         <div className="flex items-start">
                                             <div className={cn(
                                                 "flex items-center justify-center w-8 h-8 rounded-full mr-3 flex-shrink-0",
-                                                isCompleted ? "bg-main text-white" : "bg-gray-100 border border-gray-200"
+                                                isCompleted ? "bg-main" : "bg-gray-100 border border-gray-200"
                                             )}>
                                                 {isCompleted ? (
-                                                    <CheckCircle2 className="h-5 w-5" />
+                                                    <CheckCircle2 className="h-5 w-5 text-bw" />
                                                 ) : (
-                                                    <CircleDashed className="h-5 w-5 text-gray-400" />
+                                                    <CircleDashed className="h-5 w-5 text-blank" />
                                                 )}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-base md:text-lg">{section.title}</h3>
-                                                <p className="text-xs md:text-sm text-gray-500 mt-1">
+                                                <h3 className="font-bold font-raleway text-xl">
+                                                    {section.title}
+                                                </h3>
+                                                <p className="text-xs md:text-sm text-gray-500 mt-1 font-nunito">
                                                     {isCompleted ? "Informações preenchidas" : "Pendente de preenchimento"}
                                                 </p>
                                             </div>
@@ -169,19 +170,19 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                             className={cn(
                                                 "w-full justify-center text-sm",
                                                 isCompleted
-                                                    ? "bg-white border-2 border-main text-main hover:bg-main hover:text-white"
-                                                    : "bg-main text-white hover:bg-main/90"
+                                                    ? ""
+                                                    : "bg-bw text-blank hover:bg-main/90"
                                             )}
                                         >
                                             {isCompleted ? (
                                                 <>
                                                     <Pencil className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                                                    <span className="hidden xs:inline">Editar</span> Informações
+                                                    Informações
                                                 </>
                                             ) : (
                                                 <>
                                                     <PlusCircle className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                                                    <span className="hidden xs:inline">Preencher</span> Agora
+                                                    Preencher
                                                 </>
                                             )}
                                         </Button>
