@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import { usePlan } from './context';
 import { planSections } from '../types';
 import { Card } from '@/components/ui/card';
@@ -8,18 +8,70 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from "@/components/ui/progress";
-import { Pencil, CheckCircle2, CircleDashed, PlusCircle, History, Grid3X3 } from 'lucide-react';
+import { Pencil, CheckCircle2, CircleDashed, PlusCircle, History, Grid3X3, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatDate, cn } from '@/lib/utils';
 import Image from 'next/image';
 import PlanChangeLog from '../components/PlanChangeLog';
 import PlanSectionImage from '../components/PlanSectionImage';
+import { useUser } from '@/context/userContext';
+
+interface EditorInfo {
+    id: string;
+    displayName: string;
+    photoURL: string | null;
+    email: string | null;
+}
 
 export default function PlanPage({ params }: { params: Promise<{ username: string; id: string }> }) {
     const resolvedParams = use(params);
     const { plan, isLoading, error } = usePlan();
     const router = useRouter();
+    const { user } = useUser();
     const [activeTab, setActiveTab] = useState("sections"); // 'sections' or 'history'
+    const [editors, setEditors] = useState<EditorInfo[]>([]);
+    const [isLoadingEditors, setIsLoadingEditors] = useState(false);
+    
+    // Fetch editor information when plan loads
+    useEffect(() => {
+        const fetchEditors = async () => {
+            if (!plan || !plan.editors || plan.editors.length === 0) return;
+            
+            setIsLoadingEditors(true);
+            
+            try {
+                const editorsList: EditorInfo[] = [];
+                
+                // Fetch data for each editor
+                for (const editorId of plan.editors) {
+                    try {
+                        const response = await fetch(`/api/users/${editorId}`);
+                        
+                        if (response.ok) {
+                            const userData = await response.json();
+                            
+                            editorsList.push({
+                                id: editorId,
+                                displayName: userData.displayName || userData.email || 'Usuário',
+                                photoURL: userData.photoURL,
+                                email: userData.email
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching editor ${editorId}:`, error);
+                    }
+                }
+                
+                setEditors(editorsList);
+            } catch (error) {
+                console.error('Error fetching editors:', error);
+            } finally {
+                setIsLoadingEditors(false);
+            }
+        };
+        
+        fetchEditors();
+    }, [plan]);
 
     if (isLoading) {
         return (
@@ -85,21 +137,72 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
         <div className="px-4 md:px-6 max-w-6xl mx-auto">
             <div className="mb-6">
                 <div className='bg-bw p-4 border-2 border-black shadow-brutalist'>
-                    <div>
-                        <h2 className="text-lg md:text-xl font-bold">
-                            Progresso Geral
-                        </h2>
-                        <span className="inline-flex items-center py-1 text-sm text-main font-nunito">
-                            {completionPercentage}% completo
-                        </span>
-                        <div className="py-2">
-                            <Progress value={completionPercentage} className="h-3" />
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                        <div className="flex-grow">
+                            <h2 className="text-lg md:text-xl font-bold">
+                                Progresso Geral
+                            </h2>
+                            <span className="inline-flex items-center py-1 text-sm text-main font-nunito">
+                                {completionPercentage}% completo
+                            </span>
+                            <div className="py-2">
+                                <Progress value={completionPercentage} className="h-3" />
+                            </div>
+                            <div className="flex flex-row gap-1 text-sm font-nunito">
+                                <span className="font-medium">{getCompletedSectionsCount()}</span> de <span className="font-medium">{planSections.length}</span> seções preenchidas
+                            </div>
+                        </div>
+                        
+                        <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4 flex-shrink-0">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Users className="h-4 w-4 text-gray-500" />
+                                <h3 className="text-sm font-medium">Editores do Plano</h3>
+                            </div>
+                            
+                            <div className="mt-1 space-y-2 max-w-xs">
+                                {isLoadingEditors ? (
+                                    <div className="text-xs text-gray-500 italic">Carregando editores...</div>
+                                ) : editors.length === 0 ? (
+                                    <div className="text-xs text-gray-500">Nenhum editor encontrado</div>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        {editors.map(editor => (
+                                            <div key={editor.id} className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                                    {editor.photoURL ? (
+                                                        <Image 
+                                                            src={editor.photoURL} 
+                                                            alt={editor.displayName}
+                                                            width={24}
+                                                            height={24} 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-xs">
+                                                            {editor.displayName.substring(0, 1).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs">
+                                                    <div className="font-medium">
+                                                        {editor.displayName} 
+                                                        {user && editor.id === user.uid && (
+                                                            <span className="ml-1 text-xs text-gray-500 italic">(você)</span>
+                                                        )}
+                                                    </div>
+                                                    {editor.email && (
+                                                        <div className="text-gray-500 text-xs">{editor.email}</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                    <div className="flex flex-row justify-end gap-1 text-sm font-nunito">
-                        <span className="font-medium">{getCompletedSectionsCount()}</span> de <span className="font-medium">{planSections.length}</span> seções preenchidas
-                    </div>
                 </div>
+                
                 <div className="flex flex-row items-end justify-end gap-4 font-nunito my-2">
                     <span className="text-xs">
                         Última atualização em {new Date(plan.updated_at).toLocaleDateString('pt-BR', {
@@ -142,10 +245,10 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                     // )}
                                     className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] rounded-none"
                                 >
-                                    <div className="p-4 border-b border-gray-100">
-                                        <div className="flex items-start overflow-hidden">
+                                    <div className="px-4 pt-2 border-b border-gray-100">
+                                        <div className="flex items-end overflow-hidden">
                                         
-                                            <div className={cn(
+                                            {/* <div className={cn(
                                                 "flex items-center justify-center w-8 h-8 rounded-full mr-3 flex-shrink-0",
                                                 isCompleted ? "bg-main" : "bg-gray-100 border border-gray-200"
                                             )}>
@@ -154,7 +257,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                                 ) : (
                                                     <CircleDashed className="h-5 w-5 text-blank" />
                                                 )}
-                                            </div>
+                                            </div> */}
                                             <div className="flex-grow flex items-center min-w-0 mr-2">
                                                 <div className="w-full">
                                                     <h3 className="font-bold font-raleway text-xl break-words">
@@ -171,7 +274,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                                     alt={section.title}
                                                     width={128}
                                                     height={128}
-                                                    className="h-24 w-24 flex-shrink-0"
+                                                    className="h-36 w-36 sm:h-28 sm:w-28 flex-shrink-0"
                                                 />
                                         </div>
                                     </div>

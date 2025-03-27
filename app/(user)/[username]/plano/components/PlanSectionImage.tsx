@@ -5,13 +5,13 @@ import Image from 'next/image';
 import educationImage from '@/app/assets/images/plan_02.webp';
 import extracurricularImage from '@/app/assets/images/plan_03.webp';
 import extrasImage from '@/app/assets/images/plan_04.webp';
-import screensImage from '@/app/assets/images/horizontal-menu_calendar.webp';
-import religionImage from '@/app/assets/images/horizontal-menu_heart.webp';
-import travelImage from '@/app/assets/images/horizontal-menu_geolocation.webp';
-import healthImage from '@/app/assets/images/horizontal-menu_heart_2.webp';
-import supportImage from '@/app/assets/images/horizontal-menu_pieces.webp';
-import coexistenceImage from '@/app/assets/images/horizontal-menu_heart_3.webp';
-import consequencesImage from '@/app/assets/images/horizontal-menu_rocket_2.webp';
+import screensImage from '@/app/assets/images/plan_05.webp';
+import religionImage from '@/app/assets/images/plan_06.webp';
+import travelImage from '@/app/assets/images/plan_07.webp';
+import healthImage from '@/app/assets/images/plan_08.webp';
+import supportImage from '@/app/assets/images/plan_09.webp';
+import coexistenceImage from '@/app/assets/images/plan_10.webp';
+import consequencesImage from '@/app/assets/images/plan_11.webp';
 import defaultImage from '@/app/assets/images/horizontal-menu_tasklist.webp';
 
 // Map section IDs to imported images

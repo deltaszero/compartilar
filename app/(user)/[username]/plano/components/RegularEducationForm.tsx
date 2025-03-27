@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { educationFormFields, regularEducationInitialValues } from '../data/regularEducationFormData';
 import { EducationSection, FieldStatus } from '../types';
@@ -16,6 +16,15 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 
+interface EditorInfo {
+    id: string;
+    displayName: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    photoURL?: string | null;
+    email?: string | null;
+}
+
 interface RegularEducationFormProps {
     initialData?: EducationSection;
     onSubmit: (data: EducationSection) => Promise<void>;
@@ -27,6 +36,7 @@ interface RegularEducationFormProps {
     onCancelChange?: (fieldName: string) => Promise<any>;
     currentUserId?: string;
     isEditMode?: boolean;
+    editors?: EditorInfo[]; // Add editors prop
 }
 
 export default function RegularEducationForm({
@@ -39,26 +49,46 @@ export default function RegularEducationForm({
     onApproveField,
     onCancelChange,
     currentUserId,
-    isEditMode = false
+    isEditMode = false,
+    editors = [] // Default to empty array
 }: RegularEducationFormProps) {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<EducationSection>({
+    const { register, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<EducationSection>({
         defaultValues: initialData
     });
     const { toast } = useToast();
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editFieldValue, setEditFieldValue] = useState<string>('');
     const [approvalComments, setApprovalComments] = useState<string>('');
+    const [isBatchEditMode, setIsBatchEditMode] = useState(false);
+    const [isSubmittingBatch, setIsSubmittingBatch] = useState(false);
 
     // Watch form values to handle conditional fields
     const watchedValues = watch();
 
+    // Reset the form to the initial values
+    useEffect(() => {
+        if (initialData) {
+            reset(initialData);
+        }
+    }, [initialData, reset]);
+
     const processSubmit = async (data: EducationSection) => {
         try {
+            if (isBatchEditMode) {
+                setIsSubmittingBatch(true);
+            }
+            
             await onSubmit(data);
+            
             toast({
                 title: "Sucesso",
                 description: "Informações de educação salvas com sucesso.",
             });
+            
+            // Exit batch edit mode after successful submission
+            if (isBatchEditMode) {
+                setIsBatchEditMode(false);
+            }
         } catch (error) {
             console.error('Error submitting form:', error);
             toast({
@@ -66,7 +96,20 @@ export default function RegularEducationForm({
                 description: "Ocorreu um erro ao salvar as informações.",
                 variant: "destructive",
             });
+        } finally {
+            if (isBatchEditMode) {
+                setIsSubmittingBatch(false);
+            }
         }
+    };
+    
+    // Toggle the batch edit mode
+    const toggleBatchEditMode = () => {
+        if (isBatchEditMode) {
+            // If exiting batch edit mode without saving, reset form
+            reset(initialData);
+        }
+        setIsBatchEditMode(!isBatchEditMode);
     };
 
     const handleFieldEdit = (fieldName: string, currentValue: string | FieldStatus | undefined) => {
@@ -157,6 +200,19 @@ export default function RegularEducationForm({
         return field.isLocked === true;
     };
 
+    // Helper function to check if there are any pending approvals
+    const hasPendingApprovals = (): boolean => {
+        if (!initialData) return false;
+        
+        // Check each field in initialData to see if any have pending status
+        return Object.values(initialData).some(field => {
+            if (typeof field === 'object' && field !== null) {
+                return (field as FieldStatus).status === 'pending';
+            }
+            return false;
+        });
+    };
+    
     // Helper function to get field status badge
     const getFieldStatusBadge = (field: string | FieldStatus | undefined) => {
         if (!field || typeof field !== 'object') return null;
@@ -208,6 +264,66 @@ export default function RegularEducationForm({
                 return null;
         }
     };
+    
+    // Helper function to generate options based on field type and editors
+    const generateOptions = (fieldName: string, options: any[]) => {
+        // Get the original options to check if we need to add special options like 'dividido'
+        const originalOptions = options.map(option => option.value);
+        
+        // Create editor options - convert editors to radio options
+        const editorOptions = editors.map(editor => {
+            // Use firstName and lastName if available, or displayName as fallback
+            let editorLabel = editor.displayName;
+            
+            if (editor.firstName || editor.lastName) {
+                const fullName = `${editor.firstName || ''} ${editor.lastName || ''}`.trim();
+                editorLabel = fullName || editor.displayName;
+            }
+            
+            return {
+                id: `${fieldName}-${editor.id}`,
+                label: editorLabel || editor.email || 'Editor',
+                value: editor.id
+            };
+        });
+        
+        // Add special options like 'dividido', 'conjunto', etc. if they were in the original options
+        const specialOptions = [];
+        
+        if (originalOptions.includes('dividido')) {
+            specialOptions.push({
+                id: `${fieldName}-divided`,
+                label: 'Será dividido',
+                value: 'dividido'
+            });
+        }
+        
+        if (originalOptions.includes('publica')) {
+            specialOptions.push({
+                id: `${fieldName}-public`,
+                label: 'Escola pública',
+                value: 'publica'
+            });
+        }
+        
+        if (originalOptions.includes('conjunto')) {
+            specialOptions.push({
+                id: `${fieldName}-together`,
+                label: 'Em conjunto',
+                value: 'conjunto'
+            });
+        }
+        
+        if (originalOptions.includes('outro')) {
+            specialOptions.push({
+                id: `${fieldName}-other`,
+                label: 'Outro',
+                value: 'outro'
+            });
+        }
+        
+        return [...editorOptions, ...specialOptions];
+    };
 
     // Helper function to determine if user can modify a field
     const canEditField = (field: string | FieldStatus | undefined): boolean => {
@@ -257,6 +373,9 @@ export default function RegularEducationForm({
         const canApprove = canApproveField(fieldData);
         const canCancel = canCancelChange(fieldData);
         const displayValue = getDisplayValue(fieldData); // Extracted display value
+        
+        // In batch edit mode, we don't need to show individual edit buttons and statuses
+        const showBatchMode = isBatchEditMode && isEditMode;
 
         switch (field.type) {
             case 'text':
@@ -264,11 +383,11 @@ export default function RegularEducationForm({
                     <div key={field.id}>
                         <div className="flex items-center justify-between">
                             <Label htmlFor={field.id} className="block mb-2">
-                                {getFieldStatusBadge(fieldData)}
+                                {!showBatchMode && getFieldStatusBadge(fieldData)}
                                 {field.label.split('. ').slice(1).join('. ')}
                             </Label>
 
-                            {isEditMode && (
+                            {isEditMode && !showBatchMode && (
                                 <div className="flex space-x-2 mb-2">
                                     {canEdit && editingField !== fieldName && (
                                         <Button
@@ -408,9 +527,10 @@ export default function RegularEducationForm({
                                 type="text"
                                 defaultValue={displayValue}
                                 placeholder={field.placeholder}
-                                disabled={isEditMode && !canEdit} // Only disable if in edit mode AND user can't edit
-                                readOnly={isEditMode && !canEdit} // For better UI feedback
-                                {...(!isEditMode ? register(fieldName, { required: field.required }) : {})}
+                                disabled={isEditMode && !showBatchMode && !canEdit} // Disable only in edit mode (not batch) and can't edit
+                                readOnly={isEditMode && !showBatchMode && !canEdit} // For better UI feedback
+                                {...(showBatchMode ? register(fieldName, { required: field.required }) : {})} // Register in batch mode
+                                {...(!isEditMode ? register(fieldName, { required: field.required }) : {})} // Register in form mode
                             />
                         )}
 
@@ -433,10 +553,10 @@ export default function RegularEducationForm({
                         <div className="flex items-center justify-between">
                             <Label className="block mb-2">
                                 {field.label.split('. ').slice(1).join('. ')}
-                                {getFieldStatusBadge(fieldData)}
+                                {!showBatchMode && getFieldStatusBadge(fieldData)}
                             </Label>
 
-                            {isEditMode && (
+                            {isEditMode && !showBatchMode && (
                                 <div className="flex space-x-2">
                                     {canEdit && editingField !== fieldName && (
                                         <Button
@@ -550,7 +670,7 @@ export default function RegularEducationForm({
                                     value={editFieldValue}
                                     onValueChange={setEditFieldValue}
                                 >
-                                    {field.options.map((option: any) => (
+                                    {generateOptions(fieldName, field.options).map((option: any) => (
                                         <div className="flex items-center space-x-2 mb-1" key={option.id}>
                                             <RadioGroupItem
                                                 value={option.value}
@@ -579,15 +699,19 @@ export default function RegularEducationForm({
                         ) : (
                             <RadioGroup
                                 defaultValue={displayValue}
-                                disabled={isEditMode && !canEdit}
+                                disabled={isEditMode && !showBatchMode && !canEdit}
+                                {...(showBatchMode ? {
+                                    ...register(fieldName, { required: field.required }),
+                                    onChange: (e) => setValue(fieldName, e.target.value)
+                                } : {})}
                                 {...(!isEditMode ? register(fieldName, { required: field.required }) : {})}
                             >
-                                {field.options.map((option: any) => (
+                                {generateOptions(fieldName, field.options).map((option: any) => (
                                     <div className="flex items-center space-x-2 mb-1" key={option.id}>
                                         <RadioGroupItem
                                             value={option.value}
                                             id={option.id}
-                                            disabled={isEditMode && !canEdit}
+                                            disabled={isEditMode && !showBatchMode && !canEdit}
                                             {...(!isEditMode ? register(fieldName) : {})}
                                         />
                                         <Label htmlFor={option.id}>{option.label}</Label>
@@ -635,12 +759,61 @@ export default function RegularEducationForm({
         <TooltipProvider>
             <Card className="w-full max-w-4xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Educação Regular</CardTitle>
-                    <CardDescription>
-                        {isEditMode
-                            ? "Visualize e solicite alterações nas informações sobre a educação escolar da criança"
-                            : "Preencha as informações sobre a educação escolar da criança"}
-                    </CardDescription>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <CardTitle>Educação Regular</CardTitle>
+                            <CardDescription>
+                                {isEditMode
+                                    ? "Visualize e solicite alterações nas informações sobre a educação escolar da criança"
+                                    : "Preencha as informações sobre a educação escolar da criança"}
+                            </CardDescription>
+                        </div>
+                        
+                        {isEditMode && (
+                            <div className="flex space-x-3">
+                                {isBatchEditMode ? (
+                                    <>
+                                        <Button
+                                            type="submit"
+                                            form="education-form"
+                                            disabled={isSubmittingBatch}
+                                            className="bg-mainStrongGreen"
+                                        >
+                                            {isSubmittingBatch ? 'Salvando...' : 'Salvar Todas as Alterações'}
+                                        </Button>
+                                        
+                                        <Button
+                                            variant="outline"
+                                            onClick={toggleBatchEditMode}
+                                            className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                                        >
+                                            Cancelar Edição
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div>
+                                                <Button
+                                                    onClick={toggleBatchEditMode}
+                                                    variant="outline"
+                                                    className="border-mainStrongGreen text-mainStrongGreen hover:bg-mainStrongGreen/10"
+                                                    disabled={hasPendingApprovals()}
+                                                >
+                                                    Editar Todos os Campos
+                                                </Button>
+                                            </div>
+                                        </TooltipTrigger>
+                                        {hasPendingApprovals() && (
+                                            <TooltipContent>
+                                                <p>Resolva todas as alterações pendentes antes de editar novamente</p>
+                                            </TooltipContent>
+                                        )}
+                                    </Tooltip>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {isEditMode ? (
@@ -675,9 +848,9 @@ export default function RegularEducationForm({
                     <Button
                         variant="outline"
                         onClick={onCancel}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isSubmittingBatch}
                     >
-                        Cancelar
+                        Voltar
                     </Button>
 
                     {!isEditMode && (

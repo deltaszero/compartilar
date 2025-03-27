@@ -172,12 +172,66 @@ const educationService = {
   }
 };
 
+interface EditorInfo {
+  id: string;
+  displayName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  photoURL?: string | null;
+  email?: string | null;
+}
+
 export default function EducationPage({ params }: { params: Promise<{ username: string; id: string }> }) {
   const resolvedParams = use(params);
   const { plan, isLoading, error, refreshPlan } = usePlan();
   const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editors, setEditors] = useState<EditorInfo[]>([]);
+  const [isLoadingEditors, setIsLoadingEditors] = useState(false);
+  
+  // Fetch editors when plan loads
+  useEffect(() => {
+    const fetchEditors = async () => {
+      if (!plan || !plan.editors || plan.editors.length === 0) return;
+      
+      setIsLoadingEditors(true);
+      
+      try {
+        const editorsList: EditorInfo[] = [];
+        
+        // Fetch data for each editor
+        for (const editorId of plan.editors) {
+          try {
+            const response = await fetch(`/api/users/${editorId}`);
+            
+            if (response.ok) {
+              const userData = await response.json();
+              
+              editorsList.push({
+                id: editorId,
+                displayName: userData.displayName || userData.email || 'Usuário',
+                firstName: userData.firstName || null,
+                lastName: userData.lastName || null,
+                photoURL: userData.photoURL,
+                email: userData.email
+              });
+            }
+          } catch (error) {
+            console.error(`Error fetching editor ${editorId}:`, error);
+          }
+        }
+        
+        setEditors(editorsList);
+      } catch (error) {
+        console.error('Error fetching editors:', error);
+      } finally {
+        setIsLoadingEditors(false);
+      }
+    };
+    
+    fetchEditors();
+  }, [plan]);
 
   if (isLoading) {
     return (
@@ -297,6 +351,7 @@ export default function EducationPage({ params }: { params: Promise<{ username: 
         onCancelChange={handleCancelChange}
         currentUserId={user?.uid}
         isEditMode={true} // Set to true to enable the new field-by-field editing mode
+        editors={editors} // Pass the editors
       />
     </div>
   );
