@@ -136,6 +136,7 @@ export interface Section {
   title: string;
   route: string;
   completed: boolean;
+  imagePath?: string;
 }
 
 export const planSections: Section[] = [
@@ -143,60 +144,70 @@ export const planSections: Section[] = [
     id: 'education',
     title: 'Educação Regular',
     route: 'educacao',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_profile.webp'
   },
   {
     id: 'extracurricular',
     title: 'Atividades Extracurriculares', 
     route: 'atividades',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_rocket.webp'
   },
   {
     id: 'extras',
     title: 'Convites e Gastos Extras',
     route: 'convites',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_finance.webp'
   },
   {
     id: 'screens',
     title: 'Uso de Telas e Redes Sociais',
     route: 'telas',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_calendar.webp'
   },
   {
     id: 'religion', 
     title: 'Religião',
     route: 'religiao',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_heart.webp'
   },
   {
     id: 'travel',
     title: 'Viagens',
     route: 'viagens',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_geolocation.webp'
   },
   {
     id: 'health',
     title: 'Saúde',
     route: 'saude',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_heart_2.webp'
   },
   {
     id: 'support',
     title: 'Rede de Apoio Terceirizada',
     route: 'apoio',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_pieces.webp'
   },
   {
     id: 'coexistence',
     title: 'Convivência',
     route: 'convivencia',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_heart_3.webp'
   },
   {
     id: 'consequences',
     title: 'Consequências pelo Descumprimento',
     route: 'consequencias',
-    completed: false
+    completed: false,
+    imagePath: '/assets/images/horizontal-menu_rocket_2.webp'
   }
 ];

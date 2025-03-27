@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate, cn } from '@/lib/utils';
 import Image from 'next/image';
 import PlanChangeLog from '../components/PlanChangeLog';
+import PlanSectionImage from '../components/PlanSectionImage';
 
 export default function PlanPage({ params }: { params: Promise<{ username: string; id: string }> }) {
     const resolvedParams = use(params);
@@ -142,7 +143,8 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                     className="bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.15)] rounded-none"
                                 >
                                     <div className="p-4 border-b border-gray-100">
-                                        <div className="flex items-start">
+                                        <div className="flex items-start overflow-hidden">
+                                        
                                             <div className={cn(
                                                 "flex items-center justify-center w-8 h-8 rounded-full mr-3 flex-shrink-0",
                                                 isCompleted ? "bg-main" : "bg-gray-100 border border-gray-200"
@@ -153,14 +155,24 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                                     <CircleDashed className="h-5 w-5 text-blank" />
                                                 )}
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold font-raleway text-xl">
-                                                    {section.title}
-                                                </h3>
-                                                <p className="text-xs md:text-sm text-gray-500 mt-1 font-nunito">
-                                                    {isCompleted ? "Informações preenchidas" : "Pendente de preenchimento"}
-                                                </p>
+                                            <div className="flex-grow flex items-center min-w-0 mr-2">
+                                                <div className="w-full">
+                                                    <h3 className="font-bold font-raleway text-xl break-words">
+                                                        {section.title}
+                                                    </h3>
+                                                    <p className="text-xs md:text-sm text-gray-500 mt-1 font-nunito">
+                                                        {isCompleted ? "Informações preenchidas" : "Pendente de preenchimento"}
+                                                    </p>
+                                                </div>
                                             </div>
+
+                                            <PlanSectionImage 
+                                                    sectionId={section.id}
+                                                    alt={section.title}
+                                                    width={128}
+                                                    height={128}
+                                                    className="h-24 w-24 flex-shrink-0"
+                                                />
                                         </div>
                                     </div>
 
