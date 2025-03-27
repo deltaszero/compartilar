@@ -99,7 +99,7 @@ function PlanLayoutContent({
                         <span className="hidden xs:inline">Voltar</span>
                     </Button>
 
-                    <h1 className="text-xl sm:text-3xl font-bold truncate max-w-[150px] sm:max-w-xs font-raleway">
+                    <h1 className="text-2xl sm:text-3xl font-bold font-raleway">
                         {plan?.title || 'Plano Parental'}
                     </h1>
                 </div>

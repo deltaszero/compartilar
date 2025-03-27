@@ -27,20 +27,20 @@ export const regularEducationInitialValues: EducationSection = {
 export const educationFormFields = [
     {
         id: 'school',
-        label: '1.1. Em que escola o menor estuda:',
+        label: '1.1. Qual o nome da escola que a criança estuda?',
         type: 'text',
         name: 'school',
         required: true,
     },
     {
         id: 'tuition-responsible',
-        label: '1.2. Quem será o responsável financeiro pelo pagamento das mensalidades?',
+        label: '1.2. Em caso de escola particular, quem será responsável financeiro pelo pagamento das mensalidades?',
         type: 'radio',
         name: 'tuition_responsible',
         options: [
             { id: 'tuition-father', label: 'Pai', value: 'pai' },
             { id: 'tuition-mother', label: 'Mãe', value: 'mae' },
-            { id: 'tuition-public', label: 'Escola pública', value: 'publica' }
+            { id: 'tuition-public', label: 'Não se aplica', value: 'publica' }
         ],
         required: true,
     },
