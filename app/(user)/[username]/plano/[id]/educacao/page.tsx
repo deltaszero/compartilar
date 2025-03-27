@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth } from 'firebase/auth';
 import RegularEducationForm from '../../components/RegularEducationForm';
+import PlanSectionImage from '../../components/PlanSectionImage';
 
 // API service functions
 const educationService = {
@@ -271,9 +272,18 @@ export default function EducationPage({ params }: { params: Promise<{ username: 
 
   return (
     <div className="px-4 md:px-6">
-      <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-bold">Educação Regular</h1>
-        <p className="text-gray-500">Configure as informações sobre a educação escolar da criança</p>
+      <div className="mb-6 flex items-center gap-4">
+        <PlanSectionImage 
+          sectionId="education"
+          alt="Educação Regular"
+          width={80}
+          height={80}
+          className="h-16 w-16 flex-shrink-0 object-contain hidden sm:block"
+        />
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold">Educação Regular</h1>
+          <p className="text-gray-500">Configure as informações sobre a educação escolar da criança</p>
+        </div>
       </div>
       
       <RegularEducationForm

@@ -2,9 +2,9 @@ import React from 'react';
 import Image from 'next/image';
 
 // Import all images
-import educationImage from '@/app/assets/images/horizontal-menu_profile.webp';
-import extracurricularImage from '@/app/assets/images/horizontal-menu_rocket.webp';
-import extrasImage from '@/app/assets/images/horizontal-menu_finance.webp';
+import educationImage from '@/app/assets/images/plan_02.webp';
+import extracurricularImage from '@/app/assets/images/plan_03.webp';
+import extrasImage from '@/app/assets/images/plan_04.webp';
 import screensImage from '@/app/assets/images/horizontal-menu_calendar.webp';
 import religionImage from '@/app/assets/images/horizontal-menu_heart.webp';
 import travelImage from '@/app/assets/images/horizontal-menu_geolocation.webp';
