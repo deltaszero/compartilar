@@ -579,7 +579,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
         ];
 
         return (
-            <div key={friend.id} className="flex flex-row gap-4 items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-muted rounded-lg font-nunito">
+            <div key={friend.id} className="flex flex-row gap-4 py-2">
                 <Link
                     href={`/${friend.username}/perfil`}
                     className="flex items-center flex-1 space-x-2 sm:space-x-3 hover:text-accent-foreground transition-colors"
@@ -600,7 +600,7 @@ export const FriendList = ({ userId }: { userId: string }) => {
                     )}
                     <div className="flex flex-col flex-1">
                         <h3 className="text-lg font-semibold">
-                            {`${friend.firstName} ${friend.lastName}`.trim() || friend.displayName || friend.username}
+                            {`${friend.firstName}`.trim() || friend.displayName || friend.username}
                         </h3>
                         <span className="text-sm text-gray-400">
                             {friend.username ? `@${friend.username}` : ''}
@@ -630,22 +630,22 @@ export const FriendList = ({ userId }: { userId: string }) => {
                                 <Button
                                     variant="default"
                                     size="sm"
-                                    className="h-8 gap-1 hover:bg-accent"
+                                    className="h-8 gap-1 hover:bg-accent px-4 text-md font-semibold font-raleway"
                                     disabled={isUpdating}
                                 >
                                     {isUpdating ? (
-                                        <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin " />
                                     ) : (
                                         getRelationshipDisplay(friend.relationshipType, friend.gender)
                                     )}
-                                    <ChevronDown className="h-3 w-3" />
+                                    <ChevronDown/>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 {relationshipOptions.map(option => (
                                     <DropdownMenuItem
                                         key={option.value}
-                                        className="flex items-center gap-2 cursor-pointer"
+                                        className="flex items-center gap-2 cursor-pointer px-4 text-md font-semibold font-raleway"
                                         onClick={() => changeRelationship(friend.id, option.value as RelationshipType)}
                                         disabled={friend.relationshipType === option.value || isUpdating}
                                     >

@@ -211,7 +211,7 @@ export default function HomePage() {
                 </div>
 
                 <article className="flex flex-col sm:rounded-none z-[10]">
-                    <div className="flex flex-col gap-0 sm:gap-4 sm:flex-row">
+                    <div className="grid grid-cols-1 xl:grid-cols-3">
                         <div className="flex flex-col">
                             {/* KIDS SECTION */}
                             {/* <section className=" mx-auto p-4">
@@ -255,7 +255,7 @@ export default function HomePage() {
                             </section> */}
 
                             {/* MOBILE CALENDAR SECTION */}
-                            {/* <section>
+                            <section>
                                 {isMobile ? (
                                     <div className="flex flex-col mx-auto p-4">
                                         <div className="flex flex-col gap-2 pb-2">
@@ -279,7 +279,7 @@ export default function HomePage() {
                                 ) : (
                                     <div className="h-0" />
                                 )}
-                            </section> */}
+                            </section>
 
                             {/* SUPPORT NETWORK SECTION */}
                             <section className="w-full mx-auto p-4">
@@ -299,7 +299,7 @@ export default function HomePage() {
                                 ) : (
                                     <div>
                                         <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongYellow border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
-                                            <div className="flex flex-col gap-2 max-w-[66%]">
+                                            <div className="flex flex-col gap-2">
                                                 <h2 className="text-3xl font-black font-raleway">
                                                     Rede de Apoio
                                                 </h2>
@@ -329,28 +329,28 @@ export default function HomePage() {
                         </div>
 
                         {/* BROWSER CALENDAR SECTION */}
-                        {/* <section className=" w-2/3 mx-auto p-4">
+                        <section className="col-span-2 p-4">
                             {isMobile ? (
                                 <div className="h-0" />
                             ) : (
-                                <div>
-                                    <div className="flex items-center justify-between px-2 rounded-none relative mx-auto h-[8em] bg-mainStrongRed border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
+                                <>
+                                    <div className="flex items-center justify-between px-4 rounded-none relative mx-auto h-[8em] mb-4 bg-mainStrongRed border-2 border-border rounded-none p-4 bg-bg shadow-shadow">
                                         <div className="flex flex-col gap-2 ">
-                                            <h2 className="text-3xl font-black z-10 max-w-[66%]">
+                                            <h2 className="text-3xl font-black">
                                                 Calendário
                                             </h2>
-                                            <p className="text-xs">
+                                            <p className="text-xs font-nunito">
                                                 Consulte dias de convivência e agende eventos de forma
                                                 compartilhada.
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="hidden sm:block bg-base-100 rounded-xl py-4">
-                                        <Calendar initialMonth={new Date()} />
-                                    </div>
-                                </div>
+                                    
+                                    <Calendar initialMonth={new Date()} />
+                                    
+                                </>
                             )}
-                        </section> */}
+                        </section>
                     </div>
 
                     {/* Invitation Dialog */}

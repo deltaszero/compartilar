@@ -126,7 +126,7 @@ const NavItem = ({ href, currentPath, icon, children, subpages, isMobile = false
                     {icon}
                 </div>
                 <span className={cn(
-                    "text-md",
+                    "text-md font-raleway font-semibold",
                     isActive ? "font-bold" : ""
                 )}>
                     {children}
@@ -186,7 +186,7 @@ export default function Sidebar({ isBottomNavModal = false }: SidebarProps) {
             //     { path: `/${userData.username}/plano/formulario`, label: 'Formulário' },
             // ]
         },
-        // { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
+        { path: `/${userData.username}/calendario`, label: 'Calendário', icon: <IconCalendar width={28} height={28} /> },
         // { path: `/${userData.username}/financas`, label: 'Finanças', icon: <IconFinance width={28} height={28} /> },
         // // { path: `/${userData.username}/handshake`, label: 'Decisões', icon: <IconHandshake width={28} height={28} /> },
         // { path: `/${userData.username}/chat`, label: 'Conversas', icon: <IconChat width={28} height={28} /> },

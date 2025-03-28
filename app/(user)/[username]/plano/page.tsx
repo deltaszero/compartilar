@@ -119,7 +119,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
     return (
         <div>
             <UserProfileBar pathname='Plano de Parentalidade' />
-            <div className="flex flex-col p-4 sm:p-6 pb-[6em] sm:h-[80vh]">
+            <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
                 <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
                         Plano Parental
@@ -203,6 +203,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                         <Button
                                             variant="default"
                                             onClick={() => router.push(`/${resolvedParams.username}/plano/${plan.id}`)}
+                                            className='px-4 text-md font-semibold font-raleway'
                                         >
                                             <Eye className="mr-2 h-4 w-4" />
                                             Visualizar
@@ -213,7 +214,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                                 setPlanToDelete(plan);
                                                 setShowDeleteDialog(true);
                                             }}
-                                            className="bg-mainStrongRed"
+                                            className="bg-mainStrongRed px-4 text-md font-semibold font-raleway"
                                         >
                                             <Trash2 className="mr-2 h-4 w-4" />
                                             Excluir

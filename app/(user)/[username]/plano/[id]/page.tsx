@@ -139,7 +139,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                 <div className='bg-bw p-4 border-2 border-black shadow-brutalist'>
                     <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-grow">
-                            <h2 className="text-lg md:text-xl font-bold">
+                            <h2 className="text-lg md:text-xl font-bold font-raleway">
                                 Progresso Geral
                             </h2>
                             <span className="inline-flex items-center py-1 text-sm text-main font-nunito">
@@ -289,7 +289,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                         <Button
                                             onClick={() => router.push(`/${resolvedParams.username}/plano/${resolvedParams.id}/${section.route}`)}
                                             className={cn(
-                                                "w-full justify-center text-sm",
+                                                "w-full px-4 text-md font-semibold font-raleway",
                                                 isCompleted
                                                     ? ""
                                                     : "bg-bw text-blank hover:bg-main/90"

@@ -52,7 +52,7 @@ export default function PlanSidebar({
                     <Button
                         //variant={pathname === `/${username}/plano/${planId}` ? "default" : "ghost"}
                         //className={cn("w-full justify-start font-medium rounded-lg", pathname === `/${username}/plano/${planId}` ? "bg-main text-white hover:bg-main/90" : "hover:bg-gray-100")}
-                        className="w-full justify-start font-medium rounded-lg"
+                        className="w-full justify-start px-4 text-md font-semibold font-raleway"
                     >
                         <LayoutDashboard className="h-4 w-4 mr-2" />
                         Visão Geral
