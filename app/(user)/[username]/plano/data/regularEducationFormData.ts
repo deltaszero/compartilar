@@ -40,7 +40,8 @@ export const educationFormFields = [
         options: [
             { id: 'tuition-father', label: 'Pai', value: 'pai' },
             { id: 'tuition-mother', label: 'Mãe', value: 'mae' },
-            { id: 'tuition-public', label: 'Não se aplica', value: 'publica' }
+            { id: 'tuition-divided', label: 'Será dividido', value: 'dividido' },
+            { id: 'tuition-na', label: 'Não se aplica', value: 'na' },
         ],
         required: true,
     },

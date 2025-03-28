@@ -609,6 +609,14 @@ export default function RegularEducationForm({
             });
         }
 
+        if (originalOptions.includes('na')) {
+            specialOptions.push({
+                id: `${fieldName}-na`,
+                label: 'Não se aplica',
+                value: 'na'
+            });
+        }
+
         return [...editorOptions, ...specialOptions];
     };
 

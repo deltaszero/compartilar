@@ -156,7 +156,9 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                         <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4 flex-shrink-0">
                             <div className="flex items-center gap-2 mb-2">
                                 <Users className="h-4 w-4 text-gray-500" />
-                                <h3 className="text-sm font-medium">Editores do Plano</h3>
+                                <h3 className="text-md font-raleway font-semibold">
+                                    Editores do Plano
+                                </h3>
                             </div>
                             
                             <div className="mt-1 space-y-2 max-w-xs">
@@ -178,21 +180,25 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white text-xs">
+                                                        <div className="w-full h-full flex items-center justify-center bg-blank text-white text-xs font-black">
                                                             {editor.displayName.substring(0, 1).toUpperCase()}
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="text-xs">
-                                                    <div className="font-medium">
+                                                <div className="text-sm">
+                                                    <div className="font-raleway font-semibold">
                                                         {editor.displayName} 
                                                         {user && editor.id === user.uid && (
-                                                            <span className="ml-1 text-xs text-gray-500 italic">(você)</span>
+                                                            <span className="ml-1 text-xs text-gray-500 italic">
+                                                                (você)
+                                                            </span>
                                                         )}
                                                     </div>
-                                                    {editor.email && (
-                                                        <div className="text-gray-500 text-xs">{editor.email}</div>
-                                                    )}
+                                                    {/* {editor.email && (
+                                                        <div className="text-gray-500 text-xs">
+                                                            {editor.email}
+                                                        </div>
+                                                    )} */}
                                                 </div>
                                             </div>
                                         ))}
