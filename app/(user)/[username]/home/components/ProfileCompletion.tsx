@@ -118,7 +118,7 @@ export function ProfileCompletion({ userData }: ProfileCompletionProps) {
                     </div>
                 </div>
 
-                <Progress value={completionPercentage} className="h-5" />
+                <Progress value={completionPercentage} className="h-4" />
 
                 {missingFields.length > 0 && (
                     <div className="mt-2 flex justify-between items-center">

@@ -84,10 +84,10 @@ function PlanLayoutContent({
     const completedSections = Object.keys(plan?.sections || {});
 
     return (
-        <div className="flex flex-col min-h-screen bg-bg">
+        <div className="flex flex-col min-h-screen bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-main to-bg">
             <UserProfileBar pathname={plan?.title || 'Plano Parental'} />
 
-            <div className="p-3 flex items-center justify-between">
+            <div className="p-3 flex items-center justify-between mb-4">
                 <div className="flex items-center">
                     <Button
                         variant={null}
@@ -99,7 +99,7 @@ function PlanLayoutContent({
                         <span className="hidden xs:inline">Voltar</span>
                     </Button>
 
-                    <h1 className="text-xl sm:text-3xl font-bold truncate max-w-[150px] sm:max-w-xs font-raleway">
+                    <h1 className="text-2xl sm:text-3xl font-bold font-raleway">
                         {plan?.title || 'Plano Parental'}
                     </h1>
                 </div>
@@ -107,7 +107,7 @@ function PlanLayoutContent({
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Desktop Sidebar - Hidden on mobile */}
-                <div className="hidden lg:block w-[280px] border-r shrink-0">
+                <div className="hidden lg:block w-[280px] shrink-0">
                     <PlanSidebar
                         planId={planId}
                         username={username}

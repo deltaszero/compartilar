@@ -324,7 +324,12 @@ export const getParentalPlanChangeLog = async (planId: string, userId: string, l
   }
 };
 
-export const createParentalPlan = async (userId: string, childrenIds: string[], title: string): Promise<string> => {
+export const createParentalPlan = async (
+  userId: string, 
+  childrenIds: string[], 
+  title: string,
+  selectedEditors?: string[]
+): Promise<string> => {
   try {
     // Validate input
     if (!title.trim()) {
@@ -335,36 +340,50 @@ export const createParentalPlan = async (userId: string, childrenIds: string[], 
       throw new Error('At least one child must be linked to the plan');
     }
     
-    // Fetch all editors of children to include them as editors of the plan
-    const allEditors = new Set<string>([userId]); // Start with current user
+    let editorsArray: string[];
     
-    // For each child, get the editors
-    for (const childId of childrenIds) {
-      try {
-        const childRef = doc(db, 'children', childId);
-        const childSnap = await getDoc(childRef);
-        
-        if (childSnap.exists()) {
-          const childData = childSnap.data();
-          // Add all editors of the child to the set
-          if (childData.editors && Array.isArray(childData.editors)) {
-            childData.editors.forEach((editorId: string) => allEditors.add(editorId));
+    // If selectedEditors is provided, use it (ensuring the creator is included)
+    if (selectedEditors && selectedEditors.length > 0) {
+      // Create a Set to ensure uniqueness (in case userId is already included)
+      const editorsSet = new Set<string>(selectedEditors);
+      // Always include the creator (current user)
+      editorsSet.add(userId);
+      
+      editorsArray = Array.from(editorsSet);
+    } else {
+      // Use the old behavior of including all child editors if no selection was made
+      // Fetch all editors of children to include them as editors of the plan
+      const allEditors = new Set<string>([userId]); // Start with current user
+      
+      // For each child, get the editors
+      for (const childId of childrenIds) {
+        try {
+          const childRef = doc(db, 'children', childId);
+          const childSnap = await getDoc(childRef);
+          
+          if (childSnap.exists()) {
+            const childData = childSnap.data();
+            // Add all editors of the child to the set
+            if (childData.editors && Array.isArray(childData.editors)) {
+              childData.editors.forEach((editorId: string) => allEditors.add(editorId));
+            }
+            // Also include the child's creator if present
+            if (childData.created_by) {
+              allEditors.add(childData.created_by);
+            }
           }
-          // Also include the child's creator if present
-          if (childData.created_by) {
-            allEditors.add(childData.created_by);
-          }
+        } catch (childError) {
+          console.error(`Error fetching editors for child ${childId}:`, childError);
+          // Continue with other children, don't fail the whole operation
         }
-      } catch (childError) {
-        console.error(`Error fetching editors for child ${childId}:`, childError);
-        // Continue with other children, don't fail the whole operation
       }
+      
+      editorsArray = Array.from(allEditors);
     }
     
-    const editorsArray = Array.from(allEditors);
     console.log(`Including ${editorsArray.length} editors in new parental plan:`, editorsArray);
     
-    // Create a new plan with all collected editors
+    // Create a new plan with the selected editors
     const now = Date.now();
     const newPlan = {
       title,

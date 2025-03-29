@@ -22,10 +22,33 @@ export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR
 
 // Function to get events for a specific day
 export function getEventsForDay(date: Date, events: any[]) {
-  return events.filter(event => {
-    const startDate = event.startDate.toDate();
-    return isSameDay(date, startDate);
+  if (!events || events.length === 0) return [];
+  
+  const matchingEvents = events.filter(event => {
+    try {
+      // Handle both Firestore Timestamp and already converted Date objects
+      let eventDate;
+      
+      if (event.startDate && typeof event.startDate.toDate === 'function') {
+        // It's a Firestore Timestamp
+        eventDate = event.startDate.toDate();
+      } else if (event.startDate instanceof Date) {
+        // It's already a Date object
+        eventDate = event.startDate;
+      } else {
+        // Invalid date format
+        return false;
+      }
+      
+      // Compare the dates ignoring time
+      return isSameDay(date, eventDate);
+    } catch (error) {
+      // Silently skip events with invalid dates
+      return false;
+    }
   });
+  
+  return matchingEvents;
 }
 
 // Generate calendar days grid
@@ -44,24 +67,28 @@ export function generateCalendarDays(
   // Add days from previous month
   for (let i = 0; i < startDay; i++) {
     const date = subDays(firstDayOfMonth, startDay - i);
+    const dayEvents = getEventsForDay(date, events);
+    
     daysArray.push({
       date,
       isCurrentMonth: false,
       isToday: isSameDay(date, today),
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      events: getEventsForDay(date, events)
+      events: dayEvents
     });
   }
 
   // Add days of current month
   for (let i = 0; i < getDate(lastDayOfMonth); i++) {
     const date = addDays(firstDayOfMonth, i);
+    const dayEvents = getEventsForDay(date, events);
+    
     daysArray.push({
       date,
       isCurrentMonth: true,
       isToday: isSameDay(date, today),
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      events: getEventsForDay(date, events)
+      events: dayEvents
     });
   }
 
@@ -69,12 +96,14 @@ export function generateCalendarDays(
   const remainingDays = 42 - daysArray.length;
   for (let i = 0; i < remainingDays; i++) {
     const date = addDays(lastDayOfMonth, i + 1);
+    const dayEvents = getEventsForDay(date, events);
+    
     daysArray.push({
       date,
       isCurrentMonth: false,
       isToday: isSameDay(date, today),
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
-      events: getEventsForDay(date, events)
+      events: dayEvents
     });
   }
 
