@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { format, addHours } from "date-fns";
+import { format, addHours, isSameDay } from "date-fns";
 import { isEndAfterStart } from "./date-utils";
+import { usePremiumFeatures } from "@/hooks/usePremiumFeatures";
 
 export function EventForm({
     isOpen,
@@ -17,8 +18,10 @@ export function EventForm({
     selectedDate,
     childrenData = [],
     onSave,
-    userId
+    userId,
+    isSubmitting
 }: EventFormProps) {
+    const { isPremium, remainingFreeTierLimits } = usePremiumFeatures();
     const now = new Date();
     const oneHourLater = addHours(now, 1);
 
@@ -335,10 +338,10 @@ export function EventForm({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={saving}
+                            disabled={saving || isSubmitting}
                             className="border-2 border-black bg-black text-white shadow-brutalist-sm hover:translate-y-1 transition-transform"
                         >
-                            {saving ? "Salvando..." : event ? "Atualizar Evento" : "Criar Evento"}
+                            {saving || isSubmitting ? "Salvando..." : event ? "Atualizar Evento" : "Criar Evento"}
                         </Button>
                     </DialogFooter>
                 </form>

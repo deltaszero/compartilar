@@ -1,18 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Sparkles } from "lucide-react";
 import { DayEventsProps } from "./types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { usePremiumFeatures } from "@/hooks/usePremiumFeatures";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { SubscriptionButton } from "@/app/components/logged-area/ui/SubscriptionButton";
 
 export function DayEvents({
     selectedDate,
     events,
     onAddEvent,
     onEditEvent,
-    onDeleteEvent
+    onDeleteEvent,
+    isLoading
 }: DayEventsProps) {
+    const { isPremium, remainingFreeTierLimits } = usePremiumFeatures();
     const categoryColors = {
         school: 'bg-blue-500',
         medical: 'bg-red-500',
@@ -23,7 +28,7 @@ export function DayEvents({
 
     return (
         // <div className="h-full border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist">
-        <div className="h-full border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+        <div className="border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
             <div className="flex justify-between items-center mb-3 sm:mb-4">
                 <h3 className="font-bold text-base sm:text-lg line-clamp-2">
                     {selectedDate

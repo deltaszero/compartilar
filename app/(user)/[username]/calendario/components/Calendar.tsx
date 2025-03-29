@@ -19,8 +19,12 @@ import { DayEvents } from './DayEvents';
 import { EventForm } from './EventForm';
 import { CalendarFilters } from './CalendarFilters';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sparkles } from "lucide-react";
+import { SubscriptionButton } from "@/app/components/logged-area/ui/SubscriptionButton";
 import { CalendarProps, CalendarEventWithChild, EventFormData, UserPermission } from './types';
 import { useToast } from '@/hooks/use-toast';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import {
     fetchChildren,
     fetchCoParentingRelationships,
@@ -31,6 +35,7 @@ import {
 export default function Calendar({ initialMonth, view: initialView }: CalendarProps) {
     const { user, userData } = useUser();
     const { toast } = useToast();
+    const { isPremium, remainingFreeTierLimits } = usePremiumFeatures();
 
     // Calendar state
     const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
@@ -52,6 +57,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     // Event form state
     const [showEventForm, setShowEventForm] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithChild | undefined>(undefined);
+    const [showLimitDialog, setShowLimitDialog] = useState(false);
 
     // Load children and relationships with better error handling
     // Function to fetch children directly from API
@@ -330,15 +336,21 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
 
     // New function to delete events via API
     const handleDeleteEvent = useCallback(async (eventId: string) => {
-        if (!user || !selectedEvent?.childId) return;
+        if (!user) return;
 
         if (!confirm('Tem certeza que deseja excluir este evento?')) return;
 
         setIsSubmitting(true);
 
         try {
+            // Find the event with the given ID
+            const eventToDelete = events.find(event => event.id === eventId);
+            if (!eventToDelete || !eventToDelete.childId) {
+                throw new Error('Evento não encontrado');
+            }
+
             const token = await user.getIdToken(true);
-            const childId = selectedEvent.childId;
+            const childId = eventToDelete.childId;
 
             const response = await fetch(
                 `/api/children/${childId}/calendar/events/${eventId}`,
@@ -373,11 +385,49 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         } finally {
             setIsSubmitting(false);
         }
-    }, [user, selectedEvent, toast]);
+    }, [user, events, toast]);
 
     // New function to save events via API
     const handleSaveEvent = useCallback(async (formData: EventFormData) => {
         if (!user) return;
+
+        // Check daily limits for free users (only for new events, not edits)
+        if (!isPremium && !selectedEvent) {
+            try {
+                // Check user's daily event creation limit with the server
+                const token = await user.getIdToken(true);
+                const limitCheckResponse = await fetch(
+                    `/api/users/daily-limits?featureType=calendar_events`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'x-requested-with': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                if (!limitCheckResponse.ok) {
+                    const error = await limitCheckResponse.json();
+                    throw new Error(error.error || 'Failed to check daily limits');
+                }
+
+                const limitData = await limitCheckResponse.json();
+                
+                // If user has no remaining events for today, show premium dialog
+                if (limitData.remaining <= 0) {
+                    // Show the premium upgrade dialog instead of a toast
+                    setShowLimitDialog(true);
+                    
+                    // Don't proceed with event creation
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking daily limits:', error);
+                // Continue anyway if the limit check fails
+            }
+        }
 
         setIsSubmitting(true);
 
@@ -443,6 +493,31 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
             setEvents(allEvents);
             setShowEventForm(false);
 
+            // For free users creating new events, increment the counter on the server
+            if (!isPremium && !selectedEvent) {
+                try {
+                    // Call API to increment the usage counter
+                    const incrementResponse = await fetch('/api/users/daily-limits', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'x-requested-with': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            featureType: 'calendar_events'
+                        })
+                    });
+
+                    if (!incrementResponse.ok) {
+                        console.warn('Failed to increment daily limit counter, but event was created');
+                    }
+                } catch (error) {
+                    console.error('Error incrementing daily limit counter:', error);
+                    // This doesn't affect the main flow, so we just log the error
+                }
+            }
+
             toast({
                 title: selectedEvent ? "Evento atualizado" : "Evento criado",
                 description: selectedEvent
@@ -459,7 +534,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         } finally {
             setIsSubmitting(false);
         }
-    }, [user, selectedEvent, dateRange, children, selectedChildren, toast, fetchEventsFromAPI]);
+    }, [user, userData, selectedEvent, dateRange, children, selectedChildren, toast, fetchEventsFromAPI, isPremium, remainingFreeTierLimits.max_calendar_events]);
 
     if (!userData) {
         return (
@@ -535,7 +610,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     return (
         <div className="flex flex-col gap-4">
             <div className='grid grid-cols-1 md:grid-cols-3 gap-0 space-y-4 sm:gap-4 sm:space-y-0'>
-                <div className='col-span-2 flex flex-col gap-4'>
+                <div className='flex flex-col gap-4'>
                     <CalendarHeader
                         currentMonth={currentMonth}
                         onPrevMonth={handlePrevMonth}
@@ -553,15 +628,6 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         onCategoryFilterChange={handleCategoryFilterChange}
                     />
 
-                    <CalendarGrid
-                        days={calendarDays}
-                        onSelectDate={handleSelectDate}
-                        onDoubleClick={handleAddEvent}
-                        isLoading={loading}
-                    />
-                </div>
-
-                <div>
                     <DayEvents
                         selectedDate={selectedDate}
                         events={selectedDayEvents}
@@ -570,19 +636,47 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         onDeleteEvent={handleDeleteEvent}
                         isLoading={loading}
                     />
+
+                    <EventForm
+                        isOpen={showEventForm}
+                        onClose={() => setShowEventForm(false)}
+                        event={selectedEvent}
+                        selectedDate={selectedDate || undefined}
+                        childrenData={children}
+                        onSave={handleSaveEvent}
+                        userId={userData.uid}
+                        isSubmitting={isSubmitting}
+                    />
                 </div>
 
-                <EventForm
-                    isOpen={showEventForm}
-                    onClose={() => setShowEventForm(false)}
-                    event={selectedEvent}
-                    selectedDate={selectedDate || undefined}
-                    childrenData={children}
-                    onSave={handleSaveEvent}
-                    userId={userData.uid}
-                    isSubmitting={isSubmitting}
-                />
+                <div className='col-span-2 flex flex-col gap-4'>
+                    <CalendarGrid
+                        days={calendarDays}
+                        onSelectDate={handleSelectDate}
+                        onDoubleClick={handleAddEvent}
+                        isLoading={loading}
+                    />
+                </div>
             </div>
+
+            {/* Premium Limit Dialog */}
+            <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center">
+                            <Sparkles className="w-5 h-5 mr-2 text-yellow-400" />
+                            Recurso Premium
+                        </DialogTitle>
+                        <DialogDescription>
+                            Limite gratuito: {remainingFreeTierLimits.max_calendar_events} eventos por dia no calendário. 
+                            Faça upgrade para o plano Premium para adicionar eventos ilimitados.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-6 flex flex-col space-y-3">
+                        <SubscriptionButton />
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

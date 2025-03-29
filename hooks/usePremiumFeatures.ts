@@ -22,12 +22,12 @@ export type PremiumFeature =
     | 'priority_support';
 
 // Define limits for free tier
-const FREE_TIER_LIMITS = {
+export const FREE_TIER_LIMITS = {
     max_children: 1,
-    max_calendar_events: 10,
-    max_financial_entries: 15,
+    max_calendar_events: 3,  // Changed to match the pricing page (3 daily calendar events)
+    max_financial_entries: 3, // Changed to match the pricing page (3 daily expenses)
     reports_enabled: false,
-    location_history_days: 7
+    location_history_days: 30 // Changed to match the pricing page (30 days of check-in history)
 };
 
 // The complete hook for premium feature access control
