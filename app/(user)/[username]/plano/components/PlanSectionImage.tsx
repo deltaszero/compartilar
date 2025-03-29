@@ -1,6 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
+import { planSections } from '../types';
 
+// Fallback images for each section in case their imagePath doesn't work
 // Import all images
 import educationImage from '@/app/assets/images/plan_02.webp';
 import extracurricularImage from '@/app/assets/images/plan_03.webp';
@@ -14,7 +16,7 @@ import coexistenceImage from '@/app/assets/images/plan_10.webp';
 import consequencesImage from '@/app/assets/images/plan_11.webp';
 import defaultImage from '@/app/assets/images/horizontal-menu_tasklist.webp';
 
-// Map section IDs to imported images
+// Map section IDs to imported images as fallbacks
 const imageMap: Record<string, any> = {
     education: educationImage,
     extracurricular: extracurricularImage,
@@ -43,12 +45,23 @@ export default function PlanSectionImage({
     height = 40,
     className = ""
 }: PlanSectionImageProps) {
-    // Get the image for this section or use default if not found
-    const imageSource = imageMap[sectionId] || defaultImage;
+    // Try to find the section in planSections array to get the imagePath
+    const section = planSections.find(section => section.id === sectionId);
+    
+    // Use imagePath from section if available, fallback to imageMap, and finally defaultImage
+    let src;
+    
+    if (section?.imagePath) {
+        // Use the path from planSections
+        src = section.imagePath;
+    } else {
+        // Fallback to the imported image or default
+        src = imageMap[sectionId] || defaultImage;
+    }
 
     return (
         <Image
-            src={imageSource}
+            src={src}
             alt={alt}
             width={width}
             height={height}

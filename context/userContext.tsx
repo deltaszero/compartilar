@@ -253,18 +253,33 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                                                 setKidsData(kids);
                                                             },
                                                             error: (error) => {
-                                                                console.error('Children data error:', error);
+                                                                // Silently handle permission errors
+                                                                if (error.code === 'permission-denied') {
+                                                                  console.log('Children data permission denied - expected for some security rules');
+                                                                } else {
+                                                                  console.error('Children data error:', error);
+                                                                }
                                                             }
                                                         }
                                                     );
                                                 }
                                             );
                                         } catch (error) {
-                                            console.error('Error setting up children listener:', error);
+                                            // Silently handle permission errors
+                                            if (error.code === 'permission-denied') {
+                                              console.log('Error setting up children listener - permission denied');
+                                            } else {
+                                              console.error('Error setting up children listener:', error);
+                                            }
                                         }
                                     },
                                     error: (error) => {
-                                        console.error('User data error:', error);
+                                        // Silently handle permission errors
+                                        if (error.code === 'permission-denied') {
+                                          console.log('User data permission denied - expected for some security rules');
+                                        } else {
+                                          console.error('User data error:', error);
+                                        }
                                         setLoading(false);
                                     }
                                 }

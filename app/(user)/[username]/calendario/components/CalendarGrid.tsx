@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getDate } from "date-fns";
 
+
 export function CalendarGrid({ days, onSelectDate, onDoubleClick }: CalendarGridProps) {
     const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -42,21 +43,21 @@ export function CalendarGrid({ days, onSelectDate, onDoubleClick }: CalendarGrid
                             </div>
 
                             <div className="space-y-1 mt-1">
-                                {day.events.slice(0, 2).map((event, i) => (
-                                    <div
-                                        key={`${event.id}-${i}`}
-                                        className={cn(
-                                            "text-[9px] sm:text-xs truncate border-l-4 px-1 py-0.5",
-                                            event.category === 'school' && "border-blue-500",
-                                            event.category === 'medical' && "border-red-500",
-                                            event.category === 'activity' && "border-green-500",
-                                            event.category === 'visitation' && "border-purple-500",
-                                            event.category === 'other' && "border-gray-500"
-                                        )}
-                                    >
-                                        {event.title}
-                                    </div>
-                                ))}
+                                {day.events && day.events.slice(0, 2).map((event, i) => (
+                                        <div
+                                            key={`${event.id || 'unknown'}-${i}`}
+                                            className={cn(
+                                                "text-[9px] sm:text-xs truncate border-l-4 px-1 py-0.5",
+                                                event.category === 'school' && "border-blue-500",
+                                                event.category === 'medical' && "border-red-500",
+                                                event.category === 'activity' && "border-green-500",
+                                                event.category === 'visitation' && "border-purple-500",
+                                                event.category === 'other' && "border-gray-500"
+                                            )}
+                                        >
+                                            {event.title || 'Untitled Event'}
+                                        </div>
+                                    ))}
 
                                 {day.events.length > 2 && (
                                     <Badge

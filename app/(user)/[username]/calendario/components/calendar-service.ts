@@ -1,216 +1,77 @@
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '@/app/lib/firebaseConfig';
-import { CalendarEvent } from '@/types/shared.types';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, deleteDoc, orderBy, writeBatch, Timestamp, WhereFilterOp } from 'firebase/firestore';
+import { db } from '@/lib/firebaseConfig';
 import { Child } from '@/types/user.types';
-import { CalendarEventWithChild, EventFormData } from './types';
-// import { isSameDay } from 'date-fns';
-import { generateCalendarDays as generateDays } from './date-utils';// import { getEventsForDay, generateCalendarDays as generateDays } from './date-utils';
+import { getEventsForDay, generateCalendarDays } from './date-utils';
+import { CalendarEventWithChild } from './types';
 
-// Fetch child information
+export { generateCalendarDays };
+
+/**
+ * Fetch children accessible to a user
+ */
 export async function fetchChildren(userId: string): Promise<Child[]> {
   try {
-    const childrenQuery = query(
+    // Get children where the user is an editor
+    const editorQuery = query(
       collection(db, 'children'),
-      where('parentId', '==', userId)
+      where('editors', 'array-contains', userId)
     );
-
-    const snapshot = await getDocs(childrenQuery);
-    const childrenData: Child[] = [];
-
-    snapshot.forEach(doc => {
-      childrenData.push({
-        ...(doc.data() as Child),
-        id: doc.id
-      });
+    
+    const editorSnapshot = await getDocs(editorQuery);
+    const editorChildren = editorSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Child));
+    
+    // Get children where the user is a viewer
+    const viewerQuery = query(
+      collection(db, 'children'),
+      where('viewers', 'array-contains', userId)
+    );
+    
+    const viewerSnapshot = await getDocs(viewerQuery);
+    const viewerChildren = viewerSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Child));
+    
+    // Combine and deduplicate children
+    const allChildren = [...editorChildren];
+    viewerChildren.forEach(child => {
+      if (!allChildren.some(c => c.id === child.id)) {
+        allChildren.push(child);
+      }
     });
-
-    return childrenData;
+    
+    return allChildren;
   } catch (error) {
     console.error('Error fetching children:', error);
     throw error;
   }
 }
 
-// Fetch co-parenting relationships
+/**
+ * Fetch co-parenting relationships
+ */
 export async function fetchCoParentingRelationships(userId: string): Promise<string[]> {
   try {
-    // Find relationships where user is parent1
-    const parent1Query = query(
-      collection(db, 'co_parenting_relationships'),
-      where('parent1Id', '==', userId)
-    );
-
-    // Find relationships where user is parent2
-    const parent2Query = query(
-      collection(db, 'co_parenting_relationships'),
-      where('parent2Id', '==', userId)
-    );
-
-    const [parent1Snapshot, parent2Snapshot] = await Promise.all([
-      getDocs(parent1Query),
-      getDocs(parent2Query)
-    ]);
-
-    const relationshipIds: string[] = [];
-
-    parent1Snapshot.forEach(doc => {
-      relationshipIds.push(doc.id);
-    });
-
-    parent2Snapshot.forEach(doc => {
-      relationshipIds.push(doc.id);
-    });
-
-    return relationshipIds;
+    // This is a placeholder. In a real app, you would fetch this from Firestore
+    return [];
   } catch (error) {
     console.error('Error fetching co-parenting relationships:', error);
     throw error;
   }
 }
 
-// Fetch calendar events for a date range
-export async function fetchEvents(
-  userId: string,
-  startDate: Date,
-  endDate: Date,
-  children: Child[]
-): Promise<CalendarEventWithChild[]> {
+/**
+ * Fetch event history for a specific event
+ */
+export async function fetchEventHistory(eventId: string): Promise<any[]> {
   try {
-    const eventsMap = new Map<string, CalendarEventWithChild>();
-    const eventsRef = collection(db, 'calendar_events');
-
-    // Get events created by this user
-    const createdByQuery = query(
-      eventsRef,
-      where('createdBy', '==', userId)
-    );
-
-    const createdBySnapshot = await getDocs(createdByQuery);
-
-    createdBySnapshot.forEach(doc => {
-      const eventData = doc.data() as CalendarEvent;
-      const eventStartTime = eventData.startDate.toDate();
-
-      // Filter by date range
-      if (eventStartTime >= startDate && eventStartTime <= endDate) {
-        if (!eventsMap.has(doc.id)) {
-          const childInfo = children.find(child => child.id === eventData.childId);
-
-          eventsMap.set(doc.id, {
-            ...eventData,
-            id: doc.id,
-            childName: childInfo ? `${childInfo.firstName} ${childInfo.lastName}` : undefined,
-            childPhotoURL: childInfo?.photoURL
-          });
-        }
-      }
-    });
-
-    // Get events where user is responsible parent
-    const responsibleQuery = query(
-      eventsRef,
-      where('responsibleParentId', '==', userId)
-    );
-
-    const responsibleSnapshot = await getDocs(responsibleQuery);
-
-    responsibleSnapshot.forEach(doc => {
-      const eventData = doc.data() as CalendarEvent;
-      const eventStartTime = eventData.startDate.toDate();
-
-      // Filter by date range
-      if (eventStartTime >= startDate && eventStartTime <= endDate) {
-        if (!eventsMap.has(doc.id)) {
-          const childInfo = children.find(child => child.id === eventData.childId);
-
-          eventsMap.set(doc.id, {
-            ...eventData,
-            id: doc.id,
-            childName: childInfo ? `${childInfo.firstName} ${childInfo.lastName}` : undefined,
-            childPhotoURL: childInfo?.photoURL
-          });
-        }
-      }
-    });
-
-    // Convert map to array
-    return Array.from(eventsMap.values());
+    // This is a placeholder. In a real app, you would fetch this from Firestore
+    return [];
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error('Error fetching event history:', error);
     throw error;
   }
 }
-
-// Create or update an event
-export async function saveEvent(
-  formData: EventFormData,
-  existingEventId?: string,
-  userId?: string
-): Promise<void> {
-  try {
-    // Convert form data to calendar event format
-    const startTimestamp = Timestamp.fromDate(
-      new Date(`${formData.startDate}T${formData.startTime}:00`)
-    );
-
-    const endTimestamp = Timestamp.fromDate(
-      new Date(`${formData.endDate}T${formData.endTime}:00`)
-    );
-
-    const eventData: Partial<CalendarEvent> = {
-      title: formData.title,
-      description: formData.description,
-      startDate: startTimestamp,
-      endDate: endTimestamp,
-      category: formData.category,
-      childId: formData.childId || undefined,
-      location: { address: formData.location },
-      responsibleParentId: formData.responsibleParentId,
-      checkInRequired: formData.checkInRequired,
-      updatedAt: Timestamp.now()
-    };
-
-    if (existingEventId) {
-      // Update existing event
-      const eventRef = doc(db, 'calendar_events', existingEventId);
-      await updateDoc(eventRef, eventData);
-    } else {
-      // Create new event
-      await addDoc(collection(db, 'calendar_events'), {
-        ...eventData,
-        createdBy: userId,
-        createdAt: Timestamp.now(),
-        coParentingId: '', // Default empty value or get from form if needed
-      });
-    }
-  } catch (error) {
-    console.error('Error saving event:', error);
-    throw error;
-  }
-}
-
-// Delete an event
-export async function deleteEvent(eventId: string): Promise<void> {
-  try {
-    await deleteDoc(doc(db, 'calendar_events', eventId));
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    throw error;
-  }
-}
-
-// Re-export getEventsForDay from date-utils
-export { getEventsForDay } from './date-utils';
-
-// Re-export generateCalendarDays from date-utils
-export const generateCalendarDays = generateDays;

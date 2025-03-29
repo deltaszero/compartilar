@@ -79,9 +79,15 @@ export function DayEvents({
 
                                     <div className="flex flex-wrap items-center gap-1 mt-1">
                                         <Badge variant="default" className="bg-white border-black text-[10px] sm:text-xs">
-                                            {format(event.startDate.toDate(), 'HH:mm')}
+                                            {event.startDate && typeof event.startDate.toDate === 'function' 
+                                                ? format(event.startDate.toDate(), 'HH:mm')
+                                                : '00:00'}
                                             {' - '}
-                                            {event.endDate ? format(event.endDate.toDate(), 'HH:mm') : format(event.startDate.toDate(), 'HH:mm')}
+                                            {event.endDate && typeof event.endDate.toDate === 'function' 
+                                                ? format(event.endDate.toDate(), 'HH:mm') 
+                                                : (event.startDate && typeof event.startDate.toDate === 'function'
+                                                    ? format(event.startDate.toDate(), 'HH:mm')
+                                                    : '00:00')}
                                         </Badge>
 
                                         {event.location?.address && (

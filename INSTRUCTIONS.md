@@ -1,63 +1,77 @@
-Refactor the entire /home/dusoudeth/Documentos/github/compartilar/app/(user)/[username]/plano to match with the following requirements:
+Refactor the backend for a shared calendar system with the following requirements:
 
 Data Structure:
-- Each parental plan document should have:
-  - A title field
-  - An array of linked children IDs (minimum one)
-  - An array of editor IDs (minimum one)
-  - Ten topic sections (education, custody, etc.)
-  - A log subcollection for tracking changes
-  - A timestamp for creation and last update
+- Each calendar event should contain:
+  - Title
+  - Description
+  - Start date/time
+  - End date/time
+  - Location (optional)
+  - Event type/category
+  - Creator ID
+  - Last modified by ID
+  - Timestamps for creation and updates
+  - Associated child/children IDs
+  - Recurrence rules (if applicable)
+  - Reminder settings (if applicable)
 
-Topic Structure:
-- Each topic should be a form with multiple questions
-- Each question should store:
-  - Current value
-  - Previous value (for rollback)
-  - Status (approved, pending, disagreed)
-  - Timestamp of last change
-  - ID of user who made last change
-  - ID of user who approved/rejected (if applicable)
+Permission Model:
+- The calendar is shared among all editors of a child
+- Each child has two types of users:
+  - Editors: Full CRUD permissions on calendar events
+  - Viewers: Read-only access to calendar events
+- Permission inheritance:
+  - If a user is an editor for any child, they have edit rights for that child's events
+  - If a user is only a viewer for a child, they can only view that child's events
 
-Change Request Flow:
-1. When an editor modifies a question:
-   - Lock the question
-   - Set status to "pending"
-   - Store current value as previous value
-   - Create a change request notification for other editors
-   - Log the change request in the plan's log subcollection
+Backend Requirements:
+1. Event Creation:
+   - Validate the creator is an editor for the associated child/children
+   - Create the event with proper metadata
+   - Make the event visible to all editors and viewers of the associated children
 
-2. For canceling a change request:
-   - Allow only the editor who made the change to cancel
-   - Roll back to previous value in database
-   - Unlock the question
-   - Remove the pending notification
-   - Log the cancellation
+2. Event Updates:
+   - Verify the user has editor permissions before allowing changes
+   - Update the "last modified by" field and timestamp
+   - Log the changes in an audit trail
 
-3. For approving a change request:
-   - Update the value in the database
-   - Add an acceptance badge with timestamp
-   - Unlock the question
-   - Set status to "approved"
-   - Log the approval
+3. Event Deletion:
+   - Restrict deletion to editors only
+   - Implement soft deletion to maintain history
+   - Update visibility for all affected users
 
-4. For rejecting a change request:
-   - Roll back to previous value
-   - Add a disagreement badge with timestamp
-   - Unlock the question
-   - Set status to "disagreed"
-   - Log the rejection
+4. Event Retrieval:
+   - Filter events based on user permissions
+   - For editors: Return events with edit controls enabled
+   - For viewers: Return events with edit controls disabled
+   - Support filtering by date range, child, and event type
 
-UI Requirements:
-- Display parental plan cards in each editor's dashboard
-- Show badges for pending, approved, and disagreed questions
-- Include timestamps for all changes
-- Provide a log view showing the history of changes
-- Add controls for approving, rejecting, or canceling changes
+5. Calendar Views:
+   - Support day, week, month, and agenda views
+   - Aggregate events across all children the user has access to
+   - Clearly indicate which child each event is associated with
 
-Notifications:
-- Send notifications to other editors when changes are requested
-- Alert the requesting editor when their change is approved or rejected
-- Provide a summary of pending requests on the dashboard
+6. Synchronization:
+   - Implement real-time updates when events change
+   - Handle concurrent edit conflicts with appropriate locking or merge strategy
+   - Ensure consistent state across all users viewing the calendar
 
-Please implement this with appropriate database schema, API endpoints, and front-end components.
+7. Notifications:
+   - Notify relevant editors when events are created, updated, or deleted
+   - Send reminders based on event settings
+   - Allow users to customize notification preferences
+
+Performance Considerations:
+- Implement efficient queries for calendar views
+- Cache frequently accessed calendar data
+- Optimize for mobile bandwidth when synchronizing
+
+API Endpoints to Implement:
+- GET /calendar/events - List events with filtering options
+- GET /calendar/events/:id - Get specific event details
+- POST /calendar/events - Create a new event
+- PUT /calendar/events/:id - Update an existing event
+- DELETE /calendar/events/:id - Delete/archive an event
+- GET /calendar/permissions/:childId - Get user permissions for a specific child's calendar
+
+Please ensure all endpoints validate user permissions and handle errors appropriately.
