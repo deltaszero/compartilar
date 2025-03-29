@@ -76,18 +76,20 @@ export function CalendarFilters({
     };
     
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-            <h2 className="text-xl font-bold">Calendário Compartilhado</h2>
-            
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+            <h2 className="font-bold font-raleway">
+                Filtros
+            </h2>
+
             <div className="flex space-x-3">
                 {/* Child Filter Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="gap-2">
+                        <Button variant="default" className="gap-2 px-4 text-md font-semibold font-raleway">
                             <Filter className="h-4 w-4" />
                             Crianças
                             {selectedChildren.length > 0 && (
-                                <span className="ml-1 rounded-full bg-main w-5 h-5 text-white text-xs flex items-center justify-center">
+                                <span className="ml-1 rounded-full bg-blank w-5 h-5 text-white text-xs flex items-center justify-center font-raleway">
                                     {selectedChildren.length}
                                 </span>
                             )}
@@ -137,11 +139,11 @@ export function CalendarFilters({
                 {/* Category Filter Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="gap-2">
+                        <Button variant="default" className="gap-2 px-4 text-md font-semibold font-raleway">
                             <Filter className="h-4 w-4" />
                             Categorias
                             {selectedCategories.length > 0 && (
-                                <span className="ml-1 rounded-full bg-main w-5 h-5 text-white text-xs flex items-center justify-center">
+                                <span className="ml-1 rounded-full bg-blank w-5 h-5 text-white text-xs flex items-center justify-center font-raleway">
                                     {selectedCategories.length}
                                 </span>
                             )}

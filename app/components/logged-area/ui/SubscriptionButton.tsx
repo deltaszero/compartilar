@@ -66,7 +66,7 @@ export const SubscriptionButton = ({ productId }: SubscriptionButtonProps) => {
     <Button 
       onClick={handleSubscription}
       disabled={isLoading}
-      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium"
+      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-4 text-md font-semibold font-raleway"
       size="sm"
     >
       {isLoading ? 'Processando...' : 'Assinar Premium'}

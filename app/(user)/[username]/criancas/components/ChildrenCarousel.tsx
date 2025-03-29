@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Sparkles } from 'lucide-react';
 import { SubscriptionButton } from '@/app/components/logged-area/ui/SubscriptionButton';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 
 interface ChildrenCarouselProps {
     children: KidInfo[];
@@ -28,6 +29,7 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
     const { username } = useParams<{ username: string }>();
     const [api, setApi] = useState<any>(null);
     const [current, setCurrent] = useState(0);
+    const { isPremium } = usePremiumFeatures();
 
     useEffect(() => {
         if (!api) return;
@@ -137,28 +139,48 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
             {/* Add Child Button - shown above carousel when user has children and it's their own profile */}
             {isOwnChildren && visibleChildren.length > 0 && (
                 <div className="flex justify-end mb-2">
-                    <Dialog>
-                        <DialogTrigger asChild>
+                    {isPremium ? (
+                        // Premium users get direct link to add more children
+                        <Link href={`/${username}/criancas/novo`}>
                             <Button variant="default" size="sm" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Adicionar Criança
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                                <DialogTitle className="flex items-center">
-                                    <Sparkles className="w-5 h-5 mr-2 text-yellow-400" />
-                                    Recurso Premium
-                                </DialogTitle>
-                                <DialogDescription>
-                                    Limite gratuito: 1 criança. Faça upgrade para adicionar mais crianças ao seu perfil.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="mt-6 flex flex-col space-y-3">
-                                <SubscriptionButton />
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                        </Link>
+                    ) : (
+                        // Free users see premium upgrade dialog
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="default" size="sm" className='bg-mainStrongGreen px-4 text-md font-semibold font-raleway'>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Adicionar Criança
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md p-6">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center">
+                                        <Sparkles className="w-8 h-8 mr-2 text-main" />
+                                        <p className='text-2xl font-bold font-raleway py-2'>
+                                            Recurso Premium
+                                        </p>
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        <div className='flex flex-col gap-2 text-lg font-nunito'>
+                                            <p>
+                                                Usuários grátis podem adicionar apenas 1 criança ao perfil.
+                                            </p>
+                                            <p>
+                                                Faça upgrade para adicionar mais crianças e desbloquear recursos adicionais.
+                                            </p>
+                                        </div>
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="mt-6 flex flex-col space-y-3">
+                                    <SubscriptionButton />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             )}
 
