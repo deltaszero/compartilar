@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -12,7 +12,7 @@ import Image from "next/image";
 import { isSameDay } from "date-fns";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { fetchEvents, fetchChildren } from "../../calendario/components/calendar-service";
+import { fetchChildren } from "../../calendario/components/calendar-service";
 import { CalendarEventWithChild } from "../../calendario/components/types";
 
 interface CurrentWeekProps {
@@ -25,34 +25,125 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
     const [events, setEvents] = useState<CalendarEventWithChild[]>([]);
     const [loading, setLoading] = useState(true);
     const [children, setChildren] = useState<any[]>([]);
-    const { userData } = useUser();
+    const { user, userData } = useUser();
     const params = useParams();
     const username = params.username as string;
 
+    // Function to fetch children from API
+    const fetchChildrenAPI = useCallback(async () => {
+        if (!user || !userData) return [];
+        
+        try {
+            const token = await user.getIdToken(true);
+            const userId = userData.uid;
+            
+            // Use the profile/children endpoint with required parameters
+            const response = await fetch(`/api/profile/children?userId=${userId}&currentUserId=${userId}&relationshipStatus=none`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-requested-with': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to fetch children');
+            }
+            
+            return response.json();
+        } catch (error) {
+            console.error('Error fetching children from API:', error);
+            return [];
+        }
+    }, [user, userData]);
+
+    // Function to fetch events from API
+    const fetchEventsAPI = useCallback(async (childId: string, startDate: Date, endDate: Date) => {
+        if (!user) return [];
+        
+        try {
+            const token = await user.getIdToken(true);
+            
+            const formattedStartDate = startDate.toISOString().split('T')[0];
+            const formattedEndDate = endDate.toISOString().split('T')[0];
+            
+            const response = await fetch(
+                `/api/children/${childId}/calendar?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'x-requested-with': 'XMLHttpRequest'
+                    }
+                }
+            );
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to fetch events');
+            }
+            
+            const result = await response.json();
+            return result.events || [];
+        } catch (error) {
+            console.error('Error fetching events from API:', error);
+            return [];
+        }
+    }, [user]);
+
     // Load children and events
     useEffect(() => {
-        if (!userData) return;
+        if (!user || !userData) return;
 
         const loadEvents = async () => {
             setLoading(true);
             try {
-                // Fetch children first
-                const childrenData = await fetchChildren(userData.uid);
-                setChildren(childrenData);
+                // Fetch children first via API
+                const childrenData = await fetchChildrenAPI();
+                
+                // If that fails, fall back to the existing function
+                let finalChildrenData = childrenData;
+                if (childrenData.length === 0) {
+                    finalChildrenData = await fetchChildren(userData.uid);
+                }
+                
+                setChildren(finalChildrenData);
 
                 // Calculate date range for the entire week with buffer
                 const weekStart = selectedDate.startOf('week').subtract(1, 'day').toDate();
                 const weekEnd = selectedDate.endOf('week').add(1, 'day').toDate();
 
-                // Fetch events for the week
-                const eventsData = await fetchEvents(
-                    userData.uid,
-                    weekStart,
-                    weekEnd,
-                    childrenData
-                );
+                // Fetch events for each child in parallel using the API
+                let allEvents: CalendarEventWithChild[] = [];
+                
+                if (finalChildrenData.length > 0) {
+                    const eventPromises = finalChildrenData.map((child: { id: string }) => 
+                        fetchEventsAPI(child.id, weekStart, weekEnd)
+                    );
+                    
+                    const eventsArrays = await Promise.all(eventPromises);
+                    
+                    // Flatten and enrich with child data
+                    allEvents = eventsArrays.flat().map(event => {
+                        const child = finalChildrenData.find((c: { id: string }) => c.id === event.childId);
+                        return {
+                            ...event,
+                            childName: child?.name || 'Unknown',
+                            childPhotoURL: child?.photoURL,
+                            // Convert string dates back to Date objects
+                            startDate: {
+                                toDate: () => new Date(event.startDate)
+                            },
+                            endDate: {
+                                toDate: () => new Date(event.endDate)
+                            },
+                            canEdit: true // API handles permission checks server-side
+                        };
+                    });
+                }
 
-                setEvents(eventsData);
+                setEvents(allEvents);
             } catch (error) {
                 console.error('Error loading weekly events:', error);
             } finally {
@@ -61,7 +152,7 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
         };
 
         loadEvents();
-    }, [userData, selectedDate]);
+    }, [user, userData, selectedDate, fetchChildrenAPI, fetchEventsAPI]);
 
     // Generate week days
     useEffect(() => {

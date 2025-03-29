@@ -1070,43 +1070,82 @@ export default function RegularEducationForm({
                                 <RadioGroup
                                     defaultValue={displayValue}
                                     disabled={isEditMode && !showBatchMode && !canEdit}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        // For both batch edit mode and regular mode, update the value
-                                        if (showBatchMode || !isEditMode) {
-                                            setValue(fieldName, e.target.value);
-                                        }
-                                        
-                                        // If "dividido" is selected, set up the percentage field
-                                        const percentageField = `${fieldName.replace('_responsible', '')}_percentage`;
-                                        if (e.target.value === 'dividido' && percentageField in initialData) {
-                                            // Initial value string for proportions based on existing values or default
-                                            let proportionString = '';
-                                            
-                                            // If there's no existing value, create a default with equal proportions
-                                            if (!getDisplayValue(initialData[percentageField as keyof typeof initialData])) {
-                                                if (editors.length > 0) {
-                                                    const equalShare = Math.floor(100 / editors.length);
-                                                    
-                                                    proportionString = editors.map((editor, index) => {
-                                                        // Last editor gets remainder to ensure 100%
-                                                        const percent = index === editors.length - 1 
-                                                            ? 100 - (equalShare * (editors.length - 1))
-                                                            : equalShare;
-                                                            
-                                                        const name = (editor.firstName || editor.lastName) ? 
-                                                            `${editor.firstName || ''} ${editor.lastName || ''}`.trim() : 
-                                                            editor.displayName;
-                                                            
-                                                        return `${name} ${percent}%`;
-                                                    }).join(', ');
-                                                }
+                                    {...(showBatchMode ? register(fieldName, { 
+                                        required: field.required,
+                                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                                            // For both batch edit mode and regular mode, update the value
+                                            if (showBatchMode || !isEditMode) {
+                                                setValue(fieldName, e.target.value);
                                             }
                                             
-                                            // Set the value in react-hook-form (for both create and batch edit modes)
-                                            setValue(percentageField as any, proportionString);
+                                            // If "dividido" is selected, set up the percentage field
+                                            const percentageField = `${fieldName.replace('_responsible', '')}_percentage`;
+                                            if (e.target.value === 'dividido' && percentageField in initialData) {
+                                                // Initial value string for proportions based on existing values or default
+                                                let proportionString = '';
+                                                
+                                                // If there's no existing value, create a default with equal proportions
+                                                if (!getDisplayValue(initialData[percentageField as keyof typeof initialData])) {
+                                                    if (editors.length > 0) {
+                                                        const equalShare = Math.floor(100 / editors.length);
+                                                        
+                                                        proportionString = editors.map((editor, index) => {
+                                                            // Last editor gets remainder to ensure 100%
+                                                            const percent = index === editors.length - 1 
+                                                                ? 100 - (equalShare * (editors.length - 1))
+                                                                : equalShare;
+                                                                
+                                                            const name = (editor.firstName || editor.lastName) ? 
+                                                                `${editor.firstName || ''} ${editor.lastName || ''}`.trim() : 
+                                                                editor.displayName;
+                                                                
+                                                            return `${name} ${percent}%`;
+                                                        }).join(', ');
+                                                    }
+                                                }
+                                                
+                                                // Set the value in react-hook-form (for both create and batch edit modes)
+                                                setValue(percentageField as any, proportionString);
+                                            }
                                         }
-                                    }}
-                                    {...(showBatchMode ? register(fieldName, { required: field.required }) : {})}
+                                    }) : {
+                                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                                            // For both batch edit mode and regular mode, update the value
+                                            if (showBatchMode || !isEditMode) {
+                                                setValue(fieldName, e.target.value);
+                                            }
+                                            
+                                            // If "dividido" is selected, set up the percentage field
+                                            const percentageField = `${fieldName.replace('_responsible', '')}_percentage`;
+                                            if (e.target.value === 'dividido' && percentageField in initialData) {
+                                                // Initial value string for proportions based on existing values or default
+                                                let proportionString = '';
+                                                
+                                                // If there's no existing value, create a default with equal proportions
+                                                if (!getDisplayValue(initialData[percentageField as keyof typeof initialData])) {
+                                                    if (editors.length > 0) {
+                                                        const equalShare = Math.floor(100 / editors.length);
+                                                        
+                                                        proportionString = editors.map((editor, index) => {
+                                                            // Last editor gets remainder to ensure 100%
+                                                            const percent = index === editors.length - 1 
+                                                                ? 100 - (equalShare * (editors.length - 1))
+                                                                : equalShare;
+                                                                
+                                                            const name = (editor.firstName || editor.lastName) ? 
+                                                                `${editor.firstName || ''} ${editor.lastName || ''}`.trim() : 
+                                                                editor.displayName;
+                                                                
+                                                            return `${name} ${percent}%`;
+                                                        }).join(', ');
+                                                    }
+                                                }
+                                                
+                                                // Set the value in react-hook-form (for both create and batch edit modes)
+                                                setValue(percentageField as any, proportionString);
+                                            }
+                                        }
+                                    })}
                                     {...(!isEditMode ? register(fieldName, { required: field.required }) : {})}
                                 >
                                     {generateOptions(fieldName, field.options).map((option: any) => (

@@ -266,7 +266,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                             );
                                         } catch (error) {
                                             // Silently handle permission errors
-                                            if (error.code === 'permission-denied') {
+                                            if (error && typeof error === 'object' && 'code' in error && error.code === 'permission-denied') {
                                               console.log('Error setting up children listener - permission denied');
                                             } else {
                                               console.error('Error setting up children listener:', error);
@@ -275,7 +275,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                     },
                                     error: (error) => {
                                         // Silently handle permission errors
-                                        if (error.code === 'permission-denied') {
+                                        if (error && typeof error === 'object' && 'code' in error && error.code === 'permission-denied') {
                                           console.log('User data permission denied - expected for some security rules');
                                         } else {
                                           console.error('User data error:', error);

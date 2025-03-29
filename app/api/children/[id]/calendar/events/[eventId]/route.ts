@@ -2,6 +2,48 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
+// Define interfaces for type safety
+interface EventData {
+  id?: string;
+  title: string;
+  description?: string;
+  startDate?: any; // Timestamp
+  endDate?: any; // Timestamp
+  createdAt?: any; // Timestamp
+  updatedAt?: any; // Timestamp
+  category?: string;
+  childId?: string;
+  location?: { address: string };
+  isPrivate?: boolean;
+  createdBy?: string;
+  recurrence?: {
+    type: string;
+    interval: number;
+    endDate?: any; // Timestamp
+    occurrences?: number;
+  };
+  reminder?: {
+    enabled: boolean;
+    reminderTime: number;
+  };
+  [key: string]: any; // For other properties
+}
+
+interface UpdateData {
+  title?: string;
+  description?: string;
+  startDate?: any; // Timestamp
+  endDate?: any; // Timestamp
+  category?: string;
+  location?: { address: string };
+  isPrivate?: boolean;
+  recurrence?: any;
+  reminder?: any;
+  updatedBy: string;
+  updatedAt: any; // FieldValue
+  [key: string]: any; // For other properties
+}
+
 /**
  * GET - Fetch a single calendar event by ID
  */
@@ -67,21 +109,25 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
     
-    const eventData = eventDoc.data();
+    const eventData = eventDoc.data() as EventData | undefined;
+    
+    if (!eventData) {
+      return NextResponse.json({ error: 'Event data is undefined' }, { status: 500 });
+    }
     
     // Check if event is private and belongs to another user
-    if (eventData.isPrivate && eventData.createdBy !== userId) {
+    if (eventData?.isPrivate && eventData?.createdBy !== userId) {
       return NextResponse.json({ error: 'Access denied to private event' }, { status: 403 });
     }
     
     // Convert timestamps to ISO strings for serialization
-    const startDate = eventData.startDate ? eventData.startDate.toDate().toISOString() : null;
-    const endDate = eventData.endDate ? eventData.endDate.toDate().toISOString() : null;
-    const createdAt = eventData.createdAt ? eventData.createdAt.toDate().toISOString() : null;
-    const updatedAt = eventData.updatedAt ? eventData.updatedAt.toDate().toISOString() : null;
+    const startDate = eventData?.startDate ? eventData.startDate.toDate().toISOString() : null;
+    const endDate = eventData?.endDate ? eventData.endDate.toDate().toISOString() : null;
+    const createdAt = eventData?.createdAt ? eventData.createdAt.toDate().toISOString() : null;
+    const updatedAt = eventData?.updatedAt ? eventData.updatedAt.toDate().toISOString() : null;
     
     // If recurrence has an end date, convert it too
-    let recurrence = eventData.recurrence;
+    let recurrence = eventData?.recurrence;
     if (recurrence && recurrence.endDate) {
       recurrence = {
         ...recurrence,
@@ -174,26 +220,30 @@ export async function PATCH(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
     
-    const eventData = eventDoc.data();
+    const eventData = eventDoc.data() as EventData | undefined;
+    
+    if (!eventData) {
+      return NextResponse.json({ error: 'Event data is undefined' }, { status: 500 });
+    }
     
     // Check if event is private and belongs to another user
-    if (eventData.isPrivate && eventData.createdBy !== userId) {
+    if (eventData?.isPrivate && eventData?.createdBy !== userId) {
       return NextResponse.json({ error: 'Cannot modify another user\'s private event' }, { status: 403 });
     }
     
     // Store original values for changelog
     const beforeValues = {
-      title: eventData.title,
-      description: eventData.description,
-      startDate: eventData.startDate,
-      endDate: eventData.endDate,
-      category: eventData.category,
-      location: eventData.location,
-      isPrivate: eventData.isPrivate
+      title: eventData?.title,
+      description: eventData?.description,
+      startDate: eventData?.startDate,
+      endDate: eventData?.endDate,
+      category: eventData?.category,
+      location: eventData?.location,
+      isPrivate: eventData?.isPrivate
     };
     
     // Prepare update object
-    const updateData = {
+    const updateData: UpdateData = {
       updatedBy: userId,
       updatedAt: FieldValue.serverTimestamp()
     };
@@ -400,10 +450,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
     
-    const eventData = eventDoc.data();
+    const eventData = eventDoc.data() as EventData | undefined;
+    
+    if (!eventData) {
+      return NextResponse.json({ error: 'Event data is undefined' }, { status: 500 });
+    }
     
     // Check if event is private and belongs to another user
-    if (eventData.isPrivate && eventData.createdBy !== userId) {
+    if (eventData?.isPrivate && eventData?.createdBy !== userId) {
       return NextResponse.json({ error: 'Cannot delete another user\'s private event' }, { status: 403 });
     }
     
@@ -421,10 +475,10 @@ export async function DELETE(
       userId,
       timestamp: FieldValue.serverTimestamp(),
       deletedEvent: {
-        title: eventData.title,
-        startDate: eventData.startDate,
-        endDate: eventData.endDate,
-        category: eventData.category
+        title: eventData?.title,
+        startDate: eventData?.startDate,
+        endDate: eventData?.endDate,
+        category: eventData?.category
       }
     });
     
