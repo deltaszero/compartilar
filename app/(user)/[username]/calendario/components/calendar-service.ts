@@ -1,16 +1,20 @@
-import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, deleteDoc, orderBy, writeBatch, Timestamp, WhereFilterOp } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { Child } from '@/types/user.types';
 import { getEventsForDay, generateCalendarDays } from './date-utils';
+import { Child } from '@/types/user.types';
 import { CalendarEventWithChild } from './types';
+// Note: db is dynamically imported in fetchChildren to avoid direct Firestore references
 
 export { generateCalendarDays };
 
 /**
- * Fetch children accessible to a user
+ * Fetch children accessible to a user using the client-side Firestore
+ * This is a fallback method. We should use the API endpoint when possible.
  */
 export async function fetchChildren(userId: string): Promise<Child[]> {
   try {
+    // This fallback function needs to return to client side for now
+    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebaseConfig');
+
     // Get children where the user is an editor
     const editorQuery = query(
       collection(db, 'children'),
@@ -55,7 +59,7 @@ export async function fetchChildren(userId: string): Promise<Child[]> {
  */
 export async function fetchCoParentingRelationships(userId: string): Promise<string[]> {
   try {
-    // This is a placeholder. In a real app, you would fetch this from Firestore
+    // This is a placeholder. In a real app, you would fetch this from the API
     return [];
   } catch (error) {
     console.error('Error fetching co-parenting relationships:', error);
@@ -65,10 +69,11 @@ export async function fetchCoParentingRelationships(userId: string): Promise<str
 
 /**
  * Fetch event history for a specific event
+ * This is a placeholder until the API endpoint is implemented
  */
 export async function fetchEventHistory(eventId: string): Promise<any[]> {
   try {
-    // This is a placeholder. In a real app, you would fetch this from Firestore
+    // This is a placeholder. In a real app, we'd use an API endpoint
     return [];
   } catch (error) {
     console.error('Error fetching event history:', error);

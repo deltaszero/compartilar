@@ -54,6 +54,35 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithChild | undefined>(undefined);
     
     // Load children and relationships with better error handling
+    // Function to fetch children directly from API
+    const fetchChildrenAPI = useCallback(async () => {
+        if (!user || !userData) return [];
+        
+        try {
+            const token = await user.getIdToken(true);
+            const userId = userData.uid;
+            
+            // Use the profile/children endpoint with required parameters
+            const response = await fetch(`/api/profile/children?userId=${userId}&currentUserId=${userId}&relationshipStatus=none`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-requested-with': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to fetch children');
+            }
+            
+            return response.json();
+        } catch (error) {
+            console.error('Error fetching children from API:', error);
+            return [];
+        }
+    }, [user, userData]);
+
     useEffect(() => {
         if (!user || !userData) return;
 
@@ -63,11 +92,17 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
             
             // Load children with separate try-catch for better error identification
             try {
-                childrenData = await fetchChildren(userData.uid);
+                // Try to use the API first, fall back to client-side if needed
+                childrenData = await fetchChildrenAPI();
+                
+                // If that fails, fall back to the existing function
+                if (childrenData.length === 0) {
+                    childrenData = await fetchChildren(userData.uid);
+                }
                 
                 // Initialize selected children to all children by default
                 if (childrenData.length > 0 && selectedChildren.length === 0) {
-                    setSelectedChildren(childrenData.map(child => child.id));
+                    setSelectedChildren(childrenData.map((child: { id: string }) => child.id));
                 }
                 
                 setChildren(childrenData);
@@ -85,7 +120,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         };
 
         loadInitialData();
-    }, [user, userData, toast, selectedChildren.length]);
+    }, [user, userData, fetchChildrenAPI, selectedChildren.length]);
 
     // Calculate date range based on current view
     const dateRange = useMemo(() => {

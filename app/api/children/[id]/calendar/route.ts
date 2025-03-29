@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
+// Define interfaces for type safety
+interface CalendarEvent {
+  id: string;
+  childId: string;
+  title: string;
+  description?: string;
+  startDate: any; // Timestamp
+  endDate: any; // Timestamp
+  createdAt?: any; // Timestamp
+  updatedAt?: any; // Timestamp
+  category?: string;
+  location?: { address: string };
+  isPrivate?: boolean;
+  createdBy?: string;
+  recurrence?: {
+    type: string;
+    interval: number;
+    endDate?: any; // Timestamp
+    occurrences?: number;
+  };
+  reminder?: {
+    enabled: boolean;
+    reminderTime: number;
+  };
+  [key: string]: any; // For other properties
+}
+
 /**
  * GET - Fetch calendar events for a specific child based on date range
  */
@@ -61,19 +88,19 @@ export async function GET(
     }
     
     // Set up date range filtering
-    let queryRef = childRef.collection('events');
+    const eventsRef = childRef.collection('events');
+    
+    // Create the base query
+    let query = eventsRef.orderBy('startDate', 'asc');
     
     // Apply date filters if provided
     if (startDate) {
       const startDateTime = new Date(startDate);
-      queryRef = queryRef.where('startDate', '>=', Timestamp.fromDate(startDateTime));
+      query = query.where('startDate', '>=', Timestamp.fromDate(startDateTime));
     }
     
-    // For date range queries, we need to order by the same field
-    queryRef = queryRef.orderBy('startDate', 'asc');
-    
     // Execute query
-    const eventsSnapshot = await queryRef.get();
+    const eventsSnapshot = await query.get();
     
     // Filter by end date in memory (since Firestore can only have one range operator)
     let events = eventsSnapshot.docs.map(doc => {
@@ -85,15 +112,18 @@ export async function GET(
       const createdAtISO = data.createdAt ? data.createdAt.toDate().toISOString() : null;
       const updatedAtISO = data.updatedAt ? data.updatedAt.toDate().toISOString() : null;
       
-      return {
+      const event: CalendarEvent = {
         id: doc.id,
         ...data,
         childId,
+        title: data.title || '',
         startDate: startDateISO,
         endDate: endDateISO,
         createdAt: createdAtISO,
         updatedAt: updatedAtISO
       };
+      
+      return event;
     });
     
     // Filter by end date if provided
@@ -198,7 +228,7 @@ export async function POST(
     }
     
     // Create event object with clean data
-    const newEvent = {
+    const newEventData: any = {
       title: eventData.title,
       description: eventData.description || '',
       startDate: Timestamp.fromDate(startDate),
@@ -217,7 +247,7 @@ export async function POST(
     
     // Add recurrence if provided
     if (eventData.recurring && eventData.recurrenceType) {
-      newEvent.recurrence = {
+      newEventData.recurrence = {
         type: eventData.recurrenceType,
         interval: eventData.recurrenceInterval || 1,
         endDate: eventData.recurrenceEndDate ? 
@@ -229,7 +259,7 @@ export async function POST(
     
     // Add reminder if provided
     if (eventData.reminderEnabled) {
-      newEvent.reminder = {
+      newEventData.reminder = {
         enabled: true,
         reminderTime: eventData.reminderTime || 30 // Default 30 minutes before
       };
@@ -241,7 +271,7 @@ export async function POST(
     // Add the event
     const eventsRef = childRef.collection('events');
     const newEventRef = eventsRef.doc();
-    batch.set(newEventRef, newEvent);
+    batch.set(newEventRef, newEventData);
     
     // Add change history entry
     const historyRef = childRef.collection('change_history').doc();
@@ -251,10 +281,10 @@ export async function POST(
       userId,
       timestamp: FieldValue.serverTimestamp(),
       changes: {
-        title: newEvent.title,
-        startDate: newEvent.startDate,
-        endDate: newEvent.endDate,
-        category: newEvent.category
+        title: newEventData.title,
+        startDate: newEventData.startDate,
+        endDate: newEventData.endDate,
+        category: newEventData.category
       }
     });
     
@@ -268,7 +298,7 @@ export async function POST(
       eventId: newEventRef.id,
       event: {
         id: newEventRef.id,
-        ...newEvent,
+        ...newEventData,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         createdAt: new Date().toISOString(),
