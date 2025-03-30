@@ -84,7 +84,7 @@ export default function Pricing() {
     ];
 
     return (
-        <div className="bg-blank" id="planos">
+        <div className="bg-blank" id="plans">
             <div
                 className={cn(
                     "flex flex-row justify-center items-center text-center text-xl py-12 px-4 font-bold font-raleway",

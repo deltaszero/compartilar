@@ -28,10 +28,9 @@ import { useToast } from '@/hooks/use-toast';
  * navItems is an array of objects containing the label and href of each navigation item.
  */
 const navItems = [
-    { label: 'Sobre', href: '#descomplique' },
-    { label: 'Funcionalidades', href: '#organize' },
-    { label: 'Planos', href: '#proteja' },
-    // { label: 'Despreocupe-se', href: '#despreocupe-se' }
+    { label: 'Sobre', href: '#concept' },
+    { label: 'Funcionalidades', href: '#features' },
+    { label: 'Planos', href: '#plans' },
 ];
 
 /**

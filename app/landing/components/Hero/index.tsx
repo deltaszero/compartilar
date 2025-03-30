@@ -38,8 +38,9 @@ const Hero = forwardRef<HTMLDivElement, Omit<HeroProps, 'heroRef'>>((props, ref)
     return (
         <section className="bg-bg" ref={ref}>
             <div className={cn(
-                "flex flex-col gap-8 items-center justify-between mx-auto ",
-                "sm:max-w-[80%] sm:py-24 sm:mb-[8em] sm:flex-row-reverse",
+                "h-[100vh] flex flex-col gap-8 items-center justify-center px-4",
+                "sm:flex-row-reverse",
+                "xl:w-4/5 xl:mx-auto",
             )}>
                 <Image
                     src={hero_image}
@@ -51,7 +52,7 @@ const Hero = forwardRef<HTMLDivElement, Omit<HeroProps, 'heroRef'>>((props, ref)
                     loading="eager"
                     fetchPriority="high"
                 />
-                <div className="relative px-2 sm:px-6 lg:px-8 py-2 sm:py-16 lg:py-24">
+                <div className="relative py-2 sm:py-16 lg:py-24">
                     <div className="max-w-4xl">
                         <h1 className={cn(
                             "text-4xl mb-4 font-bold font-raleway",

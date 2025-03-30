@@ -65,11 +65,11 @@ const Features = forwardRef<HTMLDivElement, FeaturesProps>(
         };
         
         return (
-            <div className="bg-main">
+            <section className="bg-main" id="features">
                 <div ref={ref}>
                     <SectionTitle title="Soluções que transformam a coparentalidade" />
                 </div>
-                <div className="px-4 pb-12 mx-auto sm:w-3/4">
+                <div className="px-4 pb-12 mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-8">
                         {features.map((feature) => (
                             <FeatureCard
@@ -81,7 +81,7 @@ const Features = forwardRef<HTMLDivElement, FeaturesProps>(
                         ))}
                     </div>
                 </div>
-            </div>
+            </section>
         );
     }
 );
