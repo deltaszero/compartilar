@@ -70,6 +70,11 @@ export interface CalendarGridProps {
   onSelectDate: (date: Date) => void;
   onDoubleClick: (date: Date) => void;
   isLoading?: boolean;
+  // Calendar header properties
+  currentMonth: Date;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onTodayClick: () => void;
 }
 
 export interface DayEventsProps {
@@ -79,6 +84,12 @@ export interface DayEventsProps {
   onEditEvent: (date: Date, event: CalendarEventWithChild) => void;
   onDeleteEvent: (eventId: string) => void;
   isLoading?: boolean;
+  // Added filter parameters from CalendarFiltersProps
+  children?: Child[];
+  selectedChildren?: string[];
+  onChildFilterChange?: (childIds: string[]) => void;
+  selectedCategories?: string[];
+  onCategoryFilterChange?: (categories: string[]) => void;
 }
 
 export interface EventFormProps {

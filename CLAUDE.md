@@ -16,6 +16,27 @@ Please refer to the following documents:
 5. [API Design](/docs/05-api-design.md)
 6. [API Refactoring](/docs/06-api-refactoring.md)
 
+## Premium vs Free Tier Functionality
+
+CompartiLar operates on a freemium model with the following limits:
+
+### Free Tier (Básico):
+- 1 child profile maximum
+- 3 daily calendar events limit
+- 3 daily expenses in financial panel
+- 30 days of check-in history
+- No support network
+
+### Premium Tier (Duo - R$29,90/month):
+- Unlimited child profiles
+- Unlimited calendar events
+- Unlimited expenses
+- Complete check-in history
+- Up to 5 support network members
+- Personalized notifications and reminders
+
+All features should respect these limits using the `usePremiumFeatures` hook and the `PremiumFeature` component for UI restrictions.
+
 ## Quick Reference: Build & Verification Commands
 
 - `npm run dev` - Development server with Turbopack

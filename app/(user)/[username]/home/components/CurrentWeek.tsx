@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import dayjs, { Dayjs } from "dayjs";
@@ -5,10 +7,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { WeekDay } from "../types";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react"; // import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
+import { 
+    // ChevronLeft, 
+    ChevronRight, 
+    // Calendar 
+} from "lucide-react";
 import { useUser } from "@/context/userContext";
 import Image from "next/image";
-// import { Badge } from "@/components/ui/badge";
 import { isSameDay } from "date-fns";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -182,16 +187,16 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
     }, [selectedDate, events]);
 
     // Navigate to previous week
-    const prevWeek = () => {
-        const newDate = selectedDate.subtract(1, 'week');
-        onDateSelect(newDate);
-    };
+    // const prevWeek = () => {
+    //     const newDate = selectedDate.subtract(1, 'week');
+    //     onDateSelect(newDate);
+    // };
 
     // Navigate to next week
-    const nextWeek = () => {
-        const newDate = selectedDate.add(1, 'week');
-        onDateSelect(newDate);
-    };
+    // const nextWeek = () => {
+    //     const newDate = selectedDate.add(1, 'week');
+    //     onDateSelect(newDate);
+    // };
 
     // Handle day selection
     const handleDaySelect = (day: { date: Dayjs }) => {
@@ -228,32 +233,22 @@ export const CurrentWeek = ({ selectedDate, onDateSelect }: CurrentWeekProps) =>
         <div className="font-sans w-full max-w-2xl mx-auto">
             <div className="border-2 border-black p-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 {/* Week Navigation */}
-                <div className="flex justify-between items-center mb-4">
-                    <Button
-                        onClick={prevWeek}
-                        variant="outline"
-                        size="icon"
-                        aria-label="Previous week"
-                        className="bg-bw"
-                    >
+                <div className="flex justify-center items-center mb-4">
+                    {/*
+                    <Button onClick={prevWeek} variant="outline" size="icon" aria-label="Previous week" className="bg-bw">
                         <ChevronLeft/>
                     </Button>
-
+                    */}
                     <div className="text-center relative">
-                        <h2 className="text-xl font-bold tracking-tight pb-1 px-2 font-raleway">
+                        <h2 className="text-2xl font-bold tracking-tight pb-1 px-2 font-raleway">
                             {weekDays.length > 0 ? `${weekDays[0].date.format('MMM D')} - ${weekDays[6].date.format('MMM D, YYYY')}` : ''}
                         </h2>
                     </div>
-
-                    <Button
-                        onClick={nextWeek}
-                        variant="outline"
-                        size="icon"
-                        aria-label="Next week"
-                        className="bg-bw"
-                    >
+                   {/* 
+                    <Button onClick={nextWeek} variant="outline" size="icon" aria-label="Next week" className="bg-bw">
                         <ChevronRight/>
                     </Button>
+                    */}
                 </div>
 
                 {/* Week Days */}

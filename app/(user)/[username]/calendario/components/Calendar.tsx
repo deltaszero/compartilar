@@ -19,8 +19,12 @@ import { DayEvents } from './DayEvents';
 import { EventForm } from './EventForm';
 import { CalendarFilters } from './CalendarFilters';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sparkles } from "lucide-react";
+import { SubscriptionButton } from "@/app/components/logged-area/ui/SubscriptionButton";
 import { CalendarProps, CalendarEventWithChild, EventFormData, UserPermission } from './types';
 import { useToast } from '@/hooks/use-toast';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import {
     fetchChildren,
     fetchCoParentingRelationships,
@@ -31,12 +35,13 @@ import {
 export default function Calendar({ initialMonth, view: initialView }: CalendarProps) {
     const { user, userData } = useUser();
     const { toast } = useToast();
-    
+    const { isPremium, remainingFreeTierLimits } = usePremiumFeatures();
+
     // Calendar state
     const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day' | 'agenda'>(initialView || 'month');
-    
+
     // Data state
     const [children, setChildren] = useState<any[]>([]);
     const [coParentingRelationships, setCoParentingRelationships] = useState<string[]>([]);
@@ -44,24 +49,25 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     const [calendarDays, setCalendarDays] = useState<{ date: Date; isCurrentMonth: boolean; isToday: boolean; events: CalendarEventWithChild[]; isSelected: boolean; }[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // Filter state
     const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    
+
     // Event form state
     const [showEventForm, setShowEventForm] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEventWithChild | undefined>(undefined);
-    
+    const [showLimitDialog, setShowLimitDialog] = useState(false);
+
     // Load children and relationships with better error handling
     // Function to fetch children directly from API
     const fetchChildrenAPI = useCallback(async () => {
         if (!user || !userData) return [];
-        
+
         try {
             const token = await user.getIdToken(true);
             const userId = userData.uid;
-            
+
             // Use the profile/children endpoint with required parameters
             const response = await fetch(`/api/profile/children?userId=${userId}&currentUserId=${userId}&relationshipStatus=none`, {
                 method: 'GET',
@@ -70,12 +76,12 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                     'x-requested-with': 'XMLHttpRequest'
                 }
             });
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to fetch children');
             }
-            
+
             return response.json();
         } catch (error) {
             console.error('Error fetching children from API:', error);
@@ -89,27 +95,27 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         const loadInitialData = async () => {
             let childrenData = [];
             let relationships = [];
-            
+
             // Load children with separate try-catch for better error identification
             try {
                 // Try to use the API first, fall back to client-side if needed
                 childrenData = await fetchChildrenAPI();
-                
+
                 // If that fails, fall back to the existing function
                 if (childrenData.length === 0) {
                     childrenData = await fetchChildren(userData.uid);
                 }
-                
+
                 // Initialize selected children to all children by default
                 if (childrenData.length > 0 && selectedChildren.length === 0) {
                     setSelectedChildren(childrenData.map((child: { id: string }) => child.id));
                 }
-                
+
                 setChildren(childrenData);
             } catch (error) {
                 // Silent catch - no need to show errors about missing children
             }
-            
+
             // Load relationships with separate try-catch
             try {
                 relationships = await fetchCoParentingRelationships(userData.uid);
@@ -125,37 +131,37 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     // Calculate date range based on current view
     const dateRange = useMemo(() => {
         let startDate, endDate;
-        
+
         switch (calendarView) {
             case 'month':
                 // For month view, include previous and next month days for complete weeks
                 startDate = subDays(startOfMonth(currentMonth), 7);
                 endDate = addDays(endOfMonth(currentMonth), 7);
                 break;
-                
+
             case 'week':
                 // For week view, just the current week
                 startDate = startOfWeek(currentMonth);
                 endDate = endOfWeek(currentMonth);
                 break;
-                
+
             case 'day':
                 // For day view, just the current day
                 startDate = currentMonth;
                 endDate = currentMonth;
                 break;
-                
+
             case 'agenda':
                 // For agenda view, two weeks
                 startDate = currentMonth;
                 endDate = addWeeks(currentMonth, 2);
                 break;
-                
+
             default:
                 startDate = subDays(startOfMonth(currentMonth), 7);
                 endDate = addDays(endOfMonth(currentMonth), 7);
         }
-        
+
         return { startDate, endDate };
     }, [currentMonth, calendarView]);
 
@@ -165,12 +171,12 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
             if (!user) {
                 throw new Error('User not authenticated');
             }
-            
+
             const token = await user.getIdToken(true);
-            
+
             const formattedStartDate = startDate.toISOString().split('T')[0];
             const formattedEndDate = endDate.toISOString().split('T')[0];
-            
+
             const response = await fetch(
                 `/api/children/${childId}/calendar?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
                 {
@@ -181,12 +187,12 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                     }
                 }
             );
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to fetch events');
             }
-            
+
             const result = await response.json();
             return result.events || [];
         } catch (error) {
@@ -198,7 +204,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     // Load events when month changes or filters change - with better error handling
     useEffect(() => {
         if (!user) return;
-        
+
         // Skip loading if there are no children to fetch events for
         if (children.length === 0) {
             setEvents([]);
@@ -214,19 +220,19 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                 const filteredChildren = selectedChildren.length > 0
                     ? children.filter(child => selectedChildren.includes(child.id))
                     : children;
-                
+
                 if (filteredChildren.length === 0) {
                     setEvents([]);
                     return;
                 }
-                
+
                 // Fetch events for each child in parallel
-                const eventPromises = filteredChildren.map(child => 
+                const eventPromises = filteredChildren.map(child =>
                     fetchEventsFromAPI(child.id, dateRange.startDate, dateRange.endDate)
                 );
-                
+
                 const eventsArrays = await Promise.all(eventPromises);
-                
+
                 // Flatten the arrays and enrich with child data
                 let allEvents = eventsArrays.flat().map(event => {
                     const child = children.find(c => c.id === event.childId);
@@ -244,14 +250,14 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         canEdit: true // API handles permission checks server-side
                     };
                 });
-                
+
                 // Apply category filters if any
                 if (selectedCategories.length > 0) {
-                    allEvents = allEvents.filter(event => 
+                    allEvents = allEvents.filter(event =>
                         event.category && selectedCategories.includes(event.category)
                     );
                 }
-                
+
                 setEvents(allEvents);
             } catch (error) {
                 // Handle errors silently - the calendar should still be usable
@@ -330,16 +336,22 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
 
     // New function to delete events via API
     const handleDeleteEvent = useCallback(async (eventId: string) => {
-        if (!user || !selectedEvent?.childId) return;
-        
+        if (!user) return;
+
         if (!confirm('Tem certeza que deseja excluir este evento?')) return;
-        
+
         setIsSubmitting(true);
 
         try {
+            // Find the event with the given ID
+            const eventToDelete = events.find(event => event.id === eventId);
+            if (!eventToDelete || !eventToDelete.childId) {
+                throw new Error('Evento não encontrado');
+            }
+
             const token = await user.getIdToken(true);
-            const childId = selectedEvent.childId;
-            
+            const childId = eventToDelete.childId;
+
             const response = await fetch(
                 `/api/children/${childId}/calendar/events/${eventId}`,
                 {
@@ -350,7 +362,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                     }
                 }
             );
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to delete event');
@@ -373,27 +385,65 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         } finally {
             setIsSubmitting(false);
         }
-    }, [user, selectedEvent, toast]);
+    }, [user, events, toast]);
 
     // New function to save events via API
     const handleSaveEvent = useCallback(async (formData: EventFormData) => {
         if (!user) return;
-        
+
+        // Check daily limits for free users (only for new events, not edits)
+        if (!isPremium && !selectedEvent) {
+            try {
+                // Check user's daily event creation limit with the server
+                const token = await user.getIdToken(true);
+                const limitCheckResponse = await fetch(
+                    `/api/users/daily-limits?featureType=calendar_events`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'x-requested-with': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                if (!limitCheckResponse.ok) {
+                    const error = await limitCheckResponse.json();
+                    throw new Error(error.error || 'Failed to check daily limits');
+                }
+
+                const limitData = await limitCheckResponse.json();
+                
+                // If user has no remaining events for today, show premium dialog
+                if (limitData.remaining <= 0) {
+                    // Show the premium upgrade dialog instead of a toast
+                    setShowLimitDialog(true);
+                    
+                    // Don't proceed with event creation
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking daily limits:', error);
+                // Continue anyway if the limit check fails
+            }
+        }
+
         setIsSubmitting(true);
 
         try {
             const token = await user.getIdToken(true);
-            
+
             const childId = formData.childId;
             const method = selectedEvent ? 'PATCH' : 'POST';
-            const url = selectedEvent 
+            const url = selectedEvent
                 ? `/api/children/${childId}/calendar/events/${selectedEvent.id}`
                 : `/api/children/${childId}/calendar`;
-            
+
             // Format date and time for API
             const startDate = `${formData.startDate}T${formData.startTime}:00`;
             const endDate = `${formData.endDate}T${formData.endTime}:00`;
-            
+
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -407,21 +457,21 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                     endDate
                 })
             });
-            
+
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to save event');
             }
-            
+
             const result = await response.json();
-            
+
             // Refresh events for all selected children
-            const eventPromises = selectedChildren.map(childId => 
+            const eventPromises = selectedChildren.map(childId =>
                 fetchEventsFromAPI(childId, dateRange.startDate, dateRange.endDate)
             );
-            
+
             const eventsArrays = await Promise.all(eventPromises);
-            
+
             // Flatten the arrays and enrich with child data
             const allEvents = eventsArrays.flat().map(event => {
                 const child = children.find(c => c.id === event.childId);
@@ -439,13 +489,38 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                     canEdit: true // API handles permission checks server-side
                 };
             });
-            
+
             setEvents(allEvents);
             setShowEventForm(false);
 
+            // For free users creating new events, increment the counter on the server
+            if (!isPremium && !selectedEvent) {
+                try {
+                    // Call API to increment the usage counter
+                    const incrementResponse = await fetch('/api/users/daily-limits', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'x-requested-with': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            featureType: 'calendar_events'
+                        })
+                    });
+
+                    if (!incrementResponse.ok) {
+                        console.warn('Failed to increment daily limit counter, but event was created');
+                    }
+                } catch (error) {
+                    console.error('Error incrementing daily limit counter:', error);
+                    // This doesn't affect the main flow, so we just log the error
+                }
+            }
+
             toast({
                 title: selectedEvent ? "Evento atualizado" : "Evento criado",
-                description: selectedEvent 
+                description: selectedEvent
                     ? "O evento foi atualizado com sucesso"
                     : "O evento foi criado com sucesso"
             });
@@ -459,7 +534,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         } finally {
             setIsSubmitting(false);
         }
-    }, [user, selectedEvent, dateRange, children, selectedChildren, toast, fetchEventsFromAPI]);
+    }, [user, userData, selectedEvent, dateRange, children, selectedChildren, toast, fetchEventsFromAPI, isPremium, remainingFreeTierLimits.max_calendar_events]);
 
     if (!userData) {
         return (
@@ -472,7 +547,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
     // Filter events for the selected day, with error handling
     const selectedDayEvents = useMemo(() => {
         if (!selectedDate) return [];
-        
+
         try {
             return events.filter(event => {
                 try {
@@ -495,13 +570,15 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         return (
             <div className="flex flex-col gap-6">
                 <div className="bg-white p-6 border-2 border-black shadow-brutalist rounded-none text-center">
-                    <h1 className="text-xl font-bold mb-4">Calendário Compartilhado</h1>
+                    <h1 className="text-xl font-bold mb-4">
+                        Calendário Compartilhado
+                    </h1>
                     <p className="mb-4">Você ainda não tem crianças cadastradas no sistema.</p>
                     <p className="text-sm text-gray-600 mb-6">
                         Para usar o calendário compartilhado, você precisa adicionar uma criança ao sistema primeiro.
                     </p>
                     <div className="flex flex-col md:flex-row gap-4 justify-center">
-                        <Button 
+                        <Button
                             onClick={() => {
                                 // Navigate to add child page
                                 if (userData) {
@@ -512,7 +589,7 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         >
                             Adicionar uma Criança
                         </Button>
-                        <Button 
+                        <Button
                             variant="outline"
                             onClick={() => {
                                 // Navigate to dashboard
@@ -528,41 +605,12 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
             </div>
         );
     }
-    
+
     // Normal calendar view
     return (
         <div className="flex flex-col gap-4">
-            {/* Calendar filters */}
-            <div className="bg-white p-4 border-2 border-black shadow-brutalist rounded-none">
-                <CalendarFilters
-                    children={children}
-                    selectedChildren={selectedChildren}
-                    onChildFilterChange={handleChildFilterChange}
-                    selectedCategories={selectedCategories}
-                    onCategoryFilterChange={handleCategoryFilterChange}
-                />
-            </div>
-            
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='col-span-2 flex flex-col gap-4'>
-                    <CalendarHeader
-                        currentMonth={currentMonth}
-                        onPrevMonth={handlePrevMonth}
-                        onNextMonth={handleNextMonth}
-                        onTodayClick={handleTodayClick}
-                        view={calendarView}
-                        onViewChange={handleViewChange}
-                    />
-
-                    <CalendarGrid
-                        days={calendarDays}
-                        onSelectDate={handleSelectDate}
-                        onDoubleClick={handleAddEvent}
-                        isLoading={loading}
-                    />
-                </div>
-
-                <div>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-0 space-y-4 sm:gap-4 sm:space-y-0'>
+                <div className='flex flex-col gap-4'>
                     <DayEvents
                         selectedDate={selectedDate}
                         events={selectedDayEvents}
@@ -570,20 +618,57 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         onEditEvent={handleEditEvent}
                         onDeleteEvent={handleDeleteEvent}
                         isLoading={loading}
+                        children={children}
+                        selectedChildren={selectedChildren}
+                        onChildFilterChange={handleChildFilterChange}
+                        selectedCategories={selectedCategories}
+                        onCategoryFilterChange={handleCategoryFilterChange}
+                    />
+
+                    <EventForm
+                        isOpen={showEventForm}
+                        onClose={() => setShowEventForm(false)}
+                        event={selectedEvent}
+                        selectedDate={selectedDate || undefined}
+                        childrenData={children}
+                        onSave={handleSaveEvent}
+                        userId={userData.uid}
+                        isSubmitting={isSubmitting}
                     />
                 </div>
 
-                <EventForm
-                    isOpen={showEventForm}
-                    onClose={() => setShowEventForm(false)}
-                    event={selectedEvent}
-                    selectedDate={selectedDate || undefined}
-                    childrenData={children}
-                    onSave={handleSaveEvent}
-                    userId={userData.uid}
-                    isSubmitting={isSubmitting}
-                />
+                <div className='col-span-2 flex flex-col gap-4'>
+                    <CalendarGrid
+                        days={calendarDays}
+                        onSelectDate={handleSelectDate}
+                        onDoubleClick={handleAddEvent}
+                        isLoading={loading}
+                        currentMonth={currentMonth}
+                        onPrevMonth={handlePrevMonth}
+                        onNextMonth={handleNextMonth}
+                        onTodayClick={handleTodayClick}
+                    />
+                </div>
             </div>
+
+            {/* Premium Limit Dialog */}
+            <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center">
+                            <Sparkles className="w-5 h-5 mr-2 text-yellow-400" />
+                            Recurso Premium
+                        </DialogTitle>
+                        <DialogDescription>
+                            Limite gratuito: {remainingFreeTierLimits.max_calendar_events} eventos por dia no calendário. 
+                            Faça upgrade para o plano Premium para adicionar eventos ilimitados.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-6 flex flex-col space-y-3">
+                        <SubscriptionButton />
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
