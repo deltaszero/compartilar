@@ -611,23 +611,6 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         <div className="flex flex-col gap-4">
             <div className='grid grid-cols-1 md:grid-cols-3 gap-0 space-y-4 sm:gap-4 sm:space-y-0'>
                 <div className='flex flex-col gap-4'>
-                    <CalendarHeader
-                        currentMonth={currentMonth}
-                        onPrevMonth={handlePrevMonth}
-                        onNextMonth={handleNextMonth}
-                        onTodayClick={handleTodayClick}
-                        view={calendarView}
-                        onViewChange={handleViewChange}
-                    />
-
-                    <CalendarFilters
-                        children={children}
-                        selectedChildren={selectedChildren}
-                        onChildFilterChange={handleChildFilterChange}
-                        selectedCategories={selectedCategories}
-                        onCategoryFilterChange={handleCategoryFilterChange}
-                    />
-
                     <DayEvents
                         selectedDate={selectedDate}
                         events={selectedDayEvents}
@@ -635,6 +618,11 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         onEditEvent={handleEditEvent}
                         onDeleteEvent={handleDeleteEvent}
                         isLoading={loading}
+                        children={children}
+                        selectedChildren={selectedChildren}
+                        onChildFilterChange={handleChildFilterChange}
+                        selectedCategories={selectedCategories}
+                        onCategoryFilterChange={handleCategoryFilterChange}
                     />
 
                     <EventForm
@@ -655,6 +643,10 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                         onSelectDate={handleSelectDate}
                         onDoubleClick={handleAddEvent}
                         isLoading={loading}
+                        currentMonth={currentMonth}
+                        onPrevMonth={handlePrevMonth}
+                        onNextMonth={handleNextMonth}
+                        onTodayClick={handleTodayClick}
                     />
                 </div>
             </div>
