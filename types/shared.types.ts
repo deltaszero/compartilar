@@ -102,10 +102,15 @@ export interface SystemMetadata {
   severity: 'info' | 'warning' | 'critical';
 }
 
+// Form state type for window augmentation
+interface FormState {
+  [key: string]: string | number | boolean | null | undefined | FormState;
+}
+
 // Extend Window with formState for conditional form display
 declare global {
   interface Window {
-    formState?: Record<string, unknown>; // Use unknown instead of any for better type safety
+    formState?: Record<string, FormState>;
   }
 }
 
