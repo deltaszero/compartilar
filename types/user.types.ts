@@ -1,7 +1,6 @@
 // types/user.types.ts
 import { Timestamp } from 'firebase/firestore';
 import { AccessLevel } from './signup.types';
-import { ChildEvent } from './shared.types';
 
 export interface UserProfile {
     uid: string;
