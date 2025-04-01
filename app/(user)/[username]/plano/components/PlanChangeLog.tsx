@@ -203,8 +203,8 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
         : 'N/A';
 
       return (
-        <div className="mt-2 bg-gray-50 p-2 rounded text-sm">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mt-2 bg-gray-50 p-2 rounded text-xs sm:text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <p className="font-medium">Valor anterior:</p>
               <p className="break-words">{beforeValue}</p>
@@ -246,25 +246,25 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Histórico de Alterações</CardTitle>
+    <Card className="sm:max-w-2xl mx-auto">
+      <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
+        <CardTitle className="text-lg sm:text-xl">Histórico de Alterações</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 py-2 sm:px-6 sm:py-4">
         {changelog.length === 0 ? (
-          <p className="text-center text-gray-500">Nenhuma alteração registrada</p>
+          <p className="text-center text-gray-500 py-4">Nenhuma alteração registrada</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {changelog.map((entry) => (
               <div 
                 key={entry.id} 
-                className="border rounded p-2 hover:bg-gray-50 transition-colors"
+                className="border rounded p-3 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-2">
-                    <div className="mt-1">{getActionBadge(entry.action)}</div>
-                    <div>
-                      <div className="font-medium">{renderChangeSummary(entry)}</div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <div className="mt-0.5">{getActionBadge(entry.action)}</div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm sm:text-base">{renderChangeSummary(entry)}</div>
                       <div className="text-xs text-gray-500">
                         {formatDate(entry.timestamp)}
                       </div>
@@ -274,7 +274,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
                     variant="ghost" 
                     size="sm" 
                     onClick={() => entry.id && toggleExpandEntry(entry.id)}
-                    className="px-2 h-7"
+                    className="px-3 h-8 sm:px-2 sm:h-7"
                   >
                     {expandedEntries.has(entry.id || '') ? 'Menos' : 'Mais'}
                   </Button>
