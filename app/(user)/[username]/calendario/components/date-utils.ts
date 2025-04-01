@@ -6,10 +6,8 @@ import {
   subDays,
   addDays,
   isSameDay,
-  isSameMonth,
   getDate,
   parseISO,
-  isBefore,
   isAfter,
   isEqual
 } from 'date-fns';
