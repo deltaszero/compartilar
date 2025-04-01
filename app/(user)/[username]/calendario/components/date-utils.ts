@@ -12,6 +12,7 @@ import {
   isEqual
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { CalendarEvent } from '@/types/user.types';
 
 // Format date with localization support
 export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR) {
