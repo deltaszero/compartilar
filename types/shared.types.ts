@@ -105,7 +105,7 @@ export interface SystemMetadata {
 // Extend Window with formState for conditional form display
 declare global {
   interface Window {
-    formState?: Record<string, any>;
+    formState?: Record<string, unknown>; // Use unknown instead of any for better type safety
   }
 }
 
