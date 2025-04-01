@@ -24,27 +24,22 @@ export function getEventsForDay(date: Date, events: CalendarEvent[]) {
   if (!events || events.length === 0) return [];
   
   const matchingEvents = events.filter(event => {
-    try {
-      // Handle both Firestore Timestamp and already converted Date objects
-      let eventDate;
-      
-      if (event.startDate && typeof event.startDate.toDate === 'function') {
-        // It's a Firestore Timestamp
-        eventDate = event.startDate.toDate();
-      } else if (event.startDate instanceof Date) {
-        // It's already a Date object
-        eventDate = event.startDate;
-      } else {
-        // Invalid date format
-        return false;
-      }
-      
-      // Compare the dates ignoring time
-      return isSameDay(date, eventDate);
-    } catch (error) {
-      // Silently skip events with invalid dates
+    // Handle both Firestore Timestamp and already converted Date objects
+    let eventDate;
+    
+    if (event.startDate && typeof event.startDate.toDate === 'function') {
+      // It's a Firestore Timestamp
+      eventDate = event.startDate.toDate();
+    } else if (event.startDate instanceof Date) {
+      // It's already a Date object
+      eventDate = event.startDate;
+    } else {
+      // Invalid date format
       return false;
     }
+    
+    // Compare the dates ignoring time
+    return isSameDay(date, eventDate);
   });
   
   return matchingEvents;
