@@ -66,7 +66,7 @@ export async function fetchCoParentingRelationships(): Promise<string[]> {
  * Fetch event history for a specific event
  * This is a placeholder until the API endpoint is implemented
  */
-export async function fetchEventHistory(eventId: string): Promise<EventHistory[]> {
+export async function fetchEventHistory(): Promise<EventHistory[]> {
   try {
     // This is a placeholder. In a real app, we'd use an API endpoint
     return [];
