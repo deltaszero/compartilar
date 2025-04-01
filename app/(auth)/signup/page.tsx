@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft } from 'lucide-react';
 import puzzlePiece from '@/app/assets/animations/puzzle-piece.gif';
 
 export default function SignupPage() {

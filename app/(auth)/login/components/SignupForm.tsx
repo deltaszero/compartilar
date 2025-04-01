@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Mail, KeyRound, Eye, EyeOff, User } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
