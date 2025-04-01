@@ -55,15 +55,11 @@ export async function fetchChildren(userId: string): Promise<Child[]> {
 
 /**
  * Fetch co-parenting relationships
+ * @returns Promise<string[]> - Placeholder for future implementation
  */
-export async function fetchCoParentingRelationships(userId: string): Promise<string[]> {
-  try {
-    // This is a placeholder. In a real app, you would fetch this from the API
-    return [];
-  } catch (error) {
-    console.error('Error fetching co-parenting relationships:', error);
-    throw error;
-  }
+export async function fetchCoParentingRelationships(): Promise<string[]> {
+  // This is a placeholder. In a real app, you would fetch this from the API
+  return [];
 }
 
 /**
