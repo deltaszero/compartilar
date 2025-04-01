@@ -70,6 +70,39 @@ export interface ExpenseGroup {
     updatedBy?: string;
 }
 
+// Calendar event types
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
+  location?: string;
+  category: 'school' | 'medical' | 'activity' | 'visitation' | 'other';
+  childId: string;
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+  recurrence?: {
+    type: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    interval: number;
+    endDate?: Timestamp;
+    occurrences?: number;
+  };
+}
+
+// Event history type
+export interface EventHistory {
+  id: string;
+  eventId: string;
+  changedBy: string;
+  changedAt: Timestamp;
+  changes: Record<string, {
+    oldValue: unknown;
+    newValue: unknown;
+  }>;
+}
+
 // Expense-related types
 export interface Expense {
     id: string;

@@ -21,7 +21,7 @@ export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR
 }
 
 // Function to get events for a specific day
-export function getEventsForDay(date: Date, events: any[]) {
+export function getEventsForDay(date: Date, events: CalendarEvent[]) {
   if (!events || events.length === 0) return [];
   
   const matchingEvents = events.filter(event => {
@@ -55,7 +55,7 @@ export function getEventsForDay(date: Date, events: any[]) {
 export function generateCalendarDays(
   currentMonth: Date,
   selectedDate: Date | null,
-  events: any[]
+  events: CalendarEvent[]
 ) {
   const firstDayOfMonth = startOfMonth(currentMonth);
   const lastDayOfMonth = endOfMonth(currentMonth);
