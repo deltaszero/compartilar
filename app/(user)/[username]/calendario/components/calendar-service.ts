@@ -1,6 +1,5 @@
-import { getEventsForDay, generateCalendarDays } from './date-utils';
+import { generateCalendarDays } from './date-utils';
 import { Child } from '@/types/user.types';
-import { CalendarEventWithChild } from './types';
 // Note: db is dynamically imported in fetchChildren to avoid direct Firestore references
 
 export { generateCalendarDays };
