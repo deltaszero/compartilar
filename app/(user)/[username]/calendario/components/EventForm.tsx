@@ -6,10 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { format, addHours, isSameDay } from "date-fns";
 import { isEndAfterStart } from "./date-utils";
 import { usePremiumFeatures } from "@/hooks/usePremiumFeatures";
+// import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
+import calendarFormImage from '@/app/assets/images/calendar_01.webp';
 
 export function EventForm({
     isOpen,
@@ -44,6 +48,18 @@ export function EventForm({
 
     // Form validation
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const [isMobile, setIsMobile] = useState(false);
+    // Track screen size
+    useEffect(() => {
+        const checkMobileScreen = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobileScreen();
+        window.addEventListener("resize", checkMobileScreen);
+        return () => window.removeEventListener("resize", checkMobileScreen);
+    }, []);
 
     // Reset form when dialog opens or closes
     useEffect(() => {
@@ -173,10 +189,15 @@ export function EventForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="border-4 border-black shadow-brutalist max-w-lg">
+            <DialogContent className={cn(
+                "rounded-none border-2 border-black shadow-brutalist max-w-[95vh] max-h-[90vh] overflow-y-auto",
+                "sm:max-w-xl"
+            )}>
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">
-                        {event ? "Editar Evento" : "Criar Evento"}
+                    <DialogTitle className="flex flex-row justify-between items-center text-xl font-bold font-raleway text-2xl">
+                        <span>
+                            {event ? "Editar Evento" : "Criar Evento"}
+                        </span>
                     </DialogTitle>
                 </DialogHeader>
 
@@ -306,7 +327,7 @@ export function EventForm({
                         </div>
                     </div>
 
-                    <div className="flex items-start space-x-2">
+                    {/* <div className="flex items-start space-x-2">
                         <Checkbox
                             id="checkInRequired"
                             checked={formData.checkInRequired}
@@ -319,7 +340,7 @@ export function EventForm({
                         >
                             Exigir check-in quando o evento começar
                         </Label>
-                    </div>
+                    </div> */}
 
                     {error && (
                         <div className="bg-red-50 text-red-600 p-2 rounded text-sm border-2 border-red-500">
@@ -327,19 +348,22 @@ export function EventForm({
                         </div>
                     )}
 
-                    <DialogFooter className="gap-2 mt-2">
+                    <div className="h-[1em]" />
+
+                    <DialogFooter className="flex flex-row justify-end items-center gap-4">
                         <Button
                             type="button"
                             variant="default"
                             onClick={onClose}
-                            className="border-2 border-black"
+                            className="bg-mainStrongRed px-4 text-md font-semibold font-raleway"
                         >
                             Cancelar
                         </Button>
                         <Button
+                            variant="default"
                             type="submit"
                             disabled={saving || isSubmitting}
-                            className="border-2 border-black bg-black text-white shadow-brutalist-sm hover:translate-y-1 transition-transform"
+                            className="bg-mainStrongGreen px-4 text-md font-semibold font-raleway"
                         >
                             {saving || isSubmitting ? "Salvando..." : event ? "Atualizar Evento" : "Criar Evento"}
                         </Button>

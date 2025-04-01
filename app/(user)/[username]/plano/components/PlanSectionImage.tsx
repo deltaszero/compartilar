@@ -4,6 +4,7 @@ import { planSections } from '../types';
 
 // Fallback images for each section in case their imagePath doesn't work
 // Import all images
+import guardaImage from '@/app/assets/images/plan_01.webp';
 import educationImage from '@/app/assets/images/plan_02.webp';
 import extracurricularImage from '@/app/assets/images/plan_03.webp';
 import extrasImage from '@/app/assets/images/plan_04.webp';
@@ -18,6 +19,7 @@ import defaultImage from '@/app/assets/images/horizontal-menu_tasklist.webp';
 
 // Map section IDs to imported images as fallbacks
 const imageMap: Record<string, any> = {
+    guarda: guardaImage,
     education: educationImage,
     extracurricular: extracurricularImage,
     extras: extrasImage,
@@ -48,12 +50,18 @@ export default function PlanSectionImage({
     // Try to find the section in planSections array to get the imagePath
     const section = planSections.find(section => section.id === sectionId);
     
-    // Use imagePath from section if available, fallback to imageMap, and finally defaultImage
+    // Use proper paths for images
     let src;
     
     if (section?.imagePath) {
-        // Use the path from planSections
-        src = section.imagePath;
+        // Check if the path starts with "/app" and handle it
+        if (section.imagePath.startsWith('/app')) {
+            // Use the imported image instead as it's more reliable
+            src = imageMap[sectionId] || defaultImage;
+        } else {
+            // Use the path from planSections
+            src = section.imagePath;
+        }
     } else {
         // Fallback to the imported image or default
         src = imageMap[sectionId] || defaultImage;

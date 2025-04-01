@@ -8,6 +8,7 @@ export interface ParentalPlan {
     viewers: string[];
     created_by: string;
     sections: {
+        general?: GeneralSection;
         education?: EducationSection;
         extracurricular?: ExtracurricularSection;
         extras?: ExtrasSection;
@@ -18,6 +19,7 @@ export interface ParentalPlan {
         support?: SupportSection;
         coexistence?: CoexistenceSection;
         consequences?: ConsequencesSection;
+        [key: string]: any; // Add index signature for dynamic access
     };
     isLocked?: boolean; // Flag to indicate if the entire plan is locked
     isDeleted?: boolean; // Flag to indicate if the plan is soft-deleted
@@ -61,9 +63,29 @@ export interface PendingChangeNotification {
     read: boolean;
 }
 
+export interface GeneralSection {
+    reference_home: string | FieldStatus; // Can be editor IDs or 'alternado'
+    guardianship_type: 'unilateral' | 'compartilhada' | FieldStatus;
+    
+    // Child support for employed parent
+    employed_money_payment: 'sim' | 'não' | FieldStatus;
+    employed_payment_method?: 'depósito' | 'desconto_em_folha' | FieldStatus;
+    employed_direct_payment: 'sim' | 'não' | FieldStatus;
+    employed_services_payment: 'sim' | 'não' | FieldStatus;
+    employed_extra_expenses: 'sim' | 'não' | FieldStatus;
+    
+    // Child support for unemployed parent
+    unemployed_money_payment: 'sim' | 'não' | FieldStatus;
+    unemployed_payment_method?: 'depósito' | 'desconto_em_folha' | FieldStatus;
+    unemployed_direct_payment: 'sim' | 'não' | FieldStatus;
+    unemployed_services_payment: 'sim' | 'não' | FieldStatus;
+    unemployed_extra_expenses: 'sim' | 'não' | FieldStatus;
+}
+
 export interface EducationSection {
     school: string | FieldStatus;
-    tuition_responsible: string | FieldStatus; // Changed from hardcoded values to any string (editor IDs)
+    tuition_responsible: string | 'dividido' | FieldStatus; // Editor ID or 'dividido'
+    tuition_percentage?: string | FieldStatus;
 
     supplies_responsible: string | 'dividido' | FieldStatus; // Editor ID or 'dividido'
     supplies_percentage?: string | FieldStatus;
@@ -141,73 +163,80 @@ export interface Section {
 
 export const planSections: Section[] = [
     {
+        id: 'general',
+        title: 'Informações Gerais',
+        route: 'guarda',
+        completed: false,
+        imagePath: '/app/assets/images/plan_01.webp'
+    },
+    {
         id: 'education',
         title: 'Educação Regular',
         route: 'educacao',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_profile.webp'
+        imagePath: '/app/assets/images/plan_02.webp'
     },
     {
         id: 'extracurricular',
         title: 'Atividades Extracurriculares',
         route: 'atividades',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_rocket.webp'
+        imagePath: '/app/assets/images/plan_03.webp'
     },
     {
         id: 'extras',
         title: 'Convites & Gastos Extras',
         route: 'convites',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_finance.webp'
+        imagePath: '/app/assets/images/plan_04.webp'
     },
     {
         id: 'screens',
         title: 'Uso de Telas & Redes Sociais',
         route: 'telas',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_calendar.webp'
+        imagePath: '/app/assets/images/plan_05.webp'
     },
     {
         id: 'religion',
         title: 'Religião',
         route: 'religiao',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_heart.webp'
+        imagePath: '/app/assets/images/plan_06.webp'
     },
     {
         id: 'travel',
         title: 'Viagens',
         route: 'viagens',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_geolocation.webp'
+        imagePath: '/app/assets/images/plan_07.webp'
     },
     {
         id: 'health',
         title: 'Saúde',
         route: 'saude',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_heart_2.webp'
+        imagePath: '/app/assets/images/plan_08.webp'
     },
     {
         id: 'support',
         title: 'Rede de Apoio Terceirizada',
         route: 'apoio',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_pieces.webp'
+        imagePath: '/app/assets/images/plan_09.webp'
     },
     {
         id: 'coexistence',
         title: 'Convivência',
         route: 'convivencia',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_heart_3.webp'
+        imagePath: '/app/assets/images/plan_10.webp'
     },
     {
         id: 'consequences',
         title: 'Consequências pelo Descumprimento',
         route: 'consequencias',
         completed: false,
-        imagePath: '/assets/images/horizontal-menu_rocket_2.webp'
+        imagePath: '/app/assets/images/plan_11.webp'
     }
 ];

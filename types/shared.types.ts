@@ -102,6 +102,13 @@ export interface SystemMetadata {
   severity: 'info' | 'warning' | 'critical';
 }
 
+// Extend Window with formState for conditional form display
+declare global {
+  interface Window {
+    formState?: Record<string, any>;
+  }
+}
+
 // Parental Plan types
 export interface ParentalPlan {
     id: string;

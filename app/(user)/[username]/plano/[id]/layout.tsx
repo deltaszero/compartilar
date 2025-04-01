@@ -107,7 +107,7 @@ function PlanLayoutContent({
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Desktop Sidebar - Hidden on mobile */}
-                <div className="hidden lg:block w-[280px] shrink-0">
+                <div className="hidden lg:block shrink-0">
                     <PlanSidebar
                         planId={planId}
                         username={username}

@@ -125,8 +125,10 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
         return Object.entries(plan.sections || {}).some(([_, sectionData]) => {
             if (typeof sectionData === 'object') {
                 return Object.entries(sectionData).some(([_, fieldValue]) => {
-                    return typeof fieldValue === 'object' &&
-                        fieldValue.status === 'pending';
+                    return fieldValue !== null && 
+                           typeof fieldValue === 'object' && 
+                           'status' in fieldValue && 
+                           fieldValue.status === 'pending';
                 });
             }
             return false;

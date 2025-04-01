@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, serverTimestamp, deleteDoc, orderBy, writeBatch, arrayUnion, Timestamp, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, serverTimestamp, deleteDoc, orderBy, writeBatch, arrayUnion, Timestamp, limit as firestoreLimit, deleteField } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { ParentalPlan, EducationSection, FieldStatus, ChangelogEntry, PendingChangeNotification } from '../types';
 import { logAuditEvent } from '@/lib/auditLogger';
@@ -123,12 +123,12 @@ const addChangeRequestNotification = async (
 // Add an approval notification for the original requester
 const addApprovalNotification = async (
   planId: string,
-  planTitle: string,
   fieldName: string,
   section: string,
-  approved: boolean,
   approvingUserId: string,
-  originalRequesterId: string
+  originalRequesterId: string,
+  approved: boolean,
+  comments?: string
 ): Promise<void> => {
   try {
     const timestamp = Date.now();
@@ -148,9 +148,9 @@ const addApprovalNotification = async (
     const fullNotification = {
       ...notification,
       type: 'change_response',
-      planTitle,
       title: approved ? 'Alteração aprovada' : 'Alteração rejeitada',
       message: `Sua alteração no campo ${fieldName} da seção ${section} foi ${approved ? 'aprovada' : 'rejeitada'}`,
+      ...(comments ? { comments } : {})
     };
     
     // Add to notifications collection
@@ -198,7 +198,7 @@ const updateNotificationStatus = async (
 };
 
 // Helper to add a changelog entry
-const addChangelogEntry = async (entry: ChangelogEntry): Promise<void> => {
+export const addChangelogEntry = async (entry: ChangelogEntry): Promise<void> => {
   try {
     const planRef = doc(db, COLLECTION_NAME, entry.planId);
     await addDoc(collection(planRef, 'changelog'), {
@@ -287,6 +287,317 @@ export const getParentalPlan = async (planId: string, userId?: string): Promise<
     }
   } catch (error) {
     console.error('Error fetching parental plan:', error);
+    throw error;
+  }
+};
+
+// Update a specific field in any section of the parental plan
+export const updatePlanField = async (
+  planId: string,
+  section: string,
+  fieldName: string,
+  value: any,
+  userId: string
+): Promise<boolean> => {
+  try {
+    // Verify permission
+    if (!(await isEditor(planId, userId))) {
+      throw new Error('User does not have permission to edit this plan');
+    }
+    
+    const planRef = doc(db, COLLECTION_NAME, planId);
+    const planSnap = await getDoc(planRef);
+    
+    if (!planSnap.exists()) {
+      throw new Error('Plan does not exist');
+    }
+    
+    const plan = planSnap.data() as ParentalPlan;
+    
+    // Check if plan is locked
+    if (plan.isLocked) {
+      throw new Error('Plan is locked for editing');
+    }
+    
+    // Get current section data or initialize if it doesn't exist
+    const sectionData = plan.sections?.[section as keyof typeof plan.sections] || {};
+    
+    // Check if a previous value exists (to avoid undefined values)
+    const existingValue = sectionData[fieldName]?.value || sectionData[fieldName];
+    
+    // Generate field status object
+    const fieldStatus: FieldStatus = {
+      value: value,
+      status: 'pending',
+      isLocked: true,
+      lastUpdatedBy: userId,
+      lastUpdatedAt: Date.now()
+    };
+    
+    // Only add previousValue if it's not undefined (Firestore doesn't accept undefined)
+    if (existingValue !== undefined) {
+      fieldStatus.previousValue = existingValue;
+    }
+    
+    // Prepare update
+    const updateData: Record<string, any> = {
+      [`sections.${section}.${fieldName}`]: fieldStatus,
+      updated_at: Date.now()
+    };
+    
+    // Apply update
+    await updateDoc(planRef, updateData);
+    
+    // Add to changelog (avoiding undefined values)
+    const changelogData: ChangelogEntry = {
+      planId,
+      timestamp: Date.now(),
+      userId,
+      action: 'update',
+      description: `Atualizado campo ${fieldName} na seção ${section}`,
+      fieldsAfter: { [fieldName]: value },
+      fieldName,
+      section
+    };
+    
+    // Only add fieldsBefore if the previous value wasn't undefined
+    if (existingValue !== undefined) {
+      changelogData.fieldsBefore = { [fieldName]: existingValue };
+    }
+    
+    await addChangelogEntry(changelogData);
+    
+    // Notify other editors
+    const otherEditors = await getOtherEditors(planId, userId);
+    
+    if (otherEditors.length > 0) {
+      // Create notification for editors
+      const notificationData: any = {
+        planId,
+        fieldName,
+        section,
+        timestamp: Date.now(),
+        requestedBy: userId,
+        targetUsers: otherEditors,
+        status: 'pending',
+        read: false
+      };
+      
+      const notificationsRef = collection(db, 'notifications');
+      await addDoc(notificationsRef, notificationData);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating plan field:', error);
+    throw error;
+  }
+};
+
+// Generic function to approve or reject a field change in any section
+export const approveField = async (
+  planId: string,
+  section: string,
+  fieldName: string,
+  approved: boolean,
+  userId: string,
+  comments?: string
+): Promise<boolean> => {
+  try {
+    // Verify that user is an editor
+    if (!(await isEditor(planId, userId))) {
+      throw new Error('User is not authorized to approve/reject changes');
+    }
+    
+    const planRef = doc(db, COLLECTION_NAME, planId);
+    const planSnap = await getDoc(planRef);
+    
+    if (!planSnap.exists()) {
+      throw new Error('Plan does not exist');
+    }
+    
+    const planData = planSnap.data() as ParentalPlan;
+    const sectionData = planData.sections?.[section] || {};
+    const fieldData = sectionData[fieldName];
+    
+    // Check if the field exists and has a pending status
+    if (!fieldData || typeof fieldData !== 'object' || !('status' in fieldData) || fieldData.status !== 'pending') {
+      throw new Error(`No pending changes found for field ${fieldName} in section ${section}`);
+    }
+    
+    // Cannot approve/reject your own changes
+    if (fieldData.lastUpdatedBy === userId) {
+      throw new Error('Cannot approve/reject your own changes');
+    }
+    
+    // If approving the change
+    if (approved) {
+      // Update status to approved
+      await updateDoc(planRef, {
+        [`sections.${section}.${fieldName}.status`]: 'approved',
+        [`sections.${section}.${fieldName}.isLocked`]: false,
+        [`sections.${section}.${fieldName}.approvedBy`]: userId,
+        [`sections.${section}.${fieldName}.approvedAt`]: Date.now(),
+        ...(comments ? { [`sections.${section}.${fieldName}.comments`]: comments } : {})
+      });
+      
+      // Add approval to changelog with more details
+      await addChangelogEntry({
+        planId,
+        timestamp: Date.now(),
+        userId,
+        action: 'approve_field',
+        description: `Aprovada alteração no campo ${fieldName} na seção ${section}`,
+        fieldName,
+        section,
+        fieldsAfter: { [fieldName]: fieldData.value },
+        fieldsBefore: fieldData.previousValue !== undefined ? { [fieldName]: fieldData.previousValue } : undefined,
+        ...(comments ? { comments } : {})
+      });
+      
+      // Update notification status
+      await addApprovalNotification(
+        planId,
+        fieldName,
+        section,
+        userId,
+        fieldData.lastUpdatedBy,
+        true,
+        comments
+      );
+    } 
+    // If rejecting the change
+    else {
+      // Get previous value (if exists)
+      const previousValue = fieldData.previousValue;
+      
+      // Update with previous value or remove field if no previous value
+      if (previousValue !== undefined) {
+        // Revert to previous value
+        await updateDoc(planRef, {
+          [`sections.${section}.${fieldName}`]: previousValue
+        });
+      } else {
+        // If there was no previous value, remove the field
+        const sectionRef = doc(db, COLLECTION_NAME, planId);
+        const fieldPath = `sections.${section}.${fieldName}`;
+        
+        // Create a field path to delete
+        await updateDoc(sectionRef, {
+          [fieldPath]: deleteField()
+        });
+      }
+      
+      // Add rejection to changelog with detailed information
+      await addChangelogEntry({
+        planId,
+        timestamp: Date.now(),
+        userId,
+        action: 'reject_field',
+        description: `Rejeitada alteração no campo ${fieldName} na seção ${section}`,
+        fieldName,
+        section,
+        fieldsAfter: previousValue !== undefined ? { [fieldName]: previousValue } : undefined,
+        fieldsBefore: { [fieldName]: fieldData.value },
+        ...(comments ? { comments } : {})
+      });
+      
+      // Update notification status
+      await addApprovalNotification(
+        planId,
+        fieldName,
+        section,
+        userId,
+        fieldData.lastUpdatedBy,
+        false,
+        comments
+      );
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error approving/rejecting field:', error);
+    throw error;
+  }
+};
+
+// Function to allow a user to cancel their own pending changes
+export const cancelFieldChange = async (
+  planId: string,
+  section: string,
+  fieldName: string,
+  userId: string
+): Promise<boolean> => {
+  try {
+    // Verify permissions
+    if (!(await hasPermissionToPlan(planId, userId))) {
+      throw new Error('User does not have permission to this plan');
+    }
+    
+    const planRef = doc(db, COLLECTION_NAME, planId);
+    const planSnap = await getDoc(planRef);
+    
+    if (!planSnap.exists()) {
+      throw new Error('Plan does not exist');
+    }
+    
+    const planData = planSnap.data() as ParentalPlan;
+    const sectionData = planData.sections?.[section] || {};
+    const fieldData = sectionData[fieldName];
+    
+    // Check if field exists and has pending status
+    if (!fieldData || typeof fieldData !== 'object' || !('status' in fieldData) || fieldData.status !== 'pending') {
+      throw new Error(`No pending changes found for field ${fieldName} in section ${section}`);
+    }
+    
+    // Only the user who made the change can cancel it
+    if (fieldData.lastUpdatedBy !== userId) {
+      throw new Error('Only the user who made the change can cancel it');
+    }
+    
+    // Get previous value (if exists)
+    const previousValue = fieldData.previousValue;
+    
+    // Update with previous value or remove field if no previous value
+    if (previousValue !== undefined) {
+      // Revert to previous value
+      await updateDoc(planRef, {
+        [`sections.${section}.${fieldName}`]: previousValue
+      });
+    } else {
+      // If there was no previous value, remove the field
+      const sectionRef = doc(db, COLLECTION_NAME, planId);
+      const fieldPath = `sections.${section}.${fieldName}`;
+      
+      // Create a field path to delete
+      await updateDoc(sectionRef, {
+        [fieldPath]: deleteField()
+      });
+    }
+    
+    // Add cancellation to changelog with detailed information
+    await addChangelogEntry({
+      planId,
+      timestamp: Date.now(),
+      userId,
+      action: 'cancel_field_change',
+      description: `Cancelada alteração no campo ${fieldName} na seção ${section}`,
+      fieldName,
+      section,
+      fieldsAfter: previousValue !== undefined ? { [fieldName]: previousValue } : undefined,
+      fieldsBefore: { [fieldName]: fieldData.value }
+    });
+    
+    // Update notification status if there are other editors
+    const otherEditors = await getOtherEditors(planId, userId);
+    
+    if (otherEditors.length > 0) {
+      await updateNotificationStatus(planId, fieldName, 'canceled');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error canceling field change:', error);
     throw error;
   }
 };
@@ -692,12 +1003,12 @@ export const approveEducationField = async (
     // Notify the original requester
     await addApprovalNotification(
       planId,
-      planData.title,
       fieldName,
       'education',
-      approved,
       userId,
-      fieldStatus.lastUpdatedBy
+      fieldStatus.lastUpdatedBy,
+      approved,
+      comments // Optional comments
     );
     
     // Add to changelog
@@ -734,7 +1045,7 @@ export const approveEducationField = async (
   }
 };
 
-export const cancelFieldChange = async (
+export const cancelEducationFieldChange = async (
   planId: string,
   userId: string,
   fieldName: string,
