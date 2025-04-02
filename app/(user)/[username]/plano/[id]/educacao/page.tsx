@@ -11,6 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import PlanChangeLog from '../../components/PlanChangeLog';
+import { getAuth } from 'firebase/auth';
+
+// Helper function to normalize values for comparison
+const normalizeValue = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  return String(value);
+};
 
 const EducacaoPage = () => {
   const { id } = useParams();
@@ -47,23 +54,43 @@ const EducacaoPage = () => {
             // Check if the education section exists and has pending changes
             const educationSection = planData.sections.education;
             let hasPending = false;
+            let pendingFieldsList: any[] = [];
             
             if (educationSection) {
               const initialState: Record<string, any> = {};
               
               Object.entries(educationSection).forEach(([key, value]) => {
                 if (value && typeof value === 'object' && 'value' in value) {
+                  // Extract the value for the form state
                   initialState[key] = value.value;
+                  
+                  // Check if this field has pending changes
                   if (value.status === 'pending') {
                     hasPending = true;
+                    
+                    // Add to pending fields list for display
+                    pendingFieldsList.push({
+                      fieldName: key,
+                      dbFieldName: key,
+                      label: key, // We'll display raw field name as fallback
+                      currentValue: value.value,
+                      previousValue: value.previousValue,
+                      updatedBy: value.lastUpdatedBy,
+                      updatedByName: value.lastUpdatedBy, // Would need to resolve to actual name
+                      updatedAt: value.lastUpdatedAt
+                    });
                   }
                 } else {
                   initialState[key] = value;
                 }
               });
               
+              console.log('Form state initialized:', initialState);
+              console.log('Pending fields:', pendingFieldsList);
+              
               setFormState(initialState);
               setHasPendingChanges(hasPending);
+              setPendingFields(pendingFieldsList);
             }
           }
         }
@@ -119,16 +146,33 @@ const EducacaoPage = () => {
       }
       
       for (const [fieldId, value] of Object.entries(formState)) {
-        if (originalValues[fieldId] !== value) {
-          validFieldPromises.push(
-            updatePlanField(
-              plan.id,
-              'education',
-              fieldId,
-              value,
-              user.uid
-            )
-          );
+        // Skip undefined values
+        if (value === undefined) continue;
+        
+        // Use the normalize helper for consistent value handling
+        const normalizedValue = normalizeValue(value);
+        const normalizedOriginal = normalizeValue(originalValues[fieldId]);
+        
+        // Log all values to help diagnose
+        console.log(`Field: ${fieldId}, Current: "${normalizedValue}", Original: "${normalizedOriginal}"`);
+        
+        // If field has changed or doesn't exist in originalValues
+        if (normalizedValue !== normalizedOriginal || !(fieldId in originalValues)) {
+          console.log(`Updating field ${fieldId}: "${normalizedOriginal}" → "${normalizedValue}"`);
+          
+          try {
+            validFieldPromises.push(
+              updatePlanField(
+                plan.id,
+                'education',
+                fieldId,
+                normalizedValue,
+                user.uid
+              )
+            );
+          } catch (err) {
+            console.error(`Error updating field ${fieldId}:`, err);
+          }
         }
       }
       
@@ -189,6 +233,178 @@ const EducacaoPage = () => {
       </div>
       
       <div className="grid grid-cols-1 gap-8">
+        {/* Pending changes display */}
+        {hasPendingChanges && pendingFields.length > 0 && (
+          <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 mb-4">
+            <h2 className="text-lg font-semibold mb-2">Alterações Pendentes</h2>
+            <div className="space-y-3">
+              {pendingFields.map((field, index) => (
+                <div key={index} className="p-3 bg-white rounded shadow-sm">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{field.label}</p>
+                      <div className="grid grid-cols-2 gap-4 mt-1 text-sm">
+                        <div>
+                          <p className="text-gray-500">Valor anterior:</p>
+                          <p>{field.previousValue || '(vazio)'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Novo valor:</p>
+                          <p>{field.currentValue || '(vazio)'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {isUserEditor && (
+                      <div className="space-x-2">
+                        {user?.uid === field.updatedBy ? (
+                          // If this is the user's own change, show cancel button
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={async () => {
+                              try {
+                                setApprovingField(field.dbFieldName);
+                                // Simple client-side direct update approach to cancel changes
+                                // This approach sets the field value directly back to the previous value
+                                
+                                // Get the current field with previous value reference
+                                if (!plan?.sections?.education?.[field.dbFieldName]) {
+                                  throw new Error('Field not found');
+                                }
+                                
+                                const currentField = plan.sections.education[field.dbFieldName];
+                                
+                                // Check if this is the user's own change
+                                if (currentField.lastUpdatedBy !== user!.uid) {
+                                  throw new Error('You can only cancel your own changes');
+                                }
+                                
+                                // Get the previous value to restore
+                                const previousValue = currentField.previousValue || '';
+                                
+                                // Update the field directly with the original value
+                                await updatePlanField(
+                                  plan!.id,
+                                  'education',
+                                  field.dbFieldName,
+                                  previousValue,
+                                  user!.uid
+                                );
+                                
+                                toast({
+                                  title: 'Alteração cancelada',
+                                  description: 'Sua alteração foi cancelada com sucesso.',
+                                  variant: 'default'
+                                });
+                                
+                                // Refresh the plan data
+                                const updatedPlan = await getParentalPlan(plan!.id);
+                                if (updatedPlan) {
+                                  setPlan(updatedPlan);
+                                  setHasPendingChanges(false);
+                                  setPendingFields([]);
+                                }
+                              } catch (error) {
+                                console.error('Error canceling field change:', error);
+                                toast({
+                                  title: 'Erro',
+                                  description: 'Ocorreu um erro ao cancelar a alteração.',
+                                  variant: 'destructive'
+                                });
+                              } finally {
+                                setApprovingField(null);
+                              }
+                            }}
+                            disabled={approvingField === field.dbFieldName}
+                          >
+                            Cancelar
+                          </Button>
+                        ) : (
+                          // If this is another user's change, show approve/reject buttons
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={async () => {
+                                try {
+                                  setApprovingField(field.dbFieldName);
+                                  await approveField(plan!.id, 'education', field.dbFieldName, true, user!.uid);
+                                  
+                                  toast({
+                                    title: 'Alteração aprovada',
+                                    description: 'A alteração foi aprovada com sucesso.',
+                                    variant: 'default'
+                                  });
+                                  
+                                  // Refresh the plan data
+                                  const updatedPlan = await getParentalPlan(plan!.id);
+                                  if (updatedPlan) {
+                                    setPlan(updatedPlan);
+                                    setHasPendingChanges(false);
+                                    setPendingFields([]);
+                                  }
+                                } catch (error) {
+                                  console.error('Error approving field:', error);
+                                  toast({
+                                    title: 'Erro',
+                                    description: 'Ocorreu um erro ao aprovar a alteração.',
+                                    variant: 'destructive'
+                                  });
+                                } finally {
+                                  setApprovingField(null);
+                                }
+                              }}
+                              disabled={approvingField === field.dbFieldName}
+                            >
+                              Aprovar
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive" 
+                              onClick={async () => {
+                                try {
+                                  setApprovingField(field.dbFieldName);
+                                  await approveField(plan!.id, 'education', field.dbFieldName, false, user!.uid);
+                                  
+                                  toast({
+                                    title: 'Alteração rejeitada',
+                                    description: 'A alteração foi rejeitada com sucesso.',
+                                    variant: 'default'
+                                  });
+                                  
+                                  // Refresh the plan data
+                                  const updatedPlan = await getParentalPlan(plan!.id);
+                                  if (updatedPlan) {
+                                    setPlan(updatedPlan);
+                                    setHasPendingChanges(false);
+                                    setPendingFields([]);
+                                  }
+                                } catch (error) {
+                                  console.error('Error rejecting field:', error);
+                                  toast({
+                                    title: 'Erro',
+                                    description: 'Ocorreu um erro ao rejeitar a alteração.',
+                                    variant: 'destructive'
+                                  });
+                                } finally {
+                                  setApprovingField(null);
+                                }
+                              }}
+                              disabled={approvingField === field.dbFieldName}
+                            >
+                              Rejeitar
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <FormLayout
           sections={[educationFormData]}
           formState={formState}

@@ -201,10 +201,30 @@ const updateNotificationStatus = async (
 export const addChangelogEntry = async (entry: ChangelogEntry): Promise<void> => {
   try {
     const planRef = doc(db, COLLECTION_NAME, entry.planId);
-    await addDoc(collection(planRef, 'changelog'), {
+    
+    // Create a sanitized copy of the entry with no undefined values
+    const sanitizedEntry: Record<string, any> = {
       ...entry,
       timestamp: entry.timestamp || Date.now()
+    };
+    
+    // Ensure fieldsBefore and fieldsAfter are never undefined
+    if (!sanitizedEntry.fieldsBefore) {
+      sanitizedEntry.fieldsBefore = {};
+    }
+    
+    if (!sanitizedEntry.fieldsAfter) {
+      sanitizedEntry.fieldsAfter = {};
+    }
+    
+    // Remove any potential undefined values in nested objects
+    Object.keys(sanitizedEntry).forEach(key => {
+      if (sanitizedEntry[key] === undefined) {
+        delete sanitizedEntry[key];
+      }
     });
+    
+    await addDoc(collection(planRef, 'changelog'), sanitizedEntry);
   } catch (error) {
     console.error('Error adding changelog entry:', error);
     // Log but don't fail the operation
@@ -442,7 +462,7 @@ export const approveField = async (
       });
       
       // Add approval to changelog with more details
-      await addChangelogEntry({
+      const changelogData: ChangelogEntry = {
         planId,
         timestamp: Date.now(),
         userId,
@@ -450,10 +470,23 @@ export const approveField = async (
         description: `Aprovada alteração no campo ${fieldName} na seção ${section}`,
         fieldName,
         section,
-        fieldsAfter: { [fieldName]: fieldData.value },
-        fieldsBefore: fieldData.previousValue !== undefined ? { [fieldName]: fieldData.previousValue } : undefined,
-        ...(comments ? { comments } : {})
-      });
+        fieldsAfter: { [fieldName]: fieldData.value }
+      };
+      
+      // Only add fieldsBefore if the previous value exists
+      if (fieldData.previousValue !== undefined && fieldData.previousValue !== null) {
+        changelogData.fieldsBefore = { [fieldName]: fieldData.previousValue };
+      } else {
+        // Add an empty string instead of undefined
+        changelogData.fieldsBefore = { [fieldName]: '' };
+      }
+      
+      // Add comments if provided
+      if (comments) {
+        changelogData.comments = comments;
+      }
+      
+      await addChangelogEntry(changelogData);
       
       // Update notification status
       await addApprovalNotification(
@@ -489,7 +522,7 @@ export const approveField = async (
       }
       
       // Add rejection to changelog with detailed information
-      await addChangelogEntry({
+      const rejectChangelogData: ChangelogEntry = {
         planId,
         timestamp: Date.now(),
         userId,
@@ -497,10 +530,23 @@ export const approveField = async (
         description: `Rejeitada alteração no campo ${fieldName} na seção ${section}`,
         fieldName,
         section,
-        fieldsAfter: previousValue !== undefined ? { [fieldName]: previousValue } : undefined,
-        fieldsBefore: { [fieldName]: fieldData.value },
-        ...(comments ? { comments } : {})
-      });
+        fieldsBefore: { [fieldName]: fieldData.value }
+      };
+      
+      // Only add fieldsAfter if the previous value exists
+      if (previousValue !== undefined && previousValue !== null) {
+        rejectChangelogData.fieldsAfter = { [fieldName]: previousValue };
+      } else {
+        // Add an empty string instead of undefined
+        rejectChangelogData.fieldsAfter = { [fieldName]: '' };
+      }
+      
+      // Add comments if provided
+      if (comments) {
+        rejectChangelogData.comments = comments;
+      }
+      
+      await addChangelogEntry(rejectChangelogData);
       
       // Update notification status
       await addApprovalNotification(
@@ -524,9 +570,9 @@ export const approveField = async (
 // Function to allow a user to cancel their own pending changes
 export const cancelFieldChange = async (
   planId: string,
-  section: string,
+  userId: string,
   fieldName: string,
-  userId: string
+  section: string = 'education'
 ): Promise<boolean> => {
   try {
     // Verify permissions
@@ -576,7 +622,7 @@ export const cancelFieldChange = async (
     }
     
     // Add cancellation to changelog with detailed information
-    await addChangelogEntry({
+    const cancelChangelogData: ChangelogEntry = {
       planId,
       timestamp: Date.now(),
       userId,
@@ -584,9 +630,18 @@ export const cancelFieldChange = async (
       description: `Cancelada alteração no campo ${fieldName} na seção ${section}`,
       fieldName,
       section,
-      fieldsAfter: previousValue !== undefined ? { [fieldName]: previousValue } : undefined,
       fieldsBefore: { [fieldName]: fieldData.value }
-    });
+    };
+    
+    // Only add fieldsAfter if the previous value exists
+    if (previousValue !== undefined && previousValue !== null) {
+      cancelChangelogData.fieldsAfter = { [fieldName]: previousValue };
+    } else {
+      // Add an empty string instead of undefined
+      cancelChangelogData.fieldsAfter = { [fieldName]: '' };
+    }
+    
+    await addChangelogEntry(cancelChangelogData);
     
     // Update notification status if there are other editors
     const otherEditors = await getOtherEditors(planId, userId);
