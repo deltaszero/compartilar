@@ -35,6 +35,17 @@ export interface EducationFormData {
     transport: RadioQuestion<'sim' | 'não'>;
     signDocuments: RadioQuestion<'sim' | 'não'>;
   };
+  schoolTransport: RadioQuestion<'pai' | 'mãe'>;
+  privateTutor: {
+    decision: RadioQuestion<'conjunto' | 'pai' | 'mãe'>;
+    payment: RadioQuestion<'pai' | 'mãe' | 'dividido'>;
+    percentage?: TextQuestion;
+  };
+  familyAccess: {
+    transport: RadioQuestion<'sim' | 'não'>;
+    signDocuments: RadioQuestion<'sim' | 'não'>;
+    extracurricular: RadioQuestion<'sim' | 'não'>;
+  };
   schoolEvents: RadioQuestion<'ambos' | 'revezamento'>;
   newFamilyParticipation: RadioQuestion<'sim' | 'não'>;
 }
@@ -110,13 +121,90 @@ export const educationFormData: FormSection<EducationFormData> = {
         value: 'outro'
       }
     },
+    schoolTransport: {
+      id: 'schoolTransport',
+      type: 'radio',
+      label: 'Se for necessária a contratação de transporte escolar, quem arcará com os custos?',
+      options: [
+        { value: 'pai', label: 'Pai' },
+        { value: 'mãe', label: 'Mãe' }
+      ],
+      required: true
+    },
+    privateTutor: {
+      decision: {
+        id: 'privateTutor.decision',
+        type: 'radio',
+        label: 'Se for preciso contratar um professor particular, quem decidirá?',
+        options: [
+          { value: 'conjunto', label: 'Em conjunto' },
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' }
+        ],
+        required: true
+      },
+      payment: {
+        id: 'privateTutor.payment',
+        type: 'radio',
+        label: 'Quem será responsável pelo pagamento?',
+        options: [
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' },
+          { value: 'dividido', label: 'Será dividido' }
+        ],
+        required: true
+      },
+      percentage: {
+        id: 'privateTutor.percentage',
+        type: 'text',
+        label: 'Porcentagem de divisão',
+        placeholder: 'Ex: 50%',
+        required: false,
+        conditionalOn: {
+          field: 'privateTutor.payment',
+          value: 'dividido'
+        }
+      }
+    },
+    familyAccess: {
+      transport: {
+        id: 'familyAccess.transport',
+        type: 'radio',
+        label: 'Família extensa está autorizada a transportar o menor?',
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'não', label: 'Não' }
+        ],
+        required: true
+      },
+      signDocuments: {
+        id: 'familyAccess.signDocuments',
+        type: 'radio',
+        label: 'Família extensa pode assinar documentos na escola?',
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'não', label: 'Não' }
+        ],
+        required: true
+      },
+      extracurricular: {
+        id: 'familyAccess.extracurricular',
+        type: 'radio',
+        label: 'E nas atividades extracurriculares?',
+        options: [
+          { value: 'sim', label: 'Sim' },
+          { value: 'não', label: 'Não' }
+        ],
+        required: true
+      }
+    },
     schoolEvents: {
       id: 'schoolEvents',
       type: 'radio',
       label: 'Em festas escolares, os genitores:',
       options: [
         { value: 'ambos', label: 'Ambos participarão sempre' },
-        { value: 'revezamento', label: 'Se revezarão' }
+        { value: 'revezamento', label: 'Se revezarão (participando somente nas atividades em sua homenagem e revezando-se anualmente)' }
       ],
       required: true
     },
