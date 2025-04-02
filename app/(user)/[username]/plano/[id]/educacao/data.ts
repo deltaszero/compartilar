@@ -110,7 +110,25 @@ export const educationFormData: FormSection<EducationFormData> = {
         value: 'outro'
       }
     },
-    // Continue with the rest of the fields from the README
-    // ...
+    schoolEvents: {
+      id: 'schoolEvents',
+      type: 'radio',
+      label: 'Em festas escolares, os genitores:',
+      options: [
+        { value: 'ambos', label: 'Ambos participarão sempre' },
+        { value: 'revezamento', label: 'Se revezarão' }
+      ],
+      required: true
+    },
+    newFamilyParticipation: {
+      id: 'newFamilyParticipation',
+      type: 'radio',
+      label: 'Se um dos genitores tiver nova família, os novos membros poderão comparecer a eventos escolares?',
+      options: [
+        { value: 'sim', label: 'Sim' },
+        { value: 'não', label: 'Não' }
+      ],
+      required: true
+    },
   }
 };
