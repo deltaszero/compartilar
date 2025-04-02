@@ -246,7 +246,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
   }
 
   return (
-    <Card className="sm:max-w-2xl mx-auto">
+    <Card className="mx-auto">
       <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
         <CardTitle className="text-lg sm:text-xl">Histórico de Alterações</CardTitle>
       </CardHeader>
@@ -271,7 +271,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
                     </div>
                   </div>
                   <Button 
-                    variant="ghost" 
+                    variant="default" 
                     size="sm" 
                     onClick={() => entry.id && toggleExpandEntry(entry.id)}
                     className="px-3 h-8 sm:px-2 sm:h-7"

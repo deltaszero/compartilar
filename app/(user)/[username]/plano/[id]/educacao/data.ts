@@ -34,16 +34,6 @@ export interface EducationFormData {
   familyAccess: {
     transport: RadioQuestion<'sim' | 'não'>;
     signDocuments: RadioQuestion<'sim' | 'não'>;
-  };
-  schoolTransport: RadioQuestion<'pai' | 'mãe'>;
-  privateTutor: {
-    decision: RadioQuestion<'conjunto' | 'pai' | 'mãe'>;
-    payment: RadioQuestion<'pai' | 'mãe' | 'dividido'>;
-    percentage?: TextQuestion;
-  };
-  familyAccess: {
-    transport: RadioQuestion<'sim' | 'não'>;
-    signDocuments: RadioQuestion<'sim' | 'não'>;
     extracurricular: RadioQuestion<'sim' | 'não'>;
   };
   schoolEvents: RadioQuestion<'ambos' | 'revezamento'>;
@@ -97,8 +87,102 @@ export const educationFormData: FormSection<EducationFormData> = {
         }
       }
     },
-    // Similar structure for uniform, books, extraActivities, fieldTrips
-    // ...
+    uniform: {
+      payment: {
+        id: 'uniform.payment',
+        type: 'radio',
+        label: 'Quem arcará com os custos de fardamento?',
+        options: [
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' },
+          { value: 'dividido', label: 'Será dividido' }
+        ],
+        required: true
+      },
+      percentage: {
+        id: 'uniform.percentage',
+        type: 'text',
+        label: 'Porcentagem de divisão',
+        placeholder: 'Ex: 50%',
+        required: false,
+        conditionalOn: {
+          field: 'uniform.payment',
+          value: 'dividido'
+        }
+      }
+    },
+    books: {
+      payment: {
+        id: 'books.payment',
+        type: 'radio',
+        label: 'Quem arcará com os custos de apostilas?',
+        options: [
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' },
+          { value: 'dividido', label: 'Será dividido' }
+        ],
+        required: true
+      },
+      percentage: {
+        id: 'books.percentage',
+        type: 'text',
+        label: 'Porcentagem de divisão',
+        placeholder: 'Ex: 50%',
+        required: false,
+        conditionalOn: {
+          field: 'books.payment',
+          value: 'dividido'
+        }
+      }
+    },
+    extraActivities: {
+      payment: {
+        id: 'extraActivities.payment',
+        type: 'radio',
+        label: 'Quem arcará com os custos de atividades extras propostas pela escola?',
+        options: [
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' },
+          { value: 'dividido', label: 'Será dividido' }
+        ],
+        required: true
+      },
+      percentage: {
+        id: 'extraActivities.percentage',
+        type: 'text',
+        label: 'Porcentagem de divisão',
+        placeholder: 'Ex: 50%',
+        required: false,
+        conditionalOn: {
+          field: 'extraActivities.payment',
+          value: 'dividido'
+        }
+      }
+    },
+    fieldTrips: {
+      payment: {
+        id: 'fieldTrips.payment',
+        type: 'radio',
+        label: 'Quem arcará com os custos de excursões?',
+        options: [
+          { value: 'pai', label: 'Pai' },
+          { value: 'mãe', label: 'Mãe' },
+          { value: 'dividido', label: 'Será dividido' }
+        ],
+        required: true
+      },
+      percentage: {
+        id: 'fieldTrips.percentage',
+        type: 'text',
+        label: 'Porcentagem de divisão',
+        placeholder: 'Ex: 50%',
+        required: false,
+        conditionalOn: {
+          field: 'fieldTrips.payment',
+          value: 'dividido'
+        }
+      }
+    },
     emergencyContact: {
       id: 'emergencyContact',
       type: 'radio',
@@ -109,17 +193,6 @@ export const educationFormData: FormSection<EducationFormData> = {
         { value: 'outro', label: 'Outro' }
       ],
       required: true
-    },
-    otherContactName: {
-      id: 'otherContactName',
-      type: 'text',
-      label: 'Nome do contato alternativo',
-      placeholder: 'Nome completo',
-      required: false,
-      conditionalOn: {
-        field: 'emergencyContact',
-        value: 'outro'
-      }
     },
     schoolTransport: {
       id: 'schoolTransport',
@@ -205,16 +278,6 @@ export const educationFormData: FormSection<EducationFormData> = {
       options: [
         { value: 'ambos', label: 'Ambos participarão sempre' },
         { value: 'revezamento', label: 'Se revezarão (participando somente nas atividades em sua homenagem e revezando-se anualmente)' }
-      ],
-      required: true
-    },
-    newFamilyParticipation: {
-      id: 'newFamilyParticipation',
-      type: 'radio',
-      label: 'Se um dos genitores tiver nova família, os novos membros poderão comparecer a eventos escolares?',
-      options: [
-        { value: 'sim', label: 'Sim' },
-        { value: 'não', label: 'Não' }
       ],
       required: true
     },
