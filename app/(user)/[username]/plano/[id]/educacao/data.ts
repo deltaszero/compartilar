@@ -36,6 +36,7 @@ export interface EducationFormData {
     signDocuments: RadioQuestion<'sim' | 'não'>;
   };
   schoolEvents: RadioQuestion<'ambos' | 'revezamento'>;
+  newFamilyParticipation: RadioQuestion<'sim' | 'não'>;
 }
 
 export const educationFormData: FormSection<EducationFormData> = {
