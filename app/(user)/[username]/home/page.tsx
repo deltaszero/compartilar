@@ -28,6 +28,7 @@ import { InvitationDialog } from "./components/InvitationDialog";
 import { HomeFinanceAnalytics } from "./components/HomeFinanceAnalytics";
 import ProfileCompletion from "./components/ProfileCompletion";
 import { PremiumFeatureShowcase } from "./components/PremiumFeatureShowcase";
+import { PremiumSubscriptionCTA } from "./components/PremiumSubscriptionCTA";
 import FeatureCardMenu from "./components/FeatureCardMenu";
 
 // Financial analytics
@@ -199,8 +200,11 @@ export default function HomePage() {
             <UserProfileBar pathname="Home" />
             <div className="flex flex-col sm:mb-0 sm:p-6 sm:gap-6">
                 <div className="flex flex-col relative sm:rounded-none">
-                    <section className="flex flex-col ">
-                        <UserProfileCard userData={userData} />
+                    <section className="flex flex-col">
+                        <div className="flex flex-col sm:flex-row justify-between items-start">
+                            <UserProfileCard userData={userData} />
+                            <PremiumSubscriptionCTA />
+                        </div>
                         <div className="p-4">
                             <ProfileCompletion userData={userData} />
                         </div>
