@@ -16,6 +16,56 @@ Please refer to the following documents:
 5. [API Design](/docs/05-api-design.md)
 6. [API Refactoring](/docs/06-api-refactoring.md)
 
+## API Endpoints
+
+### Authentication
+- `/api/auth/login`
+- `/api/auth/logout`
+- `/api/auth/signup`
+- `/api/auth/google-login`
+- `/api/auth/google-signup`
+- `/api/auth/check-username`
+- `/api/auth/get-token`
+
+### User Management
+- `/api/users`
+- `/api/users/[id]`
+- `/api/users/search`
+- `/api/users/daily-limits`
+- `/api/profile`
+- `/api/profile/children`
+
+### Child Management
+- `/api/children/[id]`
+- `/api/children/[id]/history`
+- `/api/children/[id]/permissions`
+- `/api/children/access`
+
+### Calendar & Events
+- `/api/children/[id]/calendar`
+- `/api/children/[id]/calendar/events`
+- `/api/children/[id]/calendar/events/[eventId]`
+
+### Social Features
+- `/api/friends`
+- `/api/friends/requests`
+- `/api/friends/relationship`
+- `/api/notifications`
+
+### Parental Planning
+- `/api/parental-plan`
+- `/api/parental-plan/[id]`
+- `/api/parental-plan/[id]/education`
+- `/api/parental-plan/[id]/changelog`
+- `/api/parental-plan/[id]/cancel-field`
+
+### Subscription & Payments
+- `/api/webhooks/stripe`
+- `/api/webhooks/stripe/create-checkout-session`
+- `/api/webhooks/stripe/update-subscription-status`
+- `/api/webhooks/stripe/validate-subscription`
+- `/api/webhooks/stripe/verify-stripe-session`
+
 ## Premium vs Free Tier Functionality
 
 CompartiLar operates on a freemium model with the following limits:

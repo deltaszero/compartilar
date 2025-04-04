@@ -7,7 +7,7 @@ export interface ParentalPlan {
     editors: string[]; // Array of editor IDs (minimum one)
     viewers: string[];
     created_by: string;
-    sections: {
+    sections?: {
         general?: GeneralSection;
         education?: EducationSection;
         extracurricular?: ExtracurricularSection;
@@ -21,6 +21,11 @@ export interface ParentalPlan {
         consequences?: ConsequencesSection;
         [key: string]: any; // Add index signature for dynamic access
     };
+    // Allow camelCase variants too for compatibility
+    createdAt?: string | number;
+    updatedAt?: string | number;
+    createdBy?: string;
+    // Collection-specific fields
     isLocked?: boolean; // Flag to indicate if the entire plan is locked
     isDeleted?: boolean; // Flag to indicate if the plan is soft-deleted
     status?: 'active' | 'archived'; // Status of the plan

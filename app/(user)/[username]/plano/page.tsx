@@ -40,19 +40,38 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
 
     useEffect(() => {
         const fetchPlans = async () => {
-            if (!user) return;
+            if (!user) {
+                console.log('No user found, skipping plans fetch');
+                setIsLoading(false);
+                return;
+            }
 
+            console.log('Client: Starting plans fetch for user', user.uid);
             try {
-                const fetchedPlans = await getParentalPlans(user.uid);
-                setPlans(fetchedPlans);
+                // Add a longer timeout to ensure authentication is fully ready
+                setTimeout(async () => {
+                    try {
+                        console.log('Client: Timeout complete, fetching plans...');
+                        const fetchedPlans = await getParentalPlans(user.uid);
+                        console.log('Client: Plans received in UI:', fetchedPlans.length);
+                        
+                        // Log raw plans data for debugging
+                        console.log('Client: Raw plans data:', JSON.stringify(fetchedPlans).slice(0, 1000) + '...');
+                        
+                        setPlans(fetchedPlans);
+                    } catch (error) {
+                        console.error('Error fetching plans:', error);
+                        toast({
+                            title: "Erro",
+                            description: "Não foi possível carregar os planos parentais.",
+                            variant: "destructive",
+                        });
+                    } finally {
+                        setIsLoading(false);
+                    }
+                }, 1000); // Increased to 1 second
             } catch (error) {
-                console.error('Error fetching plans:', error);
-                toast({
-                    title: "Erro",
-                    description: "Não foi possível carregar os planos parentais.",
-                    variant: "destructive",
-                });
-            } finally {
+                console.error('Error in fetchPlans:', error);
                 setIsLoading(false);
             }
         };
@@ -94,12 +113,24 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
     };
 
     const getCompletedSectionsCount = (plan: ParentalPlan) => {
+        // Handle case where sections field might not exist at all
         if (!plan.sections) return 0;
 
         let count = 0;
         planSections.forEach(section => {
-            if (plan.sections[section.id as keyof typeof plan.sections]) {
-                count++;
+            try {
+                // Check if the section exists and has any data
+                const sectionData = plan.sections[section.id as keyof typeof plan.sections];
+                if (sectionData && Object.keys(sectionData).length > 0) {
+                    count++;
+                }
+                
+                // Handle legacy data structure where sections might be directly on the plan object
+                if (!sectionData && plan[section.id as keyof typeof plan]) {
+                    count++;
+                }
+            } catch (e) {
+                console.error(`Error checking section ${section.id}:`, e);
             }
         });
 
@@ -178,12 +209,27 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                                     </CardTitle>
                                     <CardDescription>
                                         <div className="font-nunito text-sm font-light">
-                                            Atualizado em {new Date(plan.updated_at).toLocaleDateString('pt-BR', { 
-                                                weekday: 'long', 
-                                                year: 'numeric', 
-                                                month: 'long', 
-                                                day: 'numeric' 
-                                            })}
+                                            Atualizado em {
+                                                (() => {
+                                                    try {
+                                                        // Try with updated_at (snake_case format)
+                                                        const date = plan.updated_at ? new Date(plan.updated_at) : 
+                                                                  plan.updatedAt ? new Date(plan.updatedAt) : 
+                                                                  plan.timestamp ? new Date(plan.timestamp) : 
+                                                                  plan.updated_at === null ? new Date() : new Date();
+                                                        
+                                                        return date.toLocaleDateString('pt-BR', { 
+                                                            weekday: 'long', 
+                                                            year: 'numeric', 
+                                                            month: 'long', 
+                                                            day: 'numeric' 
+                                                        });
+                                                    } catch (e) {
+                                                        console.error('Error formatting date:', e, 'plan:', plan);
+                                                        return 'Data indisponível';
+                                                    }
+                                                })()
+                                            }
                                         </div>
                                     </CardDescription>
                                 </CardHeader>

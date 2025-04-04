@@ -36,8 +36,12 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
     const fetchChangelog = async () => {
       setLoading(true);
       try {
+        console.log('PlanChangeLog: Fetching changelog for plan:', planId);
         const entries = await getParentalPlanChangeLog(planId, user.uid, limit);
-        setChangelog(entries);
+        console.log('PlanChangeLog: Received', entries?.length || 0, 'changelog entries');
+        
+        // Ensure entries is always an array
+        setChangelog(Array.isArray(entries) ? entries : []);
       } catch (error) {
         console.error('Error fetching changelog:', error);
         toast({
@@ -45,6 +49,8 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
           description: 'Não foi possível carregar o histórico de alterações',
           variant: 'destructive'
         });
+        // Set empty changelog in case of error
+        setChangelog([]);
       } finally {
         setLoading(false);
       }
@@ -54,13 +60,18 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
   }, [planId, user, limit, toast]);
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      return new Date(timestamp).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error, 'timestamp:', timestamp);
+      return 'Data indisponível';
+    }
   };
 
   const toggleExpandEntry = (entryId: string) => {
@@ -255,9 +266,9 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
           <p className="text-center text-gray-500 py-4">Nenhuma alteração registrada</p>
         ) : (
           <div className="space-y-3">
-            {changelog.map((entry) => (
+            {changelog.filter(entry => entry).map((entry) => (
               <div 
-                key={entry.id} 
+                key={entry.id || `entry-${Math.random()}`} 
                 className="border rounded p-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -266,7 +277,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
                     <div className="min-w-0">
                       <div className="font-medium text-sm sm:text-base">{renderChangeSummary(entry)}</div>
                       <div className="text-xs text-gray-500">
-                        {formatDate(entry.timestamp)}
+                        {entry.timestamp ? formatDate(entry.timestamp) : 'Data desconhecida'}
                       </div>
                     </div>
                   </div>

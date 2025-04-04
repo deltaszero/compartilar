@@ -62,12 +62,15 @@ export async function GET(
     const createdAt = planData?.createdAt ? planData.createdAt.toDate().toISOString() : null;
     const updatedAt = planData?.updatedAt ? planData.updatedAt.toDate().toISOString() : null;
     
-    // Return the plan data
+    // Return the plan data with backward compatibility for snake_case fields
     return NextResponse.json({ 
       id: planDoc.id,
       ...planData,
       createdAt,
-      updatedAt
+      updatedAt,
+      // Add backward compatibility for existing client code
+      created_at: createdAt || planData.created_at || null,
+      updated_at: updatedAt || planData.updated_at || null
     });
     
   } catch (error) {

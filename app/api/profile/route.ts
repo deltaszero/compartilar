@@ -13,6 +13,20 @@ export async function PUT(request: NextRequest) {
   try {
     console.log('PUT /api/profile called');
     
+    // CSRF protection
+    const requestedWith = request.headers.get('x-requested-with');
+    if (requestedWith !== 'XMLHttpRequest') {
+      return NextResponse.json({ error: 'CSRF verification failed' }, { status: 403 });
+    }
+    
+    // Auth verification
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    
     // Get request data from body
     const { userId, updateData } = await request.json();
     
@@ -24,6 +38,20 @@ export async function PUT(request: NextRequest) {
     if (!updateData || Object.keys(updateData).length === 0) {
       console.error('Missing or empty updateData');
       return NextResponse.json({ error: 'updateData is required' }, { status: 400 });
+    }
+    
+    // Verify Firebase token and check if user is authorized to update this profile
+    if (isAdminSDK) {
+      const { adminAuth } = require('@/lib/firebase-admin');
+      const decodedToken = await adminAuth.verifyIdToken(token);
+      
+      // Users can only update their own profiles
+      if (decodedToken.uid !== userId) {
+        return NextResponse.json({ 
+          error: 'Permission denied', 
+          message: 'You can only update your own profile'
+        }, { status: 403 });
+      }
     }
     
     console.log('Updating profile for userId:', userId);
@@ -79,10 +107,35 @@ export async function GET(request: NextRequest) {
   try {
     console.log('GET /api/profile called');
     
+    // CSRF protection
+    const requestedWith = request.headers.get('x-requested-with');
+    if (requestedWith !== 'XMLHttpRequest') {
+      return NextResponse.json({ error: 'CSRF verification failed' }, { status: 403 });
+    }
+    
     // Get the username from URL params
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
-    const currentUserId = searchParams.get('currentUserId'); // For checking friendship status
+    
+    // Get token from authorization header
+    const authHeader = request.headers.get('authorization');
+    let currentUserId = searchParams.get('currentUserId'); // For checking friendship status
+    
+    // If we have an auth header, verify the token and get the user ID
+    if (authHeader && authHeader.startsWith('Bearer ') && isAdminSDK) {
+      const token = authHeader.split('Bearer ')[1];
+      try {
+        const { adminAuth } = require('@/lib/firebase-admin');
+        const decodedToken = await adminAuth.verifyIdToken(token);
+        // Use the token's UID if no currentUserId provided
+        if (!currentUserId) {
+          currentUserId = decodedToken.uid;
+        }
+      } catch (error) {
+        console.error('Error verifying token:', error);
+        // Continue without the token info - just means we show less data
+      }
+    }
     
     if (!username) {
       console.error('Missing username parameter');

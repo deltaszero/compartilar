@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { SignupFormData } from '../types';
 import { toast } from '@/hooks/use-toast';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { auth } from '@/lib/firebaseConfig';
 
 export function useProfileEdit(initialData: Partial<SignupFormData>, userId: string) {
   // Track if edit mode is active
@@ -59,11 +58,19 @@ export function useProfileEdit(initialData: Partial<SignupFormData>, userId: str
       // Get updatable fields (exclude certain fields like password)
       const { password, confirmPassword, uid, ...updatableData } = formData;
       
+      // Get authentication token
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error('Você precisa estar autenticado para atualizar seu perfil.');
+      }
+      
       // Call the API to update the profile
       const response = await fetch('/api/profile', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           userId: userId,

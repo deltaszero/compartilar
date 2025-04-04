@@ -11,6 +11,7 @@ import { FieldValue } from 'firebase-admin/firestore';
  * - limit: (optional) Number of plans to return, default 20
  */
 export async function GET(request: NextRequest) {
+  console.log('GET /api/parental-plan being called');
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
   if (requestedWith !== 'XMLHttpRequest') {
@@ -30,9 +31,10 @@ export async function GET(request: NextRequest) {
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
+    console.log('API: Fetching parental plans for user:', userId);
+    
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const queryUserId = searchParams.get('userId');
     const childId = searchParams.get('childId');
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
@@ -40,112 +42,142 @@ export async function GET(request: NextRequest) {
     // Start with base collection reference
     const collectionRef = adminDb().collection('parental_plans');
     
-    // Check if the collection exists first to avoid errors on empty collections
-    const collectionCheck = await collectionRef.limit(1).get();
+    // SIMPLIFIED APPROACH: Use three separate queries and merge results 
+    // This matches exactly how the Firestore rules are written
+    console.log('API: Using simplified query approach for parental plans...');
     
-    // If collection is empty or doesn't exist, return empty array early
-    if (collectionCheck.empty) {
-      return NextResponse.json([]);
-    }
+    // 1. Query plans where user is the creator (created_by field)
+    const creatorQuery = collectionRef.where('created_by', '==', userId);
     
-    // Base query - exclude deleted plans
-    let query = collectionRef.where('isDeleted', '==', false);
+    // 2. Query plans where user is an editor
+    const editorQuery = collectionRef.where('editors', 'array-contains', userId);
     
-    // If specific user ID is provided (and not the current user)
-    if (queryUserId && queryUserId !== userId) {
-      // User can only see other users' plans if they have access
-      query = query.where('viewers', 'array-contains', userId);
-    } else {
-      // By default, show plans where user is owner, editor, or viewer
-      // Note: Using separate queries for owner, editor, and viewer to avoid index issues
-      try {
-        query = query.where('accessibleBy', 'array-contains', userId);
-      } catch (error) {
-        // Fallback if compound query fails or index doesn't exist
-        console.warn('Using fallback query method for parental plans');
-        const ownerQuery = collectionRef
-          .where('isDeleted', '==', false)
-          .where('owner', '==', userId);
-          
-        const editorsQuery = collectionRef
-          .where('isDeleted', '==', false)
-          .where('editors', 'array-contains', userId);
-          
-        const viewersQuery = collectionRef
-          .where('isDeleted', '==', false)
-          .where('viewers', 'array-contains', userId);
-          
-        // Execute all queries and merge results
-        const [ownerSnapshot, editorsSnapshot, viewersSnapshot] = await Promise.all([
-          ownerQuery.get(),
-          editorsQuery.get(),
-          viewersQuery.get()
-        ]);
-        
-        // Process and merge results
-        const plans: any[] = [];
-        const processedIds = new Set();
-        
-        [ownerSnapshot, editorsSnapshot, viewersSnapshot].forEach(snapshot => {
-          snapshot.forEach(doc => {
-            if (!processedIds.has(doc.id)) {
-              processedIds.add(doc.id);
-              
-              const plan = doc.data();
-              const createdAt = plan.createdAt ? plan.createdAt.toDate().toISOString() : null;
-              const updatedAt = plan.updatedAt ? plan.updatedAt.toDate().toISOString() : null;
-              
-              plans.push({
-                id: doc.id,
-                ...plan,
-                createdAt,
-                updatedAt
-              });
-            }
-          });
-        });
-        
-        // Sort by updated date (desc)
-        plans.sort((a, b) => {
-          if (!a.updatedAt) return 1;
-          if (!b.updatedAt) return -1;
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        });
-        
-        // Apply limit
-        return NextResponse.json(plans.slice(0, limit));
-      }
-    }
+    // 3. Query plans where user is a viewer
+    const viewerQuery = collectionRef.where('viewers', 'array-contains', userId);
     
-    // If childId is provided, filter by plans linked to that child
-    if (childId) {
-      query = query.where('childrenIds', 'array-contains', childId);
-    }
+    // Execute all queries in parallel
+    console.log('API: Executing three separate queries for parental plans');
+    const [
+      creatorSnapshot, 
+      editorSnapshot, 
+      viewerSnapshot
+    ] = await Promise.all([
+      creatorQuery.get(),
+      editorQuery.get(),
+      viewerQuery.get()
+    ]);
     
-    // Execute the query
-    const planSnapshot = await query
-      .orderBy('updatedAt', 'desc')
-      .limit(limit)
-      .get();
-    
-    // Process results
-    const plans: any[] = [];
-    planSnapshot.forEach(doc => {
-      const plan = doc.data();
-      
-      // Convert timestamps to ISO strings for serialization
-      const createdAt = plan.createdAt ? plan.createdAt.toDate().toISOString() : null;
-      const updatedAt = plan.updatedAt ? plan.updatedAt.toDate().toISOString() : null;
-      
-      plans.push({
-        id: doc.id,
-        ...plan,
-        createdAt,
-        updatedAt
-      });
+    console.log('API: Query results received', {
+      creatorCount: creatorSnapshot.size,
+      editorCount: editorSnapshot.size,
+      viewerCount: viewerSnapshot.size
     });
     
-    return NextResponse.json(plans);
+    // Process and merge results
+    const plans: any[] = [];
+    const processedIds = new Set();
+    
+    // Helper function to process snapshots
+    const processSnapshot = (snapshot: any) => {
+      snapshot.forEach((doc: any) => {
+        if (!processedIds.has(doc.id)) {
+          processedIds.add(doc.id);
+          
+          const plan = doc.data();
+          console.log(`API: Processing plan ${doc.id}, title: ${plan.title}`);
+          
+          // Skip deleted plans
+          if (plan.isDeleted === true) {
+            console.log(`API: Skipping deleted plan: ${doc.id}`);
+            return;
+          }
+          
+          // Filter by childId if provided
+          if (childId && (!plan.childrenIds || !plan.childrenIds.includes(childId))) {
+            console.log(`API: Skipping plan ${doc.id} - doesn't include child ${childId}`);
+            return;
+          }
+          
+          // Process timestamps
+          let created_at = null;
+          let updated_at = null;
+          
+          try {
+            if (plan.created_at) {
+              if (typeof plan.created_at === 'object' && plan.created_at.toDate) {
+                created_at = plan.created_at.toDate().toISOString();
+              } else if (typeof plan.created_at === 'number') {
+                created_at = new Date(plan.created_at).toISOString();
+              } else {
+                created_at = plan.created_at;
+              }
+            }
+          } catch (err) {
+            console.error(`Error processing created_at for plan ${doc.id}:`, err);
+          }
+          
+          try {
+            if (plan.updated_at) {
+              if (typeof plan.updated_at === 'object' && plan.updated_at.toDate) {
+                updated_at = plan.updated_at.toDate().toISOString();
+              } else if (typeof plan.updated_at === 'number') {
+                updated_at = new Date(plan.updated_at).toISOString();
+              } else {
+                updated_at = plan.updated_at;
+              }
+            }
+          } catch (err) {
+            console.error(`Error processing updated_at for plan ${doc.id}:`, err);
+          }
+          
+          // Create normalized plan object with both naming conventions
+          plans.push({
+            id: doc.id,
+            ...plan,
+            // Ensure both conventions are available
+            created_at: created_at || plan.created_at,
+            updated_at: updated_at || plan.updated_at,
+            createdAt: created_at || plan.createdAt,
+            updatedAt: updated_at || plan.updatedAt,
+            created_by: plan.created_by,
+            createdBy: plan.created_by || plan.createdBy
+          });
+        }
+      });
+    };
+    
+    // Process all snapshots
+    processSnapshot(creatorSnapshot);
+    processSnapshot(editorSnapshot);
+    processSnapshot(viewerSnapshot);
+    
+    // Sort by updated date (desc) - try both field naming conventions
+    plans.sort((a, b) => {
+      const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 
+                   a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      
+      const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 
+                   b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      
+      return bTime - aTime; // descending order
+    });
+    
+    // Apply limit and return
+    const limitedPlans = plans.slice(0, limit);
+    console.log(`API: Returning ${limitedPlans.length} parental plans after processing`);
+    
+    // Log the first plan for debugging
+    if (limitedPlans.length > 0) {
+      console.log('API: First plan sample:', {
+        id: limitedPlans[0].id,
+        title: limitedPlans[0].title,
+        created_by: limitedPlans[0].created_by,
+        created_at_type: typeof limitedPlans[0].created_at,
+        updated_at_type: typeof limitedPlans[0].updated_at
+      });
+    }
+    
+    return NextResponse.json(limitedPlans);
     
   } catch (error) {
     console.error('Error fetching parental plans:', error);
@@ -234,10 +266,9 @@ export async function POST(request: NextRequest) {
     const newPlan = {
       title: planData.title,
       description: planData.description || '',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      createdBy: userId,
-      updatedBy: userId,
+      created_at: timestamp,
+      updated_at: timestamp,
+      created_by: userId,
       
       // Access control
       owner: userId,
@@ -249,7 +280,9 @@ export async function POST(request: NextRequest) {
       childrenIds: planData.childrenIds,
       
       // Content
-      regularEducation: planData.regularEducation || {},
+      sections: {
+        regularEducation: planData.regularEducation || {}
+      },
       
       // Status flags
       isActive: true,

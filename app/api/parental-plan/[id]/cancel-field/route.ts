@@ -1,157 +1,169 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/app/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { logAuditEvent } from '@/lib/auditLogger';
 
-// Define route params with Promise for Next.js 15 compatibility
-type RouteParams = {
-  params: Promise<{ id: string }>
-}
-
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+// Helper to check if user is an editor of a plan
+const isEditor = async (planId: string, userId: string): Promise<boolean> => {
   try {
-    // CSRF protection
-    const requestedWith = request.headers.get('x-requested-with');
-    if (requestedWith !== 'XMLHttpRequest') {
-      return NextResponse.json({ error: 'CSRF verification failed' }, { status: 403 });
-    }
-
-    // Auth verification
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
+    const planRef = adminDb().collection('parental_plans').doc(planId);
+    const planSnap = await planRef.get();
     
-    // Verify the Firebase auth token
+    if (!planSnap.exists) {
+      return false;
+    }
+    
+    const planData = planSnap.data();
+    if (!planData) return false;
+    
+    return planData.createdBy === userId || 
+           (planData.editors && planData.editors.includes(userId));
+  } catch (error) {
+    console.error('Error checking editor permissions:', error);
+    return false;
+  }
+};
+
+/**
+ * PUT handler to cancel a pending field change
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  // CSRF protection
+  const requestedWith = request.headers.get('x-requested-with');
+  if (requestedWith !== 'XMLHttpRequest') {
+    return NextResponse.json({ error: 'CSRF verification failed' }, { status: 403 });
+  }
+
+  // Auth verification
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = authHeader.split('Bearer ')[1];
+  
+  try {
+    // Verify Firebase token
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
-
-    // Get request body
-    const { section, fieldName } = await request.json();
     
-    if (!section || !fieldName) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Get plan ID from path parameter - using await for Next.js 15 compatibility
-    const { id: planId } = await params;
-    if (!planId) {
-      return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
+    const planId = params.id;
+    const { fieldName, section = 'education' } = await request.json();
+    
+    if (!fieldName) {
+      return NextResponse.json({ error: 'Field name is required' }, { status: 400 });
     }
     
-    // Get the plan document
+    // Verify user is an editor
+    if (!(await isEditor(planId, userId))) {
+      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
+    }
+    
     const planRef = adminDb().collection('parental_plans').doc(planId);
-    const planDoc = await planRef.get();
+    const planSnap = await planRef.get();
     
-    if (!planDoc.exists) {
+    if (!planSnap.exists) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
     
-    const planData = planDoc.data();
+    const planData = planSnap.data();
     
-    // Check if plan is deleted
-    if (planData?.isDeleted) {
-      return NextResponse.json({ error: 'Parental plan not found' }, { status: 404 });
+    if (!planData) {
+      return NextResponse.json({ error: 'Plan data not found' }, { status: 404 });
     }
     
-    // Check if user has permission to edit this plan
-    const isOwner = planData?.created_by === userId;
-    const isEditor = planData?.editors?.includes(userId);
-    
-    if (!isOwner && !isEditor) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-    }
-    
-    // Find the field in the specified section
-    const sectionData = planData.sections?.[section];
+    // Check if field exists and has pending status
+    const sectionData = planData.sections && section in planData.sections 
+      ? planData.sections[section] 
+      : undefined;
+      
     if (!sectionData) {
-      return NextResponse.json({ error: 'Section not found' }, { status: 404 });
+      return NextResponse.json({ error: `Section ${section} not found` }, { status: 404 });
     }
     
-    const fieldData = sectionData[fieldName];
-    if (!fieldData || typeof fieldData !== 'object' || !('status' in fieldData)) {
-      return NextResponse.json({ error: 'Field not found or not pending' }, { status: 404 });
+    // Safely access the field
+    const fieldData = sectionData && typeof sectionData === 'object'
+      ? sectionData[fieldName]
+      : undefined;
+      
+    if (!fieldData || typeof fieldData !== 'object') {
+      return NextResponse.json(
+        { error: `Field ${fieldName} not found or not in the correct format` }, 
+        { status: 404 }
+      );
     }
     
-    // Check if the user is the one who made the change
+    // Only the author can cancel a pending change
     if (fieldData.lastUpdatedBy !== userId) {
-      return NextResponse.json({ error: 'You can only cancel your own changes' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'You can only cancel your own pending changes' }, 
+        { status: 403 }
+      );
     }
     
-    // Check if the field is still pending
+    // Only allow cancellation of pending changes
     if (fieldData.status !== 'pending') {
-      return NextResponse.json({ error: 'Only pending changes can be canceled' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Only pending changes can be canceled' }, 
+        { status: 400 }
+      );
     }
     
-    // Get the previous value (if exists)
-    const previousValue = fieldData.previousValue || '';
-    // Make sure originalValue is a string to avoid undefined errors
-    const safeOriginalValue = previousValue || '';
-    
-    // Revert to the previous value
-    await planRef.update({
-      [`sections.${section}.${fieldName}`]: safeOriginalValue,
-      updatedAt: FieldValue.serverTimestamp(),
-      updatedBy: userId
-    });
+    // Get the original value to revert to
+    const originalValue = fieldData.previousValue || '';
     
     // Create changelog entry
     const changelogEntry = {
-      planId: planId,
+      planId,
       timestamp: FieldValue.serverTimestamp(),
-      userId: userId,
+      userId,
       action: 'cancel_field_change',
-      description: `Alterações para o campo ${fieldName} canceladas`,
-      fieldName,
+      description: `Canceled changes to ${section} field: ${fieldName}`,
       section,
-      fieldsAfter: { [fieldName]: safeOriginalValue },
-      fieldsBefore: { [fieldName]: fieldData.value }
+      fieldName,
+      fieldsBefore: { [fieldName]: fieldData },
+      fieldsAfter: { [fieldName]: originalValue }
     };
     
-    // Add changelog entry
+    // Update the field - revert to the original value
+    await planRef.update({
+      [`sections.${section}.${fieldName}`]: originalValue,
+      updatedAt: Date.now()
+    });
+    
+    // Add to changelog
     await planRef.collection('changelog').add(changelogEntry);
     
-    // Log audit event
-    try {
-      await logAuditEvent({
-        action: 'update',
-        userId,
-        resourceId: planId,
-        resourceType: 'child',
-        details: {
-          operation: 'cancel_field_change',
-          fields: [fieldName],
-          notes: `Canceled changes to ${section} field: ${fieldName}`
-        }
+    // Find and update any related notifications
+    const notificationsRef = adminDb().collection('notifications');
+    const notificationsQuery = notificationsRef
+      .where('planId', '==', planId)
+      .where('fieldName', '==', fieldName)
+      .where('status', '==', 'pending');
+    
+    const notificationsSnapshot = await notificationsQuery.get();
+    
+    if (!notificationsSnapshot.empty) {
+      const batch = adminDb().batch();
+      
+      notificationsSnapshot.forEach(doc => {
+        batch.update(doc.ref, { 
+          status: 'canceled',
+          updatedAt: Date.now()
+        });
       });
-    } catch (auditError) {
-      // Log but don't fail the operation
-      console.error('Failed to log audit event:', auditError);
+      
+      await batch.commit();
     }
     
     return NextResponse.json({ 
-      success: true,
-      message: 'Field change cancelled successfully',
-      fieldName: fieldName,
-      revertedValue: safeOriginalValue
+      success: true, 
+      originalValue,
+      message: 'Field change canceled successfully'
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error canceling field change:', error);
-    
-    // Add more detailed error info for debugging
-    const details = error instanceof Error 
-      ? { message: error.message, stack: error.stack }
-      : { message: 'Unknown error type' };
-    
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    return NextResponse.json({ 
-      error: errorMessage,
-      details: details
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

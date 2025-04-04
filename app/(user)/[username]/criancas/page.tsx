@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/userContext';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, checkFriendshipStatus, getUserChildren } from '@/lib/firebaseConfig';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
@@ -10,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import ChildrenCarousel from './components/ChildrenCarousel';
 // import ChildrenGrid from './components/ChildrenGrid';
 import { KidInfo } from './types';
+import { auth } from '@/lib/firebaseConfig';
 
 export default function ChildrenPage() {
     const { username } = useParams<{ username: string }>();
@@ -39,12 +39,22 @@ export default function ChildrenPage() {
                     targetUserData = userData;
                     setOwnerData(userData);
                 } else {
-                    // Get the target user data and check friendship
-                    const usersRef = collection(db, 'users');
-                    const q = query(usersRef, where('username', '==', username));
-                    const querySnapshot = await getDocs(q);
-
-                    if (querySnapshot.empty) {
+                    // Get the target user data via API
+                    const idToken = await auth.currentUser?.getIdToken();
+                    const response = await fetch(`/api/users/search?term=${username}&exact=true`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get user data');
+                    }
+                    
+                    const users = await response.json();
+                    
+                    if (!users || users.length === 0) {
                         toast({
                             variant: 'destructive',
                             title: 'Usuário não encontrado',
@@ -54,14 +64,26 @@ export default function ChildrenPage() {
                         return;
                     }
 
-                    const targetUser = querySnapshot.docs[0];
-                    targetUserId = targetUser.id;
-                    targetUserData = { id: targetUser.id, ...targetUser.data() };
+                    const targetUser = users[0];
+                    targetUserId = targetUser.uid;
+                    targetUserData = targetUser;
                     setOwnerData(targetUserData);
 
-                    // Check friendship status
-                    const status = await checkFriendshipStatus(user.uid, targetUserId);
-                    if (status === 'none') {
+                    // Check friendship status via API
+                    const friendshipResponse = await fetch(`/api/friends/relationship?userId=${user.uid}&friendId=${targetUserId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!friendshipResponse.ok) {
+                        throw new Error('Failed to check friendship status');
+                    }
+                    
+                    const friendshipData = await friendshipResponse.json();
+                    
+                    if (friendshipData.status === 'none') {
                         toast({
                             variant: 'destructive',
                             title: 'Acesso negado',
@@ -72,12 +94,27 @@ export default function ChildrenPage() {
                     }
                 }
 
-                // Fetch children data using the getUserChildren function
-                // This function handles permission logic by querying based on viewers/editors arrays
-                const childrenData = await getUserChildren(targetUserId);
+                // Fetch children data via API
+                const idToken = await auth.currentUser?.getIdToken();
+                
+                // We need to pass both the target userId and the current userId to the API
+                const response = await fetch(`/api/profile/children?userId=${targetUserId}&currentUserId=${user.uid}&relationshipStatus=${targetUserId === user.uid ? 'self' : 'friend'}`, {
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error fetching children data:', errorData);
+                    throw new Error(`Failed to fetch children data: ${errorData.message || 'Unknown error'}`);
+                }
+                
+                const childrenData = await response.json();
 
                 // Convert the data to match our KidInfo interface
-                const formattedChildrenData = childrenData.map(child => {
+                const formattedChildrenData = childrenData.map((child: any) => {
                     return {
                         id: child.id,
                         ...child

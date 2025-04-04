@@ -2,8 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/userContext';
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { db, storage, createChild, getUserChildren } from '@/lib/firebaseConfig';
+import { storage } from '@/lib/firebaseConfig';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { Button } from '@/components/ui/button';
@@ -26,6 +25,7 @@ import Link from 'next/link';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { ChevronLeft, Camera, Search, UserPlus, X, UserCog, Pencil } from 'lucide-react';
 import IconCamera from '@/app/assets/icons/camera.svg';
+import { auth } from '@/lib/firebaseConfig';
 
 // Friend search result type
 interface FriendSearchResult {
@@ -77,15 +77,22 @@ export default function AddChildPage() {
             
             setIsLoading(true);
             try {
-                // Get all children user has access to
-                const children = await getUserChildren(user.uid);
+                // Get children count via API
+                const idToken = await auth.currentUser?.getIdToken();
+                const response = await fetch(`/api/profile/children?userId=${user.uid}&countOnly=true`, {
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
                 
-                // Filter only the ones where user is an editor (createdBy field)
-                const ownedChildren = children.filter(child => 
-                    child.createdBy === user.uid
-                );
+                if (!response.ok) {
+                    throw new Error('Failed to get children count');
+                }
                 
-                const count = ownedChildren.length;
+                const data = await response.json();
+                const count = data.count || 0;
+                
                 setExistingChildrenCount(count);
                 
                 // Check if user can add a child (either premium or below free tier limit)
@@ -212,62 +219,31 @@ export default function AddChildPage() {
         setSearchResults([]);
 
         try {
-            console.log("Searching for users:", searchTerm);
-            const searchTermLower = searchTerm.toLowerCase().trim();
-            const usersRef = collection(db, 'users');
-
-            // Search by username (case insensitive)
-            const usernameQuery = query(
-                usersRef,
-                where('username', '>=', searchTermLower),
-                where('username', '<=', searchTermLower + '\uf8ff')
-            );
-
-            // Search by displayName (case insensitive)
-            const displayNameQuery = query(
-                usersRef,
-                where('displayName', '>=', searchTermLower),
-                where('displayName', '<=', searchTermLower + '\uf8ff')
-            );
-
-            // Execute both queries
-            const [usernameSnapshot, displayNameSnapshot] = await Promise.all([
-                getDocs(usernameQuery),
-                getDocs(displayNameQuery)
-            ]);
-
-            // Combine results and remove duplicates
-            const results: FriendSearchResult[] = [];
-            const processedUids = new Set<string>();
-
-            const processSnapshot = (snapshot: any) => {
-                snapshot.forEach((doc: any) => {
-                    const userData = doc.data();
-                    // Skip the current user
-                    if (userData.uid === user?.uid || processedUids.has(userData.uid)) {
-                        return;
+            // Get authentication token
+            const idToken = await auth.currentUser?.getIdToken();
+            
+            // Use API to search for users
+            const response = await fetch(
+                `/api/users/search?term=${encodeURIComponent(searchTerm)}&userId=${user?.uid}&limit=10`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-
-                    // Skip users who are already added as friends
-                    if (selectedFriends.some(f => f.uid === userData.uid)) {
-                        return;
-                    }
-
-                    processedUids.add(userData.uid);
-                    results.push({
-                        uid: userData.uid,
-                        username: userData.username,
-                        displayName: userData.displayName || userData.username,
-                        firstName: userData.firstName,
-                        lastName: userData.lastName,
-                        photoURL: userData.photoURL
-                    });
-                });
-            };
-
-            processSnapshot(usernameSnapshot);
-            processSnapshot(displayNameSnapshot);
-
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to search users');
+            }
+            
+            let results: FriendSearchResult[] = await response.json();
+            
+            // Filter out users already in the selected list
+            results = results.filter(user => 
+                !selectedFriends.some(friend => friend.uid === user.uid)
+            );
+            
             setSearchResults(results);
         } catch (error) {
             console.error('Error searching users:', error);
@@ -354,20 +330,39 @@ export default function AddChildPage() {
                     .map(friend => friend.uid)
             ];
 
-            // Create child using the updated method with permission model
-            const childWithData = {
+            // Use API to create child
+            const idToken = await auth.currentUser?.getIdToken();
+            
+            // Log the data we're about to send
+            console.log('Creating child with data:', JSON.stringify({
                 ...childData,
-                // Add the viewers and editors arrays explicitly
-                viewers: viewers,
-                editors: editors,
-                // Remove any undefined or empty values
-                ...(childData.schoolName ? { schoolName: childData.schoolName } : {}),
-                ...(childData.relationship ? { relationship: childData.relationship } : {}),
-                ...(childData.photoURL ? { photoURL: childData.photoURL } : {})
-            };
-
-            console.log("Creating child with data:", JSON.stringify(childWithData));
-            const newChild = await createChild(childWithData, user.uid);
+                viewers,
+                editors,
+                createdBy: user.uid
+            }));
+            
+            const response = await fetch('/api/children', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    ...childData,
+                    viewers,
+                    editors,
+                    createdBy: user.uid
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error creating child:', errorData);
+                throw new Error(errorData.message || 'Failed to create child');
+            }
+            
+            const newChild = await response.json();
 
             toast({
                 title: 'Criança adicionada',

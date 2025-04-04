@@ -6,8 +6,7 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { Notification, NotificationType } from '@/types/shared.types';
-import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { db, auth } from '@/app/lib/firebaseConfig';
+import { auth } from '@/app/lib/firebaseConfig';
 import { NotificationItem } from './NotificationItem';
 import {
     DropdownMenu,
@@ -40,7 +39,8 @@ export const NotificationBell = () => {
                 // Get notification count from the API with auth token
                 const response = await fetch(`/api/notifications?userId=${userData.uid}&status=pending`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
@@ -91,7 +91,8 @@ export const NotificationBell = () => {
             // Use the API endpoint to fetch notifications with auth token
             const response = await fetch(`/api/notifications?userId=${userData.uid}&status=pending`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
             
@@ -111,7 +112,7 @@ export const NotificationBell = () => {
                 title: notif.title,
                 message: notif.message,
                 status: notif.status as 'unread' | 'read' | 'archived',
-                createdAt: notif.createdAt ? new Timestamp(Math.floor(notif.createdAt / 1000), 0) : Timestamp.now(),
+                createdAt: new Date(notif.createdAt),
                 metadata: notif.metadata || {},
                 actionUrl: notif.actionUrl || `/${userData.username}/home`
             }));

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const currentUserId = searchParams.get('currentUserId');
     const relationshipStatus = searchParams.get('relationshipStatus') || 'none';
+    const countOnly = searchParams.get('countOnly') === 'true';
     
     // Validate parameters
     if (!userId) {
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'userId parameter is required' }, { status: 400 });
     }
     
-    if (!currentUserId) {
+    // For countOnly requests, we don't need currentUserId as we're just counting one user's children
+    if (!countOnly && !currentUserId) {
       console.error('Missing currentUserId parameter');
       return NextResponse.json({ error: 'currentUserId parameter is required' }, { status: 400 });
     }
@@ -51,20 +53,23 @@ export async function GET(request: NextRequest) {
     // Temporary solution for Firebase credential issue
     if (process.env.NODE_ENV === 'development' && !db) {
       console.error('Firebase not properly initialized for profile children API, returning empty array');
-      return NextResponse.json([]);
+      return NextResponse.json(countOnly ? { count: 0 } : []);
     }
     
-    // Check if user has permission to view this profile's children
-    const canViewChildren = 
-      userId === currentUserId || // Own profile
-      ['friend', 'support', 'coparent'].includes(relationshipStatus); // In network
-    
-    if (!canViewChildren) {
-      console.log('User does not have permission to view children');
-      return NextResponse.json({
-        error: 'Permission denied',
-        message: 'You do not have permission to view this user\'s children'
-      }, { status: 403 });
+    // For countOnly we don't need to check permissions - we just count the user's own children
+    if (!countOnly) {
+      // Check if user has permission to view this profile's children
+      const canViewChildren = 
+        userId === currentUserId || // Own profile
+        ['friend', 'support', 'coparent'].includes(relationshipStatus); // In network
+      
+      if (!canViewChildren) {
+        console.log('User does not have permission to view children');
+        return NextResponse.json({
+          error: 'Permission denied',
+          message: 'You do not have permission to view this user\'s children'
+        }, { status: 403 });
+      }
     }
     
     // Check if we're using Admin SDK (required for this operation)
@@ -75,6 +80,20 @@ export async function GET(request: NextRequest) {
     
     // Use type assertion since we know this is AdminFirestore based on isAdminSDK check
     const adminDb = db as AdminFirestore;
+    
+    // For countOnly, we just need to count children where the user is the creator
+    if (countOnly) {
+      console.log('Count only mode - counting children created by user');
+      const countQuery = adminDb.collection('children')
+        .where('createdBy', '==', userId)
+        .where('isDeleted', '==', false);
+      
+      const countSnapshot = await countQuery.get();
+      const count = countSnapshot.size;
+      
+      console.log(`User ${userId} has ${count} children`);
+      return NextResponse.json({ count });
+    }
     
     // Determine which children to fetch based on the relationship
     let childrenData: ChildData[] = [];
@@ -209,6 +228,12 @@ export async function GET(request: NextRequest) {
     }
     
     console.log(`Returning ${childrenData.length} children`);
+    
+    // If countOnly is true, just return the count
+    if (countOnly) {
+      console.log(`Count only mode - returning count of ${childrenData.length}`);
+      return NextResponse.json({ count: childrenData.length });
+    }
     
     // Format the response data - remove sensitive fields
     const formattedChildren = childrenData.map(child => ({

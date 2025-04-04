@@ -6,8 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster";
 import { UserNavbar } from './components/UserNavbar';
 import { signOut } from 'firebase/auth';
-import { auth, markFirestoreListenersInactive, db } from '@/lib/firebaseConfig';
-import { disableNetwork, enableNetwork } from 'firebase/firestore';
+import { auth, markFirestoreListenersInactive } from '@/lib/firebaseConfig';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**
@@ -27,24 +26,22 @@ const UserProfileBar = ({ pathname }: { pathname: string }) => {
             // First, mark all listeners as inactive
             markFirestoreListenersInactive();
             
-            try {
-                // Force disconnect Firestore
-                await disableNetwork(db);
-            } catch (e) {
-                console.log("Error disabling network:", e);
-                // Non-critical, continue
-            }
-            
             // Navigate away from protected routes
             router.push('/');
             
             // Sign out with a small delay
             setTimeout(async () => {
                 try {
+                    // Sign out from Firebase Auth
                     await signOut(auth);
                     
-                    // Re-enable network after sign out
-                    await enableNetwork(db);
+                    // Call the logout API endpoint
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
                     
                     toast({
                         title: "Logout realizado",
@@ -52,12 +49,6 @@ const UserProfileBar = ({ pathname }: { pathname: string }) => {
                     });
                 } catch (innerError) {
                     console.error('Error in sign out process:', innerError);
-                    // Re-enable network even on error
-                    try {
-                        await enableNetwork(db);
-                    } catch (networkError) {
-                        console.log("Error re-enabling network:", networkError);
-                    }
                 }
             }, 100);
         } catch (error) {

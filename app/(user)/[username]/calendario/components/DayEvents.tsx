@@ -65,6 +65,7 @@ export function DayEvents({
                     {selectedDate && (
                         <Button
                             variant="default"
+                            size="sm"
                             onClick={() => selectedDate && onAddEvent(selectedDate)}
                             className={cn(
                                 "bg-secondaryMain px-4 text-md font-semibold font-raleway"
@@ -77,7 +78,7 @@ export function DayEvents({
                     {onChildFilterChange && onCategoryFilterChange && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="default" className="gap-2 text-md font-semibold font-raleway h-10">
+                                <Button variant="default" size="sm" className="gap-2 text-md font-semibold font-raleway">
                                     <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
                                     <span>Filtros</span>
                                     {(selectedChildren.length > 0 || selectedCategories.length > 0) && (

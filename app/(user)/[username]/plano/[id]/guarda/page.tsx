@@ -632,7 +632,13 @@ const GuardaPage = () => {
         {/* Changelog Section */}
         <div className="mt-8">
           <h2 className="text-xl font-bold mb-4">Histórico de Alterações</h2>
-          {plan && <PlanChangeLog planId={plan.id} limit={10} />}
+          {plan?.id ? (
+            <PlanChangeLog planId={plan.id} limit={10} />
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              Não foi possível carregar o histórico
+            </div>
+          )}
         </div>
       </div>
     </div>
