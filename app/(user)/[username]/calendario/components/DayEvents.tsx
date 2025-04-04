@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { usePremiumFeatures } from "@/hooks/usePremiumFeatures";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SubscriptionButton } from "@/app/components/logged-area/ui/SubscriptionButton";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,6 +52,62 @@ export function DayEvents({
         visitation: 'bg-purple-500',
         other: 'bg-gray-500'
     };
+
+    // Render loading skeletons
+    if (isLoading) {
+        return (
+            <div className="border-2 border-border rounded-base p-4 bg-bg shadow-shadow">
+                <div className="flex flex-col justify-between gap-4 mb-4">
+                    {/* Date header skeleton */}
+                    <Skeleton className="h-7 w-60" />
+                    
+                    {/* Button skeletons */}
+                    <div className="flex flex-wrap gap-2">
+                        <Skeleton className="h-9 w-28" />
+                        <Skeleton className="h-9 w-24" />
+                    </div>
+                </div>
+
+                {/* Event skeletons */}
+                <div className="space-y-3 mt-4 max-h-[calc(100vh-250px)]">
+                    {Array(3).fill(0).map((_, index) => (
+                        <div key={index} className="border-2 border-black p-3 sm:p-4 bg-white shadow-brutalist">
+                            <div className="flex justify-between">
+                                <div className="flex-1 min-w-0 space-y-2">
+                                    {/* Title skeleton */}
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="w-3 h-3 rounded-full" />
+                                        <Skeleton className="h-5 w-36" />
+                                    </div>
+
+                                    {/* Time badge skeleton */}
+                                    <div className="flex flex-wrap gap-1">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-4 w-24" />
+                                    </div>
+
+                                    {/* Description skeleton */}
+                                    <Skeleton className="h-4 w-full" />
+                                    
+                                    {/* Child info skeleton */}
+                                    <div className="flex items-center gap-1 mt-2">
+                                        <Skeleton className="w-5 h-5 rounded-full" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </div>
+
+                                {/* Action buttons skeleton */}
+                                <div className="flex flex-col gap-1 ml-2">
+                                    <Skeleton className="h-7 w-7 rounded" />
+                                    <Skeleton className="h-7 w-7 rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="border-2 border-border rounded-base p-4 bg-bg shadow-shadow">

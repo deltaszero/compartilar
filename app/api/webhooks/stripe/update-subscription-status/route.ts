@@ -31,6 +31,7 @@ function createSubscriptionData(
     sessionId?: string | null;
     customerId?: string;
     subscriptionId?: string;
+    activationMethod?: string;
   }
 ): SubscriptionData {
   const {
@@ -39,14 +40,16 @@ function createSubscriptionData(
     isVerified = false,
     sessionId = null,
     customerId,
-    subscriptionId
+    subscriptionId,
+    activationMethod = 'api'
   } = options;
   
   const data: SubscriptionData = {
     active: true,
     plan: 'premium',
     stripeSessionId: sessionId,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    activationMethod
   };
   
   // Add conditional properties
@@ -55,6 +58,10 @@ function createSubscriptionData(
   if (isVerified) data.verifiedOwner = true;
   if (customerId) data.stripeCustomerId = customerId;
   if (subscriptionId) data.stripeSubscriptionId = subscriptionId;
+  
+  // Add specific flags based on activation method
+  if (activationMethod === 'auto') data.autoActivated = true;
+  if (activationMethod === 'manual') data.manualActivation = true;
   
   return data;
 }
@@ -65,12 +72,13 @@ export async function POST(request: Request) {
     
     // Parse the request data
     const requestData = await request.json();
-    const { sessionId, userId: providedUserId, requireVerification } = requestData;
+    const { sessionId, userId: providedUserId, requireVerification, method } = requestData;
     
     console.log('Request data:', { 
       sessionId: sessionId ? sessionId.substring(0, 10) + '...' : null,
       providedUserId: providedUserId ? providedUserId.substring(0, 10) + '...' : null,
-      requireVerification
+      requireVerification,
+      method: method || 'api'
     });
     
     // SECURITY CHECK: If verification is required or session ID is provided, verify ownership
@@ -131,7 +139,8 @@ export async function POST(request: Request) {
           isVerified: true,
           sessionId,
           customerId,
-          subscriptionId
+          subscriptionId,
+          activationMethod: method || 'api'
         });
         
         // Update only the subscription field

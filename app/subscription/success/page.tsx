@@ -4,8 +4,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
-import { db } from '@/lib/firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useUser } from '@context/userContext';
 
 function SubscriptionSuccessContent() {
@@ -70,20 +68,26 @@ function SubscriptionSuccessContent() {
         setUpdateStatus('activating subscription automatically...');
         console.log('Activating verified session:', sessionId);
         
-        // Direct Firestore update method with verified session
-        const userRef = doc(db, 'users', userData.uid);
-        await setDoc(userRef, {
-          subscription: {
-            active: true,
-            plan: 'premium',
-            stripeSessionId: sessionId,
-            autoActivated: true,
-            verifiedOwner: true,
-            updatedAt: new Date().toISOString(),
-          }
-        }, { merge: true });
+        // Use API to update subscription status
+        const updateResponse = await fetch('/api/webhooks/stripe/update-subscription-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sessionId,
+            userId: userData.uid,
+            requireVerification: true,
+            method: 'auto'
+          }),
+        });
         
-        console.log('Success: Subscription activated automatically');
+        if (!updateResponse.ok) {
+          const updateError = await updateResponse.json();
+          throw new Error(updateError.error || 'Failed to update subscription via API');
+        }
+        
+        console.log('Success: Subscription activated automatically via API');
         setUpdateStatus('success: auto-activated');
         
         // Start a shorter countdown since the subscription is now active
@@ -218,20 +222,26 @@ function SubscriptionSuccessContent() {
                     // Session is verified, proceed with activation
                     setUpdateStatus('applying subscription manually...');
                     
-                    // Direct Firestore update method with verified session
-                    const userRef = doc(db, 'users', userData.uid);
-                    await setDoc(userRef, {
-                      subscription: {
-                        active: true,
-                        plan: 'premium',
-                        manualActivation: true,
-                        stripeSessionId: sessionId,
-                        verifiedOwner: true,
-                        updatedAt: new Date().toISOString(),
-                      }
-                    }, { merge: true });
+                    // Use API to update subscription status for manual activation
+                    const updateResponse = await fetch('/api/webhooks/stripe/update-subscription-status', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        sessionId,
+                        userId: userData.uid,
+                        requireVerification: true,
+                        method: 'manual'
+                      }),
+                    });
                     
-                    console.log('Success: Document updated directly');
+                    if (!updateResponse.ok) {
+                      const updateError = await updateResponse.json();
+                      throw new Error(updateError.error || 'Failed to update subscription via API');
+                    }
+                    
+                    console.log('Success: Subscription activated manually via API');
                     setUpdateStatus('success: manual activation');
                     
                     // Show success message and redirect
