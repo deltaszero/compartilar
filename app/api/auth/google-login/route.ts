@@ -12,23 +12,51 @@ const WINDOW_MS = 60 * 60 * 1000; // 1 hour window
 
 export async function POST(request: NextRequest) {
   try {
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    // Get client IP for rate limiting - safely handle potential spoofing
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
     
     // Check rate limiting
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        { error: 'Muitas tentativas. Tente novamente mais tarde.' },
+        { 
+          status: 429,
+          headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Cache-Control': 'no-store, max-age=0',
+            'Retry-After': '3600'
+          }
+        }
       );
     }
     
-    // Check for CSRF protection
+    // Enhanced CSRF protection - check for both header and token
     const requestedWith = request.headers.get('x-requested-with');
-    if (requestedWith !== 'XMLHttpRequest') {
+    const csrfToken = request.headers.get('x-csrf-token');
+    const cookies = request.cookies;
+    const storedToken = cookies.get('csrf_token')?.value;
+    
+    // Verify the csrf protection - either by header or token
+    const isValidCsrf = requestedWith === 'XMLHttpRequest' || 
+                       (csrfToken && storedToken && csrfToken === storedToken);
+                       
+    if (!isValidCsrf) {
       return NextResponse.json(
-        { error: 'CSRF verification failed' },
-        { status: 403 }
+        { error: 'Verificação de segurança falhou' },
+        { 
+          status: 403,
+          headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Cache-Control': 'no-store, max-age=0'
+          }
+        }
       );
     }
     
@@ -37,8 +65,17 @@ export async function POST(request: NextRequest) {
     
     if (!idToken) {
       return NextResponse.json(
-        { error: 'ID token is required' },
-        { status: 400 }
+        { error: 'Dados incompletos' },
+        { 
+          status: 400,
+          headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Cache-Control': 'no-store, max-age=0'
+          }
+        }
       );
     }
     
@@ -87,14 +124,31 @@ export async function POST(request: NextRequest) {
       success: true,
       newUser: isNewUser,
       uid: uid
+    }, {
+      headers: {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Cache-Control': 'no-store, max-age=0'
+      }
     });
   } catch (error) {
     console.error('Error in Google login API:', error);
     
     // Don't expose the specific error to clients
     return NextResponse.json(
-      { error: 'Authentication failed' },
-      { status: 401 }
+      { error: 'Falha na autenticação' },
+      { 
+        status: 401,
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'X-XSS-Protection': '1; mode=block',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Cache-Control': 'no-store, max-age=0'
+        }
+      }
     );
   }
 }

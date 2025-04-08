@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, KeyRound, Eye, EyeOff, User } from 'lucide-react';
+import { Mail, KeyRound, Eye, EyeOff, User, ShieldAlert } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -28,8 +28,20 @@ export function SignupForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [csrfToken, setCsrfToken] = useState('');
     const router = useRouter();
     const { toast } = useToast();
+    
+    // Generate CSRF token on component mount
+    useEffect(() => {
+        // Generate a random token
+        const token = Math.random().toString(36).substring(2, 15) + 
+                     Math.random().toString(36).substring(2, 15);
+        setCsrfToken(token);
+        
+        // Store in cookie
+        document.cookie = `csrf_token=${token}; path=/; SameSite=Strict; Secure`;
+    }, []);
 
     const form = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -77,18 +89,34 @@ export function SignupForm() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest' // CSRF protection
+                    'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+                    'X-CSRF-Token': csrfToken // Additional CSRF protection
                 },
                 body: JSON.stringify({
                     email: data.email,
                     username: data.username,
                 }),
+                credentials: 'same-origin' // Include cookies with request
             });
             
             const result = await response.json();
             
             if (!response.ok) {
-                throw new Error(result.error || 'Erro ao criar conta');
+                const errorMsg = result.error || 'Erro ao criar conta';
+                
+                // Handle errors with generic messages for security
+                if (errorMsg.includes('Credenciais inválidas') || 
+                    errorMsg.includes('Nome de usuário indisponível')) {
+                    toast({
+                        title: "Erro de validação",
+                        description: "Verifique os dados informados e tente novamente.",
+                        variant: "destructive",
+                    });
+                    setLoading(false);
+                    return;
+                }
+                
+                throw new Error(errorMsg);
             }
             
             if (result.useClientSideSignup) {
@@ -141,11 +169,25 @@ export function SignupForm() {
 
             if (error instanceof FirebaseError) {
                 if (error.code === 'auth/email-already-in-use') {
-                    message = "Este email já está em uso";
+                    message = "Este email já está em uso. Por favor, utilize outro email ou faça login.";
+                    
+                    // Since this is a critical error, reset the form field
+                    form.setError('email', { 
+                        type: 'manual', 
+                        message: 'Email já cadastrado' 
+                    });
                 } else if (error.code === 'auth/invalid-email') {
                     message = "Email inválido";
+                    form.setError('email', { 
+                        type: 'manual', 
+                        message: 'Formato de email inválido' 
+                    });
                 } else if (error.code === 'auth/weak-password') {
                     message = "Senha muito fraca";
+                    form.setError('password', { 
+                        type: 'manual', 
+                        message: 'A senha deve ter pelo menos 6 caracteres' 
+                    });
                 } else {
                     message = `Erro de autenticação: ${error.message}`;
                 }
@@ -391,6 +433,11 @@ export function SignupForm() {
                         </FormItem>
                     )}
                 />
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                    <ShieldAlert size={16} className="text-amber-500 flex-shrink-0" />
+                    <span>A senha deve ter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.</span>
+                </div>
 
                 <Button
                     type="submit"

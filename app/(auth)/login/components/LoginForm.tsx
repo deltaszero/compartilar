@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Mail, KeyRound, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useForm } from "react-hook-form";
@@ -26,8 +26,24 @@ import { loginSchema, LoginFormValues } from './schemas';
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [loginAttempts, setLoginAttempts] = useState(0);
+    const [csrfToken, setCsrfToken] = useState('');
     const router = useRouter();
     const { toast } = useToast();
+    
+    // Generate CSRF token on component mount
+    useEffect(() => {
+        // Generate a random token
+        const token = Math.random().toString(36).substring(2, 15) + 
+                     Math.random().toString(36).substring(2, 15);
+        setCsrfToken(token);
+        
+        // Store in cookie
+        document.cookie = `csrf_token=${token}; path=/; SameSite=Strict; Secure`;
+        
+        // Reset login attempts counter
+        setLoginAttempts(0);
+    }, []);
 
     const form = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
@@ -39,31 +55,49 @@ export function LoginForm() {
 
     const handleLogin = async (data: LoginFormValues) => {
         setLoading(true);
+        
+        // Increment login attempts counter
+        const attempts = loginAttempts + 1;
+        setLoginAttempts(attempts);
+        
+        // Add a delay that increases with each failed attempt to prevent brute force
+        const delayMs = Math.min(attempts * 500, 3000); // Max 3 second delay
+        if (attempts > 1) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+        
         try {
+            // Normalize email to lowercase for consistent login
+            const normalizedEmail = data.email.toLowerCase();
+            
             // Use Firebase client SDK directly for password authentication
             // This avoids sending credentials to our server
-            await signInWithEmailAndPassword(auth, data.email, data.password);
+            await signInWithEmailAndPassword(auth, normalizedEmail, data.password);
             
             // Get a fresh token after login to ensure we have the latest claims
             await auth.currentUser?.getIdToken(true);
+            
+            // Reset login attempts after successful login
+            setLoginAttempts(0);
             
             // Redirect to the appropriate page
             router.push('/login/redirect');
         } catch (error: unknown) {
             console.error(error);
-            let message = "Erro ao fazer login";
-
-            // Handle Firebase errors
+            
+            // Generic error message for security
+            let message = "Credenciais inválidas"; // Don't distinguish between different error types
+            
+            // Only for certain error types, provide more specific messages
             if (error instanceof FirebaseError) {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    message = "Email ou senha incorretos";
-                } else if (error.code === 'auth/too-many-requests') {
+                if (error.code === 'auth/too-many-requests') {
                     message = "Muitas tentativas. Tente novamente mais tarde";
-                } else {
-                    message = `Erro de autenticação: ${error.message}`;
+                } else if (error.code === 'auth/network-request-failed') {
+                    message = "Erro de conexão. Verifique sua internet.";
                 }
-            } else if (error instanceof Error) {
-                message = error.message;
+                
+                // Log the actual error for debugging but don't expose to user
+                console.log(`Firebase login error (${error.code}): ${error.message}`);
             }
 
             toast({
@@ -101,8 +135,9 @@ export function LoginForm() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Add CSRF protection header
-                    'X-Requested-With': 'XMLHttpRequest'
+                    // Add CSRF protection headers
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': csrfToken
                 },
                 body: JSON.stringify({
                     idToken
@@ -214,6 +249,13 @@ export function LoginForm() {
                     )}
                 />
 
+                {loginAttempts > 2 && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <ShieldAlert size={16} className="text-amber-500 flex-shrink-0" />
+                        <span>Várias tentativas incorretas detectadas. Por segurança, aguarde um momento entre tentativas.</span>
+                    </div>
+                )}
+                
                 <Button
                     type="submit"
                     className="bg-mainStrongGreen w-full"
