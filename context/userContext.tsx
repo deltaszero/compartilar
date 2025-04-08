@@ -2,10 +2,9 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useMemo, useContext } from 'react';
-import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener, getUserChildren, firestoreListenersActive } from '@/app/lib/firebaseConfig';
+import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener, firestoreListenersActive } from '@/app/lib/firebaseConfig';
 import { onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork, or } from 'firebase/firestore';
-import { KidInfo } from '@/types/signup.types';
+import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork } from 'firebase/firestore';
 
 interface SubscriptionData {
     active: boolean;
@@ -25,7 +24,6 @@ interface UserData {
     phoneNumber?: string;
     birthDate?: string;
     gender?: string;
-    kids?: Record<string, { id: string }>;
     createdAt?: typeof serverTimestamp;
     uid: string;
     subscription?: SubscriptionData;
@@ -53,7 +51,6 @@ export const useUser = () => {
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
-    const [kidsData, setKidsData] = useState<Record<string, KidInfo>>({});
     const [loading, setLoading] = useState(true);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -69,7 +66,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         let unsubscribeUser: (() => void) | undefined;
-        let unsubscribeKids: (() => void) | undefined;
         let isAuthInitialized = false;
         // Track if this component instance's listeners should be active
         let isComponentMounted = true;
@@ -89,16 +85,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 unsubscribeUser = undefined;
             }
             
-            if (unsubscribeKids) {
-                try {
-                    unsubscribeKids();
-                    console.log("Manually unsubscribed from kids listener");
-                } catch (e) {
-                    console.log("Error unsubscribing from kids listener:", e);
-                }
-                unsubscribeKids = undefined;
-            }
-            
             // Use our central management system to clean up all listeners
             // This will also reset the Firestore connection
             try {
@@ -112,7 +98,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             // Clear user data if needed
             if (!isAuthInitialized) {
                 setUserData(null);
-                setKidsData({});
             }
         };
 
@@ -129,7 +114,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(currentUser);
                     if (!currentUser) {
                         setUserData(null);
-                        setKidsData({});
                         setLoading(false);
                         return;
                     }
@@ -190,88 +174,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                         setUserData(userData);
                                         setLoading(false);
         
-                                        // Add a delay before setting up children listener
-                                        // to avoid parallel listener creation
-                                        await new Promise(resolve => setTimeout(resolve, 500));
-                                        
-                                        // Skip setting up the listener if either the component is unmounted
-                                        // or the global listeners are marked as inactive
-                                        if (!isComponentMounted || !firestoreListenersActive) {
-                                            console.log("Skipping children listener setup - listeners inactive or component unmounted");
-                                            return;
-                                        }
-        
-                                        // Subscribe to children data using the new permission model
-                                        const childrenRef = collection(db, 'children');
-                                        console.log("Setting up children data listener");
-                                        
-                                        try {
-                                            // Query children where the user has either viewer or editor permission
-                                            const kidsQuery = query(
-                                                childrenRef,
-                                                or(
-                                                    where('viewers', 'array-contains', currentUser.uid),
-                                                    where('editors', 'array-contains', currentUser.uid)
-                                                )
-                                            );
-            
-                                            // Unsubscribe from previous kids listener if it exists
-                                            if (unsubscribeKids) {
-                                                try {
-                                                    unsubscribeKids();
-                                                    console.log("Unsubscribed from previous kids listener");
-                                                } catch (e) {
-                                                    console.log("Error unsubscribing from kids listener:", e);
-                                                }
-                                                unsubscribeKids = undefined;
-                                            }
-            
-                                            // Use safe listener management for kids data too
-                                            unsubscribeKids = addFirestoreListener(
-                                                `kids_${currentUser.uid}`,
-                                                () => {
-                                                    return onSnapshot(
-                                                        kidsQuery, 
-                                                        {
-                                                            next: (snapshot) => {
-                                                                console.log("Children data updated");
-                                                                const kids = snapshot.docs.reduce((acc, doc) => {
-                                                                    const kidData = doc.data() as KidInfo;
-                                                                    // Add access level information
-                                                                    const accessLevel = kidData.editors?.includes(currentUser.uid) 
-                                                                        ? 'editor' 
-                                                                        : 'viewer';
-                                                                    
-                                                                    acc[doc.id] = {
-                                                                        ...kidData,
-                                                                        id: doc.id,
-                                                                        accessLevel
-                                                                    };
-                                                                    return acc;
-                                                                }, {} as Record<string, KidInfo>);
-                    
-                                                                setKidsData(kids);
-                                                            },
-                                                            error: (error) => {
-                                                                // Silently handle permission errors
-                                                                if (error.code === 'permission-denied') {
-                                                                  console.log('Children data permission denied - expected for some security rules');
-                                                                } else {
-                                                                  console.error('Children data error:', error);
-                                                                }
-                                                            }
-                                                        }
-                                                    );
-                                                }
-                                            );
-                                        } catch (error) {
-                                            // Silently handle permission errors
-                                            if (error && typeof error === 'object' && 'code' in error && error.code === 'permission-denied') {
-                                              console.log('Error setting up children listener - permission denied');
-                                            } else {
-                                              console.error('Error setting up children listener:', error);
-                                            }
-                                        }
+                                        // Children data is now fetched directly from the children collection
+                                        // when needed by components using the appropriate API endpoints
                                     },
                                     error: (error) => {
                                         // Silently handle permission errors
@@ -334,9 +238,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const contextValue = useMemo(() => ({
         user,
-        userData: userData ? { ...userData, kids: kidsData } : null,
+        userData,
         loading
-    }), [user, userData, kidsData, loading]);
+    }), [user, userData, loading]);
 
     return (
         <UserContext.Provider value={{

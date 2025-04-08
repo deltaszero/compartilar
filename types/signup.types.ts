@@ -76,6 +76,5 @@ export interface SignupFormData {
     phoneNumber: string;
     birthDate: string;
     gender?: string;
-    // New kids field
-    kids: Record<string, KidInfo>;
+    // Children are stored in the children collection, not in the user document
 }

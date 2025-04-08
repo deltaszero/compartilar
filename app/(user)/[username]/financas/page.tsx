@@ -13,7 +13,7 @@ import {
     query,
     Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
+import { db, auth } from "@/lib/firebaseConfig";
 
 import { toast } from "@/hooks/use-toast";
 import UserProfileBar from "@/app/components/logged-area/ui/UserProfileBar";
@@ -373,24 +373,55 @@ export default function FinancasPage() {
             loadFriends();
             loadCostGroups();
             
-            // Transform kids data from userData to Child format
-            if (userData.kids) {
-                const childrenData = Object.entries(userData.kids).map(([id, kidData]) => ({
-                    id,
-                    firstName: (kidData as KidInfo).firstName || '',
-                    lastName: (kidData as KidInfo).lastName || '',
-                    photoURL: (kidData as KidInfo).photoURL,
-                    birthDate: (kidData as KidInfo).birthDate || ''
-                }));
-                setChildren(childrenData);
-                
-                // Create a map of children for easier lookup
-                const map: { [id: string]: Child } = {};
-                childrenData.forEach(child => {
-                    map[child.id] = child;
-                });
-                setChildrenMap(map);
-            }
+            // Load children from the children collection API
+            const loadChildren = async () => {
+                try {
+                    // Get authentication token
+                    const idToken = await auth.currentUser?.getIdToken();
+                    
+                    // Fetch children from API
+                    const response = await fetch(
+                        `/api/profile/children?userId=${userData.uid}&currentUserId=${userData.uid}`,
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }
+                    );
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch children');
+                    }
+                    
+                    const childrenData = await response.json();
+                    
+                    // Transform the API response to Child format
+                    const formattedChildren = childrenData.map((child: any) => ({
+                        id: child.id,
+                        firstName: child.firstName || '',
+                        lastName: child.lastName || '',
+                        photoURL: child.photoURL || null,
+                        birthDate: child.birthDate || ''
+                    }));
+                    
+                    setChildren(formattedChildren);
+                    
+                    // Create a map of children for easier lookup
+                    const map: { [id: string]: Child } = {};
+                    formattedChildren.forEach(child => {
+                        map[child.id] = child;
+                    });
+                    setChildrenMap(map);
+                } catch (error) {
+                    console.error('Error fetching children:', error);
+                    // Set empty arrays to avoid undefined errors
+                    setChildren([]);
+                    setChildrenMap({});
+                }
+            };
+            
+            loadChildren();
         }
     }, [userData, loadFriends, loadCostGroups]);
 
