@@ -41,6 +41,10 @@ export const PremiumSubscriptionCTA = () => {
                         </p>
                         <ul className="text-sm ml-6 list-disc space-y-1">
                             <li>Perfis ilimitados para seus filhos</li>
+                            <li>Eventos ilimitados no calendário</li>
+                            <li>Despesas ilimitadas no painel financeiro</li>
+                            <li>Histórico completo de check-in</li>
+                            <li>Até 5 membros na rede de apoio</li>
                         </ul>
                     </div>
                     <SubscriptionButton />

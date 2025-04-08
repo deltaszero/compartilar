@@ -23,6 +23,7 @@ import { useUser } from '@/context/userContext';
 import { signOut } from 'firebase/auth';
 import { auth, markFirestoreListenersInactive } from '@/lib/firebaseConfig';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * navItems is an array of objects containing the label and href of each navigation item.
@@ -272,7 +273,9 @@ const Header = () => {
                 <DesktopNav />
                 <div className="mx-2"></div>
                 {loading ? (
-                    <div className="h-8 w-32 rounded-md bg-gray-200 animate-pulse" />
+                    <div className="flex flex-row gap-2 items-center">
+                        <Skeleton className="h-6 w-32" /> <Skeleton className="h-9 w-9 rounded-full" />
+                    </div>
                 ) : user && userData ? (
                     <UserMenu userData={userData} onSignOut={handleSignOut} />
                 ) : (

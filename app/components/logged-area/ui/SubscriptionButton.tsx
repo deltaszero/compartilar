@@ -29,8 +29,8 @@ export const SubscriptionButton = ({ productId }: SubscriptionButtonProps) => {
     setIsLoading(true);
 
     try {
-      // Create a checkout session on the server
-      const response = await fetch('/api/create-checkout-session', {
+      // Create a checkout session on the server using the correct endpoint
+      const response = await fetch('/api/webhooks/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

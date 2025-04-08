@@ -38,7 +38,7 @@ function SubscriptionSuccessContent() {
         console.log('Verifying session:', sessionId);
         
         // First verify this session belongs to the current user by checking with Stripe
-        const verifyResponse = await fetch('/api/verify-stripe-session', {
+        const verifyResponse = await fetch('/api/webhooks/stripe/verify-stripe-session', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ function SubscriptionSuccessContent() {
         
         // Also try the API method as fallback
         try {
-          const response = await fetch('/api/update-subscription-status', {
+          const response = await fetch('/api/webhooks/stripe/update-subscription-status', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ function SubscriptionSuccessContent() {
                   
                   try {
                     // First verify this session belongs to the current user
-                    const verifyResponse = await fetch('/api/verify-stripe-session', {
+                    const verifyResponse = await fetch('/api/webhooks/stripe/verify-stripe-session', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',

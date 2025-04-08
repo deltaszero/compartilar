@@ -1,6 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { usePremiumFeatures } from "@/hooks/usePremiumFeatures";
+import { Sparkles } from "lucide-react";
 
 interface UserProfileProps {
     userData: {
@@ -20,6 +22,7 @@ const capitalizeFirstLetter = (string: string) => {
 };
 
 const UserProfileCard = ({ userData }: UserProfileProps) => {
+    const { isPremium } = usePremiumFeatures();
     const displayName = userData?.firstName ||
         userData?.displayName ||
         userData?.username || "";
@@ -32,11 +35,17 @@ const UserProfileCard = ({ userData }: UserProfileProps) => {
                     <br />
                     {capitalizeFirstLetter(displayName)}!
                 </div>
-                {/* <div className="text-md font-semibold font-nunito"> */}
-                <Badge className='flex flex-row items-center gap-1 rounded-xl bg-blank text-bw text-sm font-nunito' variant="default" >
-                    @{userData?.username || ""}
-                </Badge>
-                {/* </div> */}
+                <div className="flex items-center gap-2">
+                    <Badge className='flex flex-row items-center gap-1 rounded-xl bg-blank text-bw text-sm font-nunito' variant="default">
+                        @{userData?.username || ""}
+                    </Badge>
+                    {isPremium && (
+                        <Badge className="flex flex-row items-center gap-1 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-nunito">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Premium
+                        </Badge>
+                    )}
+                </div>
             </div>
         </div>
     );
