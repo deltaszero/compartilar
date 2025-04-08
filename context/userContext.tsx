@@ -4,7 +4,7 @@
 import React, { createContext, useState, useEffect, useMemo, useContext } from 'react';
 import { auth, db, markFirestoreListenersActive, markFirestoreListenersInactive, addFirestoreListener, firestoreListenersActive } from '@/app/lib/firebaseConfig';
 import { onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, serverTimestamp, where, disableNetwork, enableNetwork, updateDoc } from 'firebase/firestore';
 
 interface SubscriptionData {
     active: boolean;
@@ -28,6 +28,7 @@ interface UserData {
     uid: string;
     subscription?: SubscriptionData;
     displayName?: string; // Added to support displayName field
+    emailVerified?: boolean; // Track email verification status
 }
 
 interface UserContextType {
@@ -168,6 +169,49 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                                             console.error('Document UID mismatch');
                                             setLoading(false);
                                             return;
+                                        }
+                                        
+                                        // Check email verification
+                                        if (!currentUser.emailVerified) {
+                                            // Update emailVerified status in Firestore if Firebase says it's verified
+                                            // but our Firestore record doesn't reflect that
+                                            if (userData.emailVerified === false) {
+                                                // Check with Firebase if the email is actually verified
+                                                await currentUser.reload();
+                                                if (currentUser.emailVerified) {
+                                                    // Update Firestore
+                                                    await updateDoc(userRef, {
+                                                        emailVerified: true,
+                                                        updatedAt: serverTimestamp()
+                                                    });
+                                                    // Update local user data
+                                                    userData.emailVerified = true;
+                                                } else {
+                                                    // If still not verified, sign out and redirect to verification page
+                                                    console.log("Email not verified, redirecting to verification page");
+                                                    // We need to use window.location here since we're outside the React component tree
+                                                    if (typeof window !== 'undefined') {
+                                                        window.location.href = `/login/verify-email?email=${encodeURIComponent(currentUser.email || '')}`;
+                                                    }
+                                                    await auth.signOut();
+                                                    setUser(null);
+                                                    setUserData(null);
+                                                    setLoading(false);
+                                                    return;
+                                                }
+                                            } else {
+                                                // Sign out and redirect to verification page
+                                                console.log("Email not verified, redirecting to verification page");
+                                                // We need to use window.location here since we're outside the React component tree
+                                                if (typeof window !== 'undefined') {
+                                                    window.location.href = `/login/verify-email?email=${encodeURIComponent(currentUser.email || '')}`;
+                                                }
+                                                await auth.signOut();
+                                                setUser(null);
+                                                setUserData(null);
+                                                setLoading(false);
+                                                return;
+                                            }
                                         }
                                         
                                         // Set user data first to ensure UI can render

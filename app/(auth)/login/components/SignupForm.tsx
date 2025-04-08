@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, KeyRound, Eye, EyeOff, User, ShieldAlert } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithCustomToken } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -132,6 +132,9 @@ export function SignupForm() {
                     displayName: data.username
                 });
                 
+                // Send verification email using the imported function
+                await sendEmailVerification(userCredential.user);
+                
                 // Create user document in Firestore
                 const userRef = doc(db, 'users', userCredential.user.uid);
                 await setDoc(userRef, {
@@ -141,15 +144,20 @@ export function SignupForm() {
                     displayName: data.username,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
+                    emailVerified: false,
                 });
                 
                 toast({
                     title: "Conta criada",
-                    description: "Redirecionando para sua área...",
+                    description: "Foi enviado um email de verificação para o seu endereço. Por favor, verifique sua caixa de entrada e siga as instruções para confirmar sua conta.",
+                    duration: 6000,
                 });
                 
-                // Redirect to the login redirect page
-                router.push('/login/redirect');
+                // Sign out the user until email is verified
+                await auth.signOut();
+                
+                // Redirect to the login page
+                router.push('/login');
             } else if (result.customToken) {
                 // Legacy support for custom token
                 await signInWithCustomToken(auth, result.customToken);
@@ -253,6 +261,11 @@ export function SignupForm() {
                 const firstName = nameParts[0] || '';
                 const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
                 
+                // Send verification email if not verified
+                if (!result.user.emailVerified) {
+                    await sendEmailVerification(result.user);
+                }
+                
                 // Create user document in Firestore with server-verified username
                 const userRef = doc(db, 'users', uid);
                 await setDoc(userRef, {
@@ -265,16 +278,32 @@ export function SignupForm() {
                     photoURL: result.user.photoURL,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
+                    emailVerified: result.user.emailVerified,
                     subscription: {
                       status: 'free',
                       validUntil: null
                     }
                 });
                 
-                toast({
-                    title: "Conta criada",
-                    description: "Redirecionando para sua área...",
-                });
+                if (!result.user.emailVerified) {
+                    toast({
+                        title: "Conta criada",
+                        description: "Foi enviado um email de verificação para o seu endereço. Por favor, verifique sua caixa de entrada e siga as instruções para confirmar sua conta.",
+                        duration: 6000,
+                    });
+                    
+                    // Sign out user until email is verified
+                    await auth.signOut();
+                    
+                    // Redirect to login page
+                    router.push('/login');
+                    return;
+                } else {
+                    toast({
+                        title: "Conta criada",
+                        description: "Redirecionando para sua área...",
+                    });
+                }
             } else {
                 toast({
                     title: "Login efetuado",
@@ -435,7 +464,7 @@ export function SignupForm() {
                 />
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                    <ShieldAlert size={16} className="text-amber-500 flex-shrink-0" />
+                    <ShieldAlert size={16} className="text-main flex-shrink-0" />
                     <span>A senha deve ter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.</span>
                 </div>
 

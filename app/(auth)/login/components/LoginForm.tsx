@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, KeyRound, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -72,13 +73,30 @@ export function LoginForm() {
             
             // Use Firebase client SDK directly for password authentication
             // This avoids sending credentials to our server
-            await signInWithEmailAndPassword(auth, normalizedEmail, data.password);
+            const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, data.password);
             
             // Get a fresh token after login to ensure we have the latest claims
-            await auth.currentUser?.getIdToken(true);
+            await userCredential.user.getIdToken(true);
             
             // Reset login attempts after successful login
             setLoginAttempts(0);
+            
+            // Check if email is verified
+            if (!userCredential.user.emailVerified) {
+                // Send a new verification email if needed
+                await sendEmailVerification(userCredential.user);
+                
+                toast({
+                    title: "Verificação necessária",
+                    description: "Por favor, verifique seu email antes de continuar. Um novo email de verificação foi enviado.",
+                    duration: 6000,
+                });
+                
+                // Navigate to verification page instead of signing out
+                router.push(`/login/verify-email?email=${encodeURIComponent(userCredential.user.email || '')}`);
+                
+                return;
+            }
             
             // Redirect to the appropriate page
             router.push('/login/redirect');
@@ -125,6 +143,23 @@ export function LoginForm() {
             
             // Sign in with popup
             const result = await signInWithPopup(auth, provider);
+            
+            // Check if email is verified
+            if (!result.user.emailVerified) {
+                // Send verification email
+                await sendEmailVerification(result.user);
+                
+                toast({
+                    title: "Verificação necessária",
+                    description: "Por favor, verifique seu email antes de continuar. Um email de verificação foi enviado.",
+                    duration: 6000,
+                });
+                
+                // Navigate to verification page instead of signing out
+                router.push(`/login/verify-email?email=${encodeURIComponent(userCredential.user.email || '')}`);
+                
+                return;
+            }
             
             // Get the ID token to send to our backend for verification
             const idToken = await result.user.getIdToken();
@@ -251,7 +286,7 @@ export function LoginForm() {
 
                 {loginAttempts > 2 && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <ShieldAlert size={16} className="text-amber-500 flex-shrink-0" />
+                        <ShieldAlert size={16} className="text-main flex-shrink-0" />
                         <span>Várias tentativas incorretas detectadas. Por segurança, aguarde um momento entre tentativas.</span>
                     </div>
                 )}
@@ -264,11 +299,11 @@ export function LoginForm() {
                     {loading ? "Entrando..." : "Entrar"}
                 </Button>
 
-                {/* <div className="text-sm text-center font-raleway">
-                    <Link href="/reset-password" className="text-primary hover:underline">
+                <div className="text-sm text-center font-raleway">
+                    <Link href="/login/reset-password" className="text-primary hover:underline">
                         Esqueceu a senha?
                     </Link>
-                </div> */}
+                </div>
                 
                 <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">

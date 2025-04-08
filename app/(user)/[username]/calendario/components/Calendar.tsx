@@ -570,11 +570,10 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
         return (
             <div className="flex flex-col gap-6">
                 <div className="bg-white p-6 border-2 border-black shadow-brutalist rounded-none text-center">
-                    <h1 className="text-xl font-bold mb-4">
-                        Calendário Compartilhado
-                    </h1>
-                    <p className="mb-4">Você ainda não tem crianças cadastradas no sistema.</p>
-                    <p className="text-sm text-gray-600 mb-6">
+                    <p className="text-center py-6 flex flex-col items-center gap-2 text-gray-500">
+                        Você ainda não tem crianças cadastradas no sistema.
+                    </p>
+                    <p className="text-xs text-gray-400 mb-6">
                         Para usar o calendário compartilhado, você precisa adicionar uma criança ao sistema primeiro.
                     </p>
                     <div className="flex flex-col md:flex-row gap-4 justify-center">
@@ -588,17 +587,6 @@ export default function Calendar({ initialMonth, view: initialView }: CalendarPr
                             className="bg-main"
                         >
                             Adicionar uma Criança
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                // Navigate to dashboard
-                                if (userData) {
-                                    window.location.href = `/${userData.uid}`;
-                                }
-                            }}
-                        >
-                            Voltar para Dashboard
                         </Button>
                     </div>
                 </div>
