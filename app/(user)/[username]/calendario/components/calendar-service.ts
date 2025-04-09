@@ -55,10 +55,12 @@ export async function fetchChildren(userId: string): Promise<Child[]> {
 
 /**
  * Fetch co-parenting relationships
+ * @param userId - Optional user ID to filter relationships
  * @returns Promise<string[]> - Placeholder for future implementation
  */
-export async function fetchCoParentingRelationships(): Promise<string[]> {
+export async function fetchCoParentingRelationships(userId?: string): Promise<string[]> {
   // This is a placeholder. In a real app, you would fetch this from the API
+  // The userId parameter can be used for filtering relationships
   return [];
 }
 

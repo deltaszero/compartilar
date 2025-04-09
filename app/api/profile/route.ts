@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest) {
     
     // Verify Firebase token and check if user is authorized to update this profile
     if (isAdminSDK) {
-      const { adminAuth } = require('@/lib/firebase-admin');
+      const { adminAuth } = require('@/app/lib/firebase-admin');
       const decodedToken = await adminAuth.verifyIdToken(token);
       
       // Users can only update their own profiles
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ') && isAdminSDK) {
       const token = authHeader.split('Bearer ')[1];
       try {
-        const { adminAuth } = require('@/lib/firebase-admin');
+        const { adminAuth } = require('@/app/lib/firebase-admin');
         const decodedToken = await adminAuth.verifyIdToken(token);
         // Use the token's UID if no currentUserId provided
         if (!currentUserId) {

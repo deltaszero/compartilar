@@ -409,7 +409,7 @@ export default function FinancasPage() {
                     
                     // Create a map of children for easier lookup
                     const map: { [id: string]: Child } = {};
-                    formattedChildren.forEach(child => {
+                    formattedChildren.forEach((child: Child) => {
                         map[child.id] = child;
                     });
                     setChildrenMap(map);

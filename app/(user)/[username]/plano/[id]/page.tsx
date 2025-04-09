@@ -109,7 +109,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
 
         let count = 0;
         planSections.forEach(section => {
-            if (plan.sections[section.id as keyof typeof plan.sections]) {
+            if (plan.sections?.[section.id as keyof typeof plan.sections]) {
                 count++;
             }
         });
@@ -243,7 +243,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                 <TabsContent value="sections" className="mt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {planSections.map((section) => {
-                            const isCompleted = !!plan.sections[section.id as keyof typeof plan.sections];
+                            const isCompleted = !!plan.sections?.[section.id as keyof typeof plan.sections];
                             return (
                                 <div
                                     key={section.id}

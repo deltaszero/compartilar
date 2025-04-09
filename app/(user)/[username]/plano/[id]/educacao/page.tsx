@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getParentalPlan, updatePlanField, approveField } from '../../services/plan-service';
-import { ParentalPlan } from '../../types';
+import { ParentalPlan, EducationSection } from '../../types';
 import { FormLayout } from '../../components/forms';
 import { educationFormData } from './data';
 import { useUser } from '@/context/userContext';
@@ -52,7 +52,7 @@ const EducacaoPage = () => {
             setPlan(planData);
             
             // Check if the education section exists and has pending changes
-            const educationSection = planData.sections.education;
+            const educationSection = planData.sections?.education;
             let hasPending = false;
             let pendingFieldsList: any[] = [];
             
@@ -135,8 +135,8 @@ const EducacaoPage = () => {
       const validFieldPromises = [];
       const originalValues: Record<string, any> = {};
       
-      if (plan.sections.education) {
-        Object.entries(plan.sections.education).forEach(([key, value]) => {
+      if (plan.sections?.education) {
+        Object.entries(plan.sections?.education).forEach(([key, value]) => {
           if (value && typeof value === 'object' && 'value' in value) {
             originalValues[key] = value.value;
           } else {
@@ -268,11 +268,11 @@ const EducacaoPage = () => {
                                 // This approach sets the field value directly back to the previous value
                                 
                                 // Get the current field with previous value reference
-                                if (!plan?.sections?.education?.[field.dbFieldName]) {
+                                if (!plan?.sections?.education?.[field.dbFieldName as string]) {
                                   throw new Error('Field not found');
                                 }
                                 
-                                const currentField = plan.sections.education[field.dbFieldName];
+                                const currentField = plan.sections?.education?.[field.dbFieldName as string] as any;
                                 
                                 // Check if this is the user's own change
                                 if (currentField.lastUpdatedBy !== user!.uid) {

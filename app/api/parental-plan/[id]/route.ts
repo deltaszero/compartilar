@@ -69,8 +69,8 @@ export async function GET(
       createdAt,
       updatedAt,
       // Add backward compatibility for existing client code
-      created_at: createdAt || planData.created_at || null,
-      updated_at: updatedAt || planData.updated_at || null
+      created_at: createdAt || planData?.created_at || null,
+      updated_at: updatedAt || planData?.updated_at || null
     });
     
   } catch (error) {

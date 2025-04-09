@@ -12,6 +12,11 @@ import { LoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import PlanChangeLog from '../../components/PlanChangeLog';
 
+// Define the General Section type with index signature
+export interface GeneralSection {
+  [key: string]: any;
+}
+
 const GuardaPage = () => {
   const { id } = useParams();
   const { user, userData } = useUser();
@@ -46,7 +51,7 @@ const GuardaPage = () => {
             setPlan(planData);
             
             // Check if the general section exists and has pending changes
-            const generalSection = planData.sections.general;
+            const generalSection = planData.sections?.general;
             let hasPending = false;
             
             if (generalSection) {
@@ -138,9 +143,9 @@ const GuardaPage = () => {
   
   // Update pending fields when editors are loaded
   useEffect(() => {
-    if (!plan || !plan.sections.general || !editors.length) return;
+    if (!plan || !plan.sections?.general || !editors.length) return;
     
-    const generalSection = plan.sections.general;
+    const generalSection = plan.sections?.general;
     const pendingFieldsData: any[] = [];
     
     // Find fields with pending changes
@@ -435,8 +440,8 @@ const GuardaPage = () => {
       const originalValues: Record<string, any> = {};
       
       // Get original values from the plan
-      if (plan.sections.general) {
-        Object.entries(plan.sections.general).forEach(([key, value]) => {
+      if (plan.sections?.general) {
+        Object.entries(plan.sections?.general).forEach(([key, value]) => {
           // For field status objects, get the current value
           if (value && typeof value === 'object' && 'value' in value) {
             originalValues[key] = value.value;

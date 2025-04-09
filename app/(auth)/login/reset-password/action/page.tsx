@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Key, Shield, Check, X, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
@@ -36,7 +36,7 @@ const passwordResetSchema = z.object({
 
 type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
 
-export default function PasswordResetActionPage() {
+function PasswordResetActionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -296,9 +296,9 @@ export default function PasswordResetActionPage() {
             
             <div className="text-center text-sm text-gray-500">
               <Button 
-                variant="link" 
+                variant="ghost" 
                 onClick={() => router.push('/login')}
-                className="text-sm"
+                className="text-sm text-primary underline"
               >
                 Cancelar e voltar para o login
               </Button>
@@ -307,5 +307,19 @@ export default function PasswordResetActionPage() {
         </Form>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function PasswordResetActionPage() {
+  return (
+    <Suspense fallback={
+      <AuthLayout>
+        <div className="flex justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </AuthLayout>
+    }>
+      <PasswordResetActionContent />
+    </Suspense>
   );
 }

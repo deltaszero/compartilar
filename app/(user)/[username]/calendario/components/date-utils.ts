@@ -12,7 +12,7 @@ import {
   isEqual
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarEvent } from '@/types/user.types';
+import { CalendarEventWithChild } from './types';
 
 // Format date with localization support
 export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR) {
@@ -20,7 +20,7 @@ export function formatDateLocalized(date: Date, formatStr: string, locale = ptBR
 }
 
 // Function to get events for a specific day
-export function getEventsForDay(date: Date, events: CalendarEvent[]) {
+export function getEventsForDay(date: Date, events: CalendarEventWithChild[]) {
   if (!events || events.length === 0) return [];
   
   const matchingEvents = events.filter(event => {
@@ -49,7 +49,7 @@ export function getEventsForDay(date: Date, events: CalendarEvent[]) {
 export function generateCalendarDays(
   currentMonth: Date,
   selectedDate: Date | null,
-  events: CalendarEvent[]
+  events: CalendarEventWithChild[]
 ) {
   const firstDayOfMonth = startOfMonth(currentMonth);
   const lastDayOfMonth = endOfMonth(currentMonth);

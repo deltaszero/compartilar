@@ -28,7 +28,7 @@ const isEditor = async (planId: string, userId: string): Promise<boolean> => {
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // CSRF protection
   const requestedWith = request.headers.get('x-requested-with');
@@ -48,7 +48,8 @@ export async function PUT(
     const decodedToken = await adminAuth().verifyIdToken(token);
     const userId = decodedToken.uid;
     
-    const planId = params.id;
+    // Get plan ID from path parameter - using await for Next.js 15 compatibility
+    const { id: planId } = await params;
     const { fieldName, section = 'education' } = await request.json();
     
     if (!fieldName) {

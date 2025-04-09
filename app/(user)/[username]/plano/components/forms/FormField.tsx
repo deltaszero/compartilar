@@ -28,7 +28,7 @@ const FormField: React.FC<FormFieldProps> = ({
     const { field: parentField, value: requiredValue } = field.conditionalOn;
     // Get parent field value from the form state using global state or context
     const parentValue = window.formState?.[parentField]; // This should be replaced with proper state management
-    if (parentValue !== requiredValue) {
+    if (String(parentValue) !== String(requiredValue)) {
       return null;
     }
   }

@@ -25,6 +25,7 @@ export interface ParentalPlan {
     createdAt?: string | number;
     updatedAt?: string | number;
     createdBy?: string;
+    timestamp?: string | number | Date; // Legacy timestamp field
     // Collection-specific fields
     isLocked?: boolean; // Flag to indicate if the entire plan is locked
     isDeleted?: boolean; // Flag to indicate if the plan is soft-deleted
@@ -85,6 +86,9 @@ export interface GeneralSection {
     unemployed_direct_payment: 'sim' | 'não' | FieldStatus;
     unemployed_services_payment: 'sim' | 'não' | FieldStatus;
     unemployed_extra_expenses: 'sim' | 'não' | FieldStatus;
+    
+    // Add index signature for dynamic access
+    [key: string]: any;
 }
 
 export interface EducationSection {
@@ -120,6 +124,9 @@ export interface EducationSection {
     extended_family_activities: 'sim' | 'nao' | FieldStatus;
 
     school_events: 'ambos' | 'revezamento' | FieldStatus;
+    
+    // Add index signature for dynamic access
+    [key: string]: any;
 }
 
 export interface ExtracurricularSection {

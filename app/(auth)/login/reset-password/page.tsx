@@ -203,9 +203,9 @@ export default function ResetPasswordPage() {
             
             <div className="flex justify-center font-raleway">
               <Button 
-                variant="link" 
+                variant="ghost" 
                 onClick={() => router.push('/login')}
-                className="text-sm"
+                className="text-sm text-primary underline"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" /> Voltar para o login
               </Button>

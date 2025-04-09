@@ -156,7 +156,7 @@ export function LoginForm() {
                 });
                 
                 // Navigate to verification page instead of signing out
-                router.push(`/login/verify-email?email=${encodeURIComponent(userCredential.user.email || '')}`);
+                router.push(`/login/verify-email?email=${encodeURIComponent(result.user.email || '')}`);
                 
                 return;
             }

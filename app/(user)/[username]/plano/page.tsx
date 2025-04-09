@@ -120,7 +120,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
         planSections.forEach(section => {
             try {
                 // Check if the section exists and has any data
-                const sectionData = plan.sections[section.id as keyof typeof plan.sections];
+                const sectionData = plan.sections?.[section.id as keyof typeof plan.sections];
                 if (sectionData && Object.keys(sectionData).length > 0) {
                     count++;
                 }
