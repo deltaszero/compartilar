@@ -147,7 +147,7 @@ export default function ChildProfile() {
                     <TabsContent value="profile">
                         <div className="flex flex-col items-center bg-white p-6 border-2 border-black shadow-brutalist">
                             {/* Child Photo */}
-                            <div className="relative w-48 h-48 rounded-full border-4 border-primary overflow-hidden mb-4">
+                            <div className="relative w-48 h-48 rounded-xl border-2 border-blank overflow-hidden mb-4 bg-bg">
                                 {childData.photoURL ? (
                                     <Image
                                         src={childData.photoURL}
@@ -157,7 +157,7 @@ export default function ChildProfile() {
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center">
-                                        <span className="text-3xl font-bold text-gray-400">
+                                        <span className="text-6xl font-bold font-raleway">
                                             {childData.firstName.charAt(0)}
                                         </span>
                                     </div>

@@ -270,7 +270,7 @@ export function PermissionsList({ childId, user, isOwner }: PermissionsListProps
         {isOwner && (
           <Dialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
             <DialogTrigger asChild>
-              <Button variant="neutral" size="sm">
+              <Button variant="neutral" size="sm" className="bg-mainStrongGreen">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Adicionar Usuário
               </Button>

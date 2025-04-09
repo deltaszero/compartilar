@@ -77,21 +77,46 @@ export default function AddChildPage() {
             
             setIsLoading(true);
             try {
-                // Get children count via API
+                // Get children count via API - try new endpoint first
                 const idToken = await auth.currentUser?.getIdToken();
-                const response = await fetch(`/api/profile/children?userId=${user.uid}&countOnly=true`, {
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
+                let response;
+                
+                try {
+                    // Try the /api/children endpoint
+                    response = await fetch(`/api/children?userId=${user.uid}`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    // If it works, we'll just count the results
+                } catch (error) {
+                    console.error('Error fetching from main API, falling back to profile endpoint', error);
+                    // Fall back to the profile/children endpoint with countOnly
+                    response = await fetch(`/api/profile/children?userId=${user.uid}&countOnly=true`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                }
                 
                 if (!response.ok) {
                     throw new Error('Failed to get children count');
                 }
                 
                 const data = await response.json();
-                const count = data.count || 0;
+                
+                // Handle both the array of children (from /api/children) and count object (from profile endpoint)
+                let count = 0;
+                if (Array.isArray(data)) {
+                    // Response from /api/children is an array of children
+                    count = data.length;
+                } else {
+                    // Response from profile endpoint with countOnly has a count field
+                    count = data.count || 0;
+                }
                 
                 setExistingChildrenCount(count);
                 
@@ -359,7 +384,33 @@ export default function AddChildPage() {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error creating child:', errorData);
-                throw new Error(errorData.message || 'Failed to create child');
+                
+                // Check if the error is about premium limits
+                if (errorData.error === 'Free tier limit reached') {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Limite atingido',
+                        description: errorData.message || 'Usuários gratuitos podem adicionar apenas 1 criança. Faça upgrade para o plano Premium.'
+                    });
+                    throw new Error('Free tier limit reached');
+                }
+                
+                // Check for validation errors
+                if (errorData.error === 'Missing required fields') {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Campos obrigatórios',
+                        description: errorData.message || 'Por favor, preencha todos os campos obrigatórios.'
+                    });
+                    throw new Error('Missing required fields');
+                }
+                
+                // Generic error with more details if available
+                throw new Error(
+                    errorData.message || 
+                    errorData.details || 
+                    'Failed to create child'
+                );
             }
             
             const newChild = await response.json();
@@ -439,9 +490,8 @@ export default function AddChildPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div>
             <UserProfileBar pathname="Adicionar Criança" />
-
             <div className="flex-1 w-full max-w-4xl mx-auto p-4 pb-20">
                 {/* Back button */}
                 <Link
@@ -451,13 +501,11 @@ export default function AddChildPage() {
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Voltar para crianças
                 </Link>
-
                 <Card className="overflow-hidden">
                     <CardHeader>
-                        <h1 className="text-2xl font-bold">Adicionar Nova Criança</h1>
-                        <p>
-                            Preencha as informações abaixo para adicionar uma nova criança ao seu perfil.
-                        </p>
+                        <h1 className="text-2xl font-bold">
+                            Adicionar Nova Criança
+                        </h1>
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -465,19 +513,16 @@ export default function AddChildPage() {
                         <div className="flex justify-center mb-6">
                             <div className="relative">
                                 <Avatar
-                                    className="h-32 w-32 rounded-xl border-2 border-primary/40 cursor-pointer"
+                                    className="bg-bw h-32 w-32 rounded-xl cursor-pointer"
                                     onClick={handlePhotoClick}
                                 >
                                     {childData.photoURL ? (
                                         <AvatarImage src={childData.photoURL} alt="Foto da criança" />
                                     ) : (
-                                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-2xl font-bold">
-                                            {/* {childData.firstName ? childData.firstName.charAt(0) : ''}
-                      {childData.lastName ? childData.lastName.charAt(0) : ''} */}
+                                        <AvatarFallback className="bg-bw">
                                             <IconCamera width={48} height={48} className="w-full" />
                                         </AvatarFallback>
                                     )}
-
                                     <input
                                         type="file"
                                         ref={fileInputRef}
@@ -486,7 +531,7 @@ export default function AddChildPage() {
                                         onChange={handlePhotoChange}
                                     />
 
-                                    <div className="absolute bottom-0 right-0 bg-mainStrongGreen p-2 rounded-full shadow-md">
+                                    <div className="absolute bottom-1 right-2 bg-mainStrongGreen p-2 rounded-full shadow-md">
                                         <Pencil className="w-4 h-4" />
                                     </div>
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/userContext';
-import { db, checkFriendshipStatus, getUserChildren } from '@/lib/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import LoadingPage from '@/app/components/LoadingPage';
 import UserProfileBar from '@/app/components/logged-area/ui/UserProfileBar';
 import { toast } from '@/hooks/use-toast';
@@ -97,13 +97,49 @@ export default function ChildrenPage() {
                 // Fetch children data via API
                 const idToken = await auth.currentUser?.getIdToken();
                 
-                // We need to pass both the target userId and the current userId to the API
-                const response = await fetch(`/api/profile/children?userId=${targetUserId}&currentUserId=${user.uid}&relationshipStatus=${targetUserId === user.uid ? 'self' : 'friend'}`, {
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        'X-Requested-With': 'XMLHttpRequest'
+                // First, try to use the /api/children endpoint
+                let response;
+                try {
+                    // API pattern: If viewing own children, we can directly query the children collection
+                    if (targetUserId === user.uid) {
+                        console.log('Fetching own children from /api/children');
+                        response = await fetch(`/api/children?userId=${user.uid}`, {
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                    } else {
+                        // For viewing someone else's children, we need to check permissions
+                        // This still uses the profile/children endpoint which handles permission checks
+                        response = await fetch(`/api/profile/children?userId=${targetUserId}&currentUserId=${user.uid}&relationshipStatus=${targetUserId === user.uid ? 'self' : 'friend'}`, {
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
                     }
-                });
+                    
+                    // If the /api/children endpoint returns an error, fall back to the profile endpoint
+                    if (!response.ok && targetUserId === user.uid) {
+                        console.log('Falling back to profile/children endpoint');
+                        response = await fetch(`/api/profile/children?userId=${targetUserId}&currentUserId=${user.uid}&relationshipStatus=self`, {
+                            headers: {
+                                'Authorization': `Bearer ${idToken}`,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching from main API, falling back to profile endpoint', error);
+                    // Fall back to the profile/children endpoint
+                    response = await fetch(`/api/profile/children?userId=${targetUserId}&currentUserId=${user.uid}&relationshipStatus=${targetUserId === user.uid ? 'self' : 'friend'}`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                }
                 
                 if (!response.ok) {
                     const errorData = await response.json();

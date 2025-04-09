@@ -48,8 +48,8 @@ export const ChildrenCarousel = ({ children, isLoading, isOwnChildren = false }:
     if (!isLoading && children.length === 0) {
         return (
             <div className="w-full h-[300px] rounded-xl bg-muted/30 border-2 border-border flex flex-col items-center justify-center p-6 text-center">
-                <h3 className="text-xl font-semibold text-gray-400 mb-2">Nenhuma criança cadastrada</h3>
-                <p className="text-sm text-gray-400 mb-4">
+                <h3 className="text-xl mb-2 font-raleway font-bold">Nenhuma criança cadastrada</h3>
+                <p className="text-sm mb-4 font-raleway">
                     {isOwnChildren
                         ? "Adicione crianças ao seu perfil para visualizá-las aqui."
                         : "Este usuário não possui crianças cadastradas."}
