@@ -23,6 +23,13 @@ export interface UserInfo {
   lastActive?: string;
 }
 
+// Response types for API calls
+export interface ApiResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 /**
  * Fetch child data from API
  */
@@ -232,6 +239,36 @@ export async function removeUserAccess(
     }
   } catch (error) {
     console.error('Error removing user access:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete child (soft delete)
+ * Only the owner or creator can delete a child
+ */
+export async function deleteChildData(
+  childId: string,
+  token: string
+): Promise<ApiResponse> {
+  try {
+    const response = await fetch(`/api/children/[id]?id=${childId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Requested-With': 'XMLHttpRequest' // CSRF protection
+      }
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(responseData.error || `Failed to delete child: ${response.status}`);
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error('Error deleting child:', error);
     throw error;
   }
 }

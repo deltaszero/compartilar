@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
     fetchChildData,
-    updateChildData
+    updateChildData,
+    deleteChildData
 } from '../services/child-api';
 import { ChildPhotoUpload } from '../components/profile';
 import { Label } from '@/components/ui/label';
@@ -175,6 +176,46 @@ export default function EditChildProfile() {
         }
     };
 
+    // Delete child
+    const [isDeleting, setIsDeleting] = useState(false);
+    
+    const handleDeleteChild = async () => {
+        if (!childData?.id || !user?.uid) return;
+
+        // Confirm deletion
+        const confirmation = window.confirm(
+            `Você tem certeza que deseja excluir o perfil de ${childData.firstName}? Esta ação não pode ser desfeita.`
+        );
+
+        if (!confirmation) return;
+
+        setIsDeleting(true);
+        try {
+            // Get fresh auth token
+            const token = await user.getIdToken(true);
+
+            // Delete child
+            const result = await deleteChildData(childData.id, token);
+
+            toast({
+                title: 'Perfil excluído',
+                description: 'O perfil foi excluído com sucesso!'
+            });
+
+            // Navigate back to children list
+            router.push(`/${username}/criancas`);
+        } catch (error) {
+            console.error('Error deleting child:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Erro ao excluir',
+                description: error instanceof Error ? error.message : 'Ocorreu um erro ao excluir. Tente novamente.'
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     if (isLoading) {
         return <LoadingPage />;
     }
@@ -261,23 +302,38 @@ export default function EditChildProfile() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 mt-6">
-                        <Button
-                            variant="default"
-                            onClick={() => router.push(`/${username}/criancas/${kid}`)}
-                            className="flex-1"
-                        >
-                            Cancelar
-                        </Button>
+                    <div className="flex flex-col gap-4 mt-6">
+                        <div className="flex gap-2">
+                            <Button
+                                variant="default"
+                                onClick={() => router.push(`/${username}/criancas/${kid}`)}
+                                className="flex-1"
+                            >
+                                Cancelar
+                            </Button>
 
-                        <Button
-                            type="button"
-                            onClick={handleSaveChanges}
-                            disabled={isSaving || uploadProgress !== null}
-                            className="flex-1"
-                        >
-                            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                        </Button>
+                            <Button
+                                type="button"
+                                onClick={handleSaveChanges}
+                                disabled={isSaving || isDeleting || uploadProgress !== null}
+                                className="flex-1"
+                            >
+                                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                            </Button>
+                        </div>
+                        
+                        {/* Delete button - only visible for creators/owners/editors */}
+                        {(isOwner || isEditor) && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={handleDeleteChild}
+                                disabled={isDeleting || isSaving}
+                                className="w-full mt-2"
+                            >
+                                {isDeleting ? 'Excluindo...' : 'Excluir Perfil'}
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <div className="h-[8em]" />

@@ -181,15 +181,21 @@ export async function DELETE(request: NextRequest) {
 
     const childData = childDoc.data();
     
-    // Check if user is the owner
-    if (childData?.owner !== userId) {
-      return NextResponse.json({ error: 'Only the owner can delete a child' }, { status: 403 });
+    // Check if user is the owner or creator or an editor
+    const isOwner = childData?.owner === userId;
+    const isCreator = childData?.createdBy === userId;
+    const isEditor = childData?.editors?.includes(userId);
+    
+    if (!(isOwner || isCreator || isEditor)) {
+      return NextResponse.json({ error: 'Only the owner, creator, or editors can delete a child' }, { status: 403 });
     }
 
-    // Soft delete - update with deleted flag
+    // Soft delete - update with isDeleted flag (ensure we use the same flag as in the POST method)
     await childRef.update({
-      deleted: true,
-      deleted_at: FieldValue.serverTimestamp()
+      isDeleted: true,
+      deleted_at: FieldValue.serverTimestamp(),
+      updatedBy: userId,
+      updatedAt: FieldValue.serverTimestamp()
     });
     
     return NextResponse.json({ 
