@@ -26,7 +26,8 @@ export type ResourceType =
   | 'system'
   | 'finance'
   | 'calendar'
-  | 'chat';
+  | 'chat'
+  | 'parental_plan';
 
 /**
  * Core audit log entry structure

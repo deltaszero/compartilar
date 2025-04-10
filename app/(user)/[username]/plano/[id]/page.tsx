@@ -315,7 +315,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                         })}
                     </div>
 
-                    {getCompletedSectionsCount() === 0 && (
+                    {/* {getCompletedSectionsCount() === 0 && (
                         <div className="flex flex-col items-center justify-center my-8 p-4 md:p-6 bg-white/50 border border-dashed border-gray-300 rounded-lg">
                             <Image
                                 src="/assets/images/plan_01.webp"
@@ -336,7 +336,7 @@ export default function PlanPage({ params }: { params: Promise<{ username: strin
                                 Começar com Educação Regular
                             </Button>
                         </div>
-                    )}
+                    )} */}
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-6">

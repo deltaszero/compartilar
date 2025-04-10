@@ -202,7 +202,7 @@ export const FriendSearch = ({ userData }: FriendSearchProps) => {
     };
     
     return (
-        <div className="flex flex-1 max-w-md relative">
+        <div className="flex flex-1 max-w-4xl relative">
             <div className="flex items-start w-full">
                 <div className="flex items-start relative w-full">
                     <Input

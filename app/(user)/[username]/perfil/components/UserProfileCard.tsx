@@ -133,7 +133,7 @@ export const AvatarSection = ({
                     {photoURL ? (
                         <AvatarImage src={photoURL} alt={`${firstName || 'User'}'s avatar`} />
                     ) : (
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary">
                             {/* {firstName?.charAt(0)}{lastName?.charAt(0)} */}
                             <IconCamera width={64} height={64} />
                         </AvatarFallback>
@@ -292,7 +292,7 @@ export const UserProfileCard = ({
     };
 
     return (
-        <Card className={`mx-auto w-full ${isEditing ? 'max-w-2xl bg-main' : 'max-w-md bg-bw' } rounded-none border-2 border-border overflow-hidden`}>
+        <Card className={`w-full ${isEditing ? 'bg-main' : 'bg-bw' } rounded-none border-2 border-border overflow-hidden`}>
             <div className="h-24"></div>
             <CardHeader className="flex flex-col items-center pb-2 -mt-16">
                 <AvatarSection

@@ -9,293 +9,295 @@ import { useUser } from '@context/userContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import {
-  CheckCircle,
-  XCircle,
-  RotateCcw,
-  Plus,
-  Edit,
-  Trash,
-  Clock
+    CheckCircle,
+    XCircle,
+    RotateCcw,
+    Plus,
+    Edit,
+    Trash,
+    Clock
 } from 'lucide-react';
 
 interface PlanChangeLogProps {
-  planId: string;
-  limit?: number;
+    planId: string;
+    limit?: number;
 }
 
 export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps) {
-  const { user } = useUser();
-  const { toast } = useToast();
-  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!user || !planId) return;
+    useEffect(() => {
+        if (!user || !planId) return;
 
-    const fetchChangelog = async () => {
-      setLoading(true);
-      try {
-        console.log('PlanChangeLog: Fetching changelog for plan:', planId);
-        const entries = await getParentalPlanChangeLog(planId, user.uid, limit);
-        console.log('PlanChangeLog: Received', entries?.length || 0, 'changelog entries');
-        
-        // Ensure entries is always an array
-        setChangelog(Array.isArray(entries) ? entries : []);
-      } catch (error) {
-        console.error('Error fetching changelog:', error);
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar o histórico de alterações',
-          variant: 'destructive'
-        });
-        // Set empty changelog in case of error
-        setChangelog([]);
-      } finally {
-        setLoading(false);
-      }
+        const fetchChangelog = async () => {
+            setLoading(true);
+            try {
+                console.log('PlanChangeLog: Fetching changelog for plan:', planId);
+                const entries = await getParentalPlanChangeLog(planId, user.uid, limit);
+                console.log('PlanChangeLog: Received', entries?.length || 0, 'changelog entries');
+
+                // Ensure entries is always an array
+                setChangelog(Array.isArray(entries) ? entries : []);
+            } catch (error) {
+                console.error('Error fetching changelog:', error);
+                toast({
+                    title: 'Erro',
+                    description: 'Não foi possível carregar o histórico de alterações',
+                    variant: 'destructive'
+                });
+                // Set empty changelog in case of error
+                setChangelog([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchChangelog();
+    }, [planId, user, limit, toast]);
+
+    const formatDate = (timestamp: number) => {
+        try {
+            return new Date(timestamp).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error, 'timestamp:', timestamp);
+            return 'Data indisponível';
+        }
     };
 
-    fetchChangelog();
-  }, [planId, user, limit, toast]);
+    const toggleExpandEntry = (entryId: string) => {
+        setExpandedEntries(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(entryId)) {
+                newSet.delete(entryId);
+            } else {
+                newSet.add(entryId);
+            }
+            return newSet;
+        });
+    };
 
-  const formatDate = (timestamp: number) => {
-    try {
-      return new Date(timestamp).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error, 'timestamp:', timestamp);
-      return 'Data indisponível';
-    }
-  };
+    const getActionIcon = (action: string) => {
+        switch (action) {
+            case 'create':
+                return <Plus className="h-4 w-4" />;
+            case 'update':
+                return <Edit className="h-4 w-4" />;
+            case 'delete':
+                return <Trash className="h-4 w-4" />;
+            case 'approve_field':
+                return <CheckCircle className="h-4 w-4" />;
+            case 'reject_field':
+                return <XCircle className="h-4 w-4" />;
+            case 'cancel_field_change':
+                return <RotateCcw className="h-4 w-4" />;
+            default:
+                return <Clock className="h-4 w-4" />;
+        }
+    };
 
-  const toggleExpandEntry = (entryId: string) => {
-    setExpandedEntries(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(entryId)) {
-        newSet.delete(entryId);
-      } else {
-        newSet.add(entryId);
-      }
-      return newSet;
-    });
-  };
+    const getActionBadge = (action: string) => {
+        let color = '';
+        let label = '';
 
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'create':
-        return <Plus className="h-4 w-4" />;
-      case 'update':
-        return <Edit className="h-4 w-4" />;
-      case 'delete':
-        return <Trash className="h-4 w-4" />;
-      case 'approve_field':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'reject_field':
-        return <XCircle className="h-4 w-4" />;
-      case 'cancel_field_change':
-        return <RotateCcw className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
+        switch (action) {
+            case 'create':
+                color = 'bg-green-100 text-green-800';
+                label = 'Criação';
+                break;
+            case 'update':
+                color = 'bg-blue-100 text-blue-800';
+                label = 'Atualização';
+                break;
+            case 'delete':
+                color = 'bg-red-100 text-red-800';
+                label = 'Exclusão';
+                break;
+            case 'approve_field':
+                color = 'bg-green-100 text-green-800';
+                label = 'Aprovação';
+                break;
+            case 'reject_field':
+                color = 'bg-amber-100 text-amber-800';
+                label = 'Rejeição';
+                break;
+            case 'cancel_field_change':
+                color = 'bg-gray-100 text-gray-800';
+                label = 'Cancelamento';
+                break;
+            default:
+                color = 'bg-gray-100 text-gray-800';
+                label = 'Ação';
+        }
 
-  const getActionBadge = (action: string) => {
-    let color = '';
-    let label = '';
+        return (
+            <Badge className={`${color} font-normal`}>
+                {getActionIcon(action)}
+                <span className="ml-1">{label}</span>
+            </Badge>
+        );
+    };
 
-    switch (action) {
-      case 'create':
-        color = 'bg-green-100 text-green-800';
-        label = 'Criação';
-        break;
-      case 'update':
-        color = 'bg-blue-100 text-blue-800';
-        label = 'Atualização';
-        break;
-      case 'delete':
-        color = 'bg-red-100 text-red-800';
-        label = 'Exclusão';
-        break;
-      case 'approve_field':
-        color = 'bg-green-100 text-green-800';
-        label = 'Aprovação';
-        break;
-      case 'reject_field':
-        color = 'bg-amber-100 text-amber-800';
-        label = 'Rejeição';
-        break;
-      case 'cancel_field_change':
-        color = 'bg-gray-100 text-gray-800';
-        label = 'Cancelamento';
-        break;
-      default:
-        color = 'bg-gray-100 text-gray-800';
-        label = 'Ação';
-    }
+    // Render a summary of the changes
+    const renderChangeSummary = (entry: ChangelogEntry) => {
+        if (entry.action === 'create') {
+            return <p>Plano parental criado</p>;
+        }
 
-    return (
-      <Badge className={`${color} font-normal`}>
-        {getActionIcon(action)}
-        <span className="ml-1">{label}</span>
-      </Badge>
-    );
-  };
+        if (entry.action === 'delete') {
+            return <p>Plano parental excluído</p>;
+        }
 
-  // Render a summary of the changes
-  const renderChangeSummary = (entry: ChangelogEntry) => {
-    if (entry.action === 'create') {
-      return <p>Plano parental criado</p>;
-    }
+        // For field-specific changes
+        if (entry.fieldName) {
+            const section = entry.section ? `${entry.section}` : '';
+            const fieldName = entry.fieldName;
 
-    if (entry.action === 'delete') {
-      return <p>Plano parental excluído</p>;
-    }
+            switch (entry.action) {
+                case 'update':
+                    return <p>Alterou o campo {fieldName} na seção {section}</p>;
+                case 'approve_field':
+                    return <p>Aprovou alteração no campo {fieldName} na seção {section}</p>;
+                case 'reject_field':
+                    return <p>Rejeitou alteração no campo {fieldName} na seção {section}</p>;
+                case 'cancel_field_change':
+                    return <p>Cancelou alteração no campo {fieldName} na seção {section}</p>;
+                default:
+                    return <p>{entry.description}</p>;
+            }
+        }
 
-    // For field-specific changes
-    if (entry.fieldName) {
-      const section = entry.section ? `${entry.section}` : '';
-      const fieldName = entry.fieldName;
+        // General update
+        if (entry.action === 'update') {
+            if (entry.section) {
+                return <p>Atualizou seção {entry.section}</p>;
+            }
+            return <p>Atualizou o plano parental</p>;
+        }
 
-      switch (entry.action) {
-        case 'update':
-          return <p>Alterou o campo {fieldName} na seção {section}</p>;
-        case 'approve_field':
-          return <p>Aprovou alteração no campo {fieldName} na seção {section}</p>;
-        case 'reject_field':
-          return <p>Rejeitou alteração no campo {fieldName} na seção {section}</p>;
-        case 'cancel_field_change':
-          return <p>Cancelou alteração no campo {fieldName} na seção {section}</p>;
-        default:
-          return <p>{entry.description}</p>;
-      }
-    }
+        // Fallback to description
+        return <p>{entry.description}</p>;
+    };
 
-    // General update
-    if (entry.action === 'update') {
-      if (entry.section) {
-        return <p>Atualizou seção {entry.section}</p>;
-      }
-      return <p>Atualizou o plano parental</p>;
-    }
+    // Render the detailed changes
+    const renderChangeDetails = (entry: ChangelogEntry) => {
+        // Skip rendering if there's no before or after data
+        if (!entry.fieldsBefore && !entry.fieldsAfter) {
+            return null;
+        }
 
-    // Fallback to description
-    return <p>{entry.description}</p>;
-  };
+        // For field-specific changes, show the old and new values
+        if (entry.fieldName && entry.section) {
+            const fieldName = entry.fieldName;
+            const section = entry.section;
 
-  // Render the detailed changes
-  const renderChangeDetails = (entry: ChangelogEntry) => {
-    // Skip rendering if there's no before or after data
-    if (!entry.fieldsBefore && !entry.fieldsAfter) {
-      return null;
-    }
+            // Extract values - handle both primitive and object values
+            const beforeValue = entry.fieldsBefore?.[fieldName] ?
+                (typeof entry.fieldsBefore[fieldName] === 'object' ?
+                    (entry.fieldsBefore[fieldName].value || 'N/A') :
+                    entry.fieldsBefore[fieldName])
+                : 'N/A';
 
-    // For field-specific changes, show the old and new values
-    if (entry.fieldName && entry.section) {
-      const fieldName = entry.fieldName;
-      const section = entry.section;
-      
-      // Extract values - handle both primitive and object values
-      const beforeValue = entry.fieldsBefore?.[fieldName] ? 
-        (typeof entry.fieldsBefore[fieldName] === 'object' ? 
-          (entry.fieldsBefore[fieldName].value || 'N/A') : 
-          entry.fieldsBefore[fieldName]) 
-        : 'N/A';
-      
-      const afterValue = entry.fieldsAfter?.[fieldName] ? 
-        (typeof entry.fieldsAfter[fieldName] === 'object' ? 
-          (entry.fieldsAfter[fieldName].value || 'N/A') : 
-          entry.fieldsAfter[fieldName]) 
-        : 'N/A';
+            const afterValue = entry.fieldsAfter?.[fieldName] ?
+                (typeof entry.fieldsAfter[fieldName] === 'object' ?
+                    (entry.fieldsAfter[fieldName].value || 'N/A') :
+                    entry.fieldsAfter[fieldName])
+                : 'N/A';
 
-      return (
-        <div className="mt-2 bg-gray-50 p-2 rounded text-xs sm:text-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <p className="font-medium">Valor anterior:</p>
-              <p className="break-words">{beforeValue}</p>
-            </div>
-            <div>
-              <p className="font-medium">Novo valor:</p>
-              <p className="break-words">{afterValue}</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // For section updates, show a summary
-    if (entry.section) {
-      return (
-        <div className="mt-2 bg-gray-50 p-2 rounded text-sm">
-          <p>Atualizou vários campos na seção {entry.section}</p>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Alterações</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="mx-auto">
-      <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
-        <CardTitle className="text-lg sm:text-xl">Histórico de Alterações</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 py-2 sm:px-6 sm:py-4">
-        {changelog.length === 0 ? (
-          <p className="text-center text-gray-500 py-4">Nenhuma alteração registrada</p>
-        ) : (
-          <div className="space-y-3">
-            {changelog.filter(entry => entry).map((entry) => (
-              <div 
-                key={entry.id || `entry-${Math.random()}`} 
-                className="border rounded p-3 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <div className="mt-0.5">{getActionBadge(entry.action)}</div>
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm sm:text-base">{renderChangeSummary(entry)}</div>
-                      <div className="text-xs text-gray-500">
-                        {entry.timestamp ? formatDate(entry.timestamp) : 'Data desconhecida'}
-                      </div>
+            return (
+                <div className="mt-2 bg-gray-50 p-2 rounded text-xs sm:text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <p className="font-medium">Valor anterior:</p>
+                            <p className="break-words">{beforeValue}</p>
+                        </div>
+                        <div>
+                            <p className="font-medium">Novo valor:</p>
+                            <p className="break-words">{afterValue}</p>
+                        </div>
                     </div>
-                  </div>
-                  <Button 
+                </div>
+            );
+        }
+
+        // For section updates, show a summary
+        if (entry.section) {
+            return (
+                <div className="mt-2 bg-gray-50 p-2 rounded text-sm">
+                    <p>Atualizou vários campos na seção {entry.section}</p>
+                </div>
+            );
+        }
+
+        return null;
+    };
+
+    if (loading) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Histórico de Alterações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card className="mx-auto bg-bw p-4 border-2 border-black shadow-brutalist rounded-none">
+            <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
+                <CardTitle className="text-lg sm:text-xl font-raleway font-semibold">
+                    Histórico de Alterações
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 py-2 sm:px-6 sm:py-4">
+                {changelog.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">Nenhuma alteração registrada</p>
+                ) : (
+                    <div className="space-y-3">
+                        {changelog.filter(entry => entry).map((entry) => (
+                            <div
+                                key={entry.id || `entry-${Math.random()}`}
+                                className="border rounded p-3 hover:bg-gray-50 transition-colors"
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                                        <div className="mt-0.5">{getActionBadge(entry.action)}</div>
+                                        <div className="min-w-0">
+                                            <div className="font-medium text-sm sm:text-base">{renderChangeSummary(entry)}</div>
+                                            <div className="text-xs text-gray-500">
+                                                {entry.timestamp ? formatDate(entry.timestamp) : 'Data desconhecida'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* <Button 
                     variant="default" 
                     size="sm" 
                     onClick={() => entry.id && toggleExpandEntry(entry.id)}
                     className="px-3 h-8 sm:px-2 sm:h-7"
                   >
                     {expandedEntries.has(entry.id || '') ? 'Menos' : 'Mais'}
-                  </Button>
-                </div>
-                {entry.id && expandedEntries.has(entry.id) && renderChangeDetails(entry)}
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+                  </Button> */}
+                                </div>
+                                {entry.id && expandedEntries.has(entry.id) && renderChangeDetails(entry)}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
 }

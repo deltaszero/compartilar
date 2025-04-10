@@ -202,7 +202,7 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
             });
 
             // Redirect to the new plan's education section
-            router.push(`/${resolvedParams.username}/plano/${planId}/educacao`);
+            router.push(`/${resolvedParams.username}/plano/${planId}`);
         } catch (error) {
             console.error('Error creating plan:', error);
             toast({
@@ -452,6 +452,7 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
                             type="submit"
                             form="new-plan-form"
                             disabled={isSubmitting}
+                            className='bg-mainStrongGreen'
                         >
                             {isSubmitting ? 'Criando...' : 'Criar Plano'}
                         </Button>

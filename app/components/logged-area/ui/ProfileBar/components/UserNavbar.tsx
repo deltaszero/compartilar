@@ -34,7 +34,7 @@ export const UserNavbar = ({ pathname, onBackClick, userData, onSignOut }: UserN
             
             {/* Center section with search */}
             {userData && (
-                <div className="mx-2 flex-1">
+                <div className="w-full flex items-center justify-center">
                     <FriendSearch userData={userData} />
                 </div>
             )}
@@ -42,10 +42,10 @@ export const UserNavbar = ({ pathname, onBackClick, userData, onSignOut }: UserN
             {/* Right section with user menu and notifications */}
             {userData && (
                 <div className="flex items-start gap-4">
-                    <UserMenu 
+                    {/* <UserMenu 
                         userData={userData} 
                         onSignOut={onSignOut || (() => {})}
-                    />
+                    /> */}
                     <NotificationBell />
                 </div>
             )}

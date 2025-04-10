@@ -134,7 +134,7 @@ export const createParentalPlan = async (
         action: 'create',
         userId,
         resourceId: result.id,
-        resourceType: 'child', // Using 'child' as resource type since 'parental_plan' is not in the allowed types
+        resourceType: 'parental_plan', // Now using the proper resource type
         details: {
           operation: 'create_parental_plan',
           notes: `Created parental plan for children: ${childrenIds.join(', ')}`

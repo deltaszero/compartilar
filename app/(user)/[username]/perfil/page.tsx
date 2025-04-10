@@ -245,10 +245,9 @@ export default function UserProfilePage() {
         <div>
             {/* NAVBAR */}
             <UserProfileBar pathname={isOwnProfile ? "Meu Perfil" : `Perfil de ${capitalizeFirstLetter(profileData.firstName || '')}`} />
-            <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
-
-            <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
+            <div className="flex flex-col items-center pb-[6em] max-w-4xl mx-auto">
+                <div className="w-full mb-4 sm:mb-6 border-2 border-black p-3 sm:p-4 bg-white shadow-brutalist">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
                         Perfil
                     </h1>
                     <p className="mt-1 text-sm sm:text-base font-nunito">
@@ -257,7 +256,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {/* PROFILE CONTENT */}
-                <div className="w-full max-w-3xl mx-auto mt-4 pb-20">
+                <div className="flex-1 w-full py-4">
 
                     <UserProfileCard
                         userData={profileData}

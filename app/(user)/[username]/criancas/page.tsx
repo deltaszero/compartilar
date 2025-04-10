@@ -184,9 +184,8 @@ export default function ChildrenPage() {
     return (
         <div>
             <UserProfileBar pathname={pageTitle} />
-            <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
-
-                <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+            <div className="flex flex-col items-center pb-[6em] max-w-4xl mx-auto">
+                <div className="w-full mb-4 sm:mb-6 border-2 border-black p-3 sm:p-4 bg-white shadow-brutalist">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
                         Crianças
                     </h1>
@@ -194,11 +193,7 @@ export default function ChildrenPage() {
                         Adicione e edite informações sobre suas filhas e filhos.
                     </p>
                 </div>
-
-
-                <div className="flex-1 w-full max-w-5xl mx-auto p-4 pb-20">
-
-
+                <div className="flex-1 w-full py-4">
                     {/* Carousel */}
                     <ChildrenCarousel
                         children={children}
