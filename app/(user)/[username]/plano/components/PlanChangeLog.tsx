@@ -111,7 +111,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
 
         switch (action) {
             case 'create':
-                color = 'bg-green-100 text-green-800';
+                color = 'bg-main text-bw';
                 label = 'Criação';
                 break;
             case 'update':
@@ -243,7 +243,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
 
     if (loading) {
         return (
-            <Card>
+            <Card className="bg-bw p-4 border-2 border-black shadow-brutalist rounded-none">
                 <CardHeader>
                     <CardTitle>Histórico de Alterações</CardTitle>
                 </CardHeader>
@@ -257,7 +257,7 @@ export default function PlanChangeLog({ planId, limit = 10 }: PlanChangeLogProps
     }
 
     return (
-        <Card className="mx-auto bg-bw p-4 border-2 border-black shadow-brutalist rounded-none">
+        <Card className="bg-bw p-4 border-2 border-black shadow-brutalist rounded-none">
             <CardHeader className="px-4 py-3 sm:px-6 sm:py-4">
                 <CardTitle className="text-lg sm:text-xl font-raleway font-semibold">
                     Histórico de Alterações

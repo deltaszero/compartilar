@@ -274,7 +274,7 @@ const Header = () => {
                 <div className="mx-2"></div>
                 {loading ? (
                     <div className="flex flex-row gap-2 items-center">
-                        <Skeleton className="h-6 w-32" /> <Skeleton className="h-9 w-9 rounded-full" />
+                        <Skeleton className="w-20 h-6 sm:h-6 sm:w-32" /> <Skeleton className="h-9 w-9 rounded-full" />
                     </div>
                 ) : user && userData ? (
                     <UserMenu userData={userData} onSignOut={handleSignOut} />

@@ -150,8 +150,8 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
     return (
         <div>
             <UserProfileBar pathname='Plano de Parentalidade' />
-            <div className="flex flex-col p-4 sm:p-6 pb-[6em]">
-                <div className="mb-4 sm:mb-6 border-4 border-black p-3 sm:p-4 bg-white shadow-brutalist inline-block">
+            <div className="flex flex-col items-center p-2 sm:p-0 pb-[6em] max-w-4xl mx-auto">
+                <div className="w-full mb-4 sm:mb-6 border-2 border-black p-3 sm:p-4 bg-white shadow-brutalist">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-raleway">
                         Plano Parental
                     </h1>
@@ -159,7 +159,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                         Defina acordos sobre a educação e outros aspectos da vida da criança.
                     </p>
                 </div>
-                <div className="flex justify-end items-center mb-6">
+                <div className="w-full flex flex-row justify-end mb-6">
                     <Button onClick={handleCreateNewPlan} className="bg-mainStrongGreen px-4 text-md font-semibold font-raleway">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Novo Plano
@@ -197,7 +197,7 @@ export default function PlansPage({ params }: { params: Promise<{ username: stri
                         </CardFooter>
                     </Card>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
                         {plans.map((plan) => (
                             <Card key={plan.id} className="overflow-hidden bg-bw">
                                 <CardHeader className="pb-2">

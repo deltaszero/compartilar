@@ -287,7 +287,7 @@ export default function NewParentalPlanPage({ params }: { params: Promise<{ user
     return (
         <div>
             <UserProfileBar pathname='Plano de Parentalidade' />
-            <div className="p-8 max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto">
                 <Button
                     variant={null}
                     className="mb-4"
